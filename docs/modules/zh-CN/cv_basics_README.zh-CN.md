@@ -24,14 +24,14 @@
 ```bash
 conda create -n vision-workbench python=3.11 -y
 conda activate vision-workbench
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 ```
 
 安装 wheel 时使用：
 
 ```bash
-pip install C:\path\to\your_package.whl
+pip install path/to/your_package.whl
 ```
 
 ## 启动方式

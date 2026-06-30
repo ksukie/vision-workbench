@@ -11,7 +11,7 @@ The YOLO26 Detection module loads YOLO26 object-detection models and runs live c
 ```bash
 conda create -n vision-yolo python=3.11 -y
 conda activate vision-yolo
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 pip install -r requirements-yolo26.txt
 ```

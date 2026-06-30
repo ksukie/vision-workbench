@@ -29,7 +29,7 @@ The Image Classification module predicts the category of an entire image. It pro
 ```bash
 conda create -n vision-classification python=3.11 -y
 conda activate vision-classification
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 pip install -r requirements-classification.txt
 ```

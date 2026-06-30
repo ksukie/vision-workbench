@@ -11,7 +11,7 @@ The YOLO26 Training module provides basic training entry points for detection, i
 ```bash
 conda create -n vision-yolo-train python=3.11 -y
 conda activate vision-yolo-train
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 pip install -r requirements-yolo26.txt
 ```

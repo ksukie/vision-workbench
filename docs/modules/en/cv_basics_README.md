@@ -24,14 +24,14 @@ The CV Basics module provides traditional single-image computer-vision operation
 ```bash
 conda create -n vision-workbench python=3.11 -y
 conda activate vision-workbench
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 ```
 
 For a wheel installation:
 
 ```bash
-pip install C:\path\to\your_package.whl
+pip install path/to/your_package.whl
 ```
 
 ## Launch

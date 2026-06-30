@@ -9,7 +9,7 @@ This document describes the extension points, dependency rules, and wheel packag
 ```bash
 conda create -n vision-dev python=3.11 -y
 conda activate vision-dev
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .[test]
 ```
 
@@ -265,7 +265,7 @@ Validate in a clean environment:
 ```bash
 conda create -n vision-user python=3.11 -y
 conda activate vision-user
-pip install C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench\dist\your_package.whl
+pip install dist/your_package.whl
 vision-workbench
 ```
 

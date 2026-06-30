@@ -1,3 +1,5 @@
+--index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+
 -r requirements.txt
 
 # Optional deep-learning dependencies for image_classification.

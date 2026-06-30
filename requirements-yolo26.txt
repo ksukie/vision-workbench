@@ -1,3 +1,5 @@
+--index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+
 -r requirements.txt
 
 # Install the local YOLO26/Ultralytics source and its runtime dependencies.

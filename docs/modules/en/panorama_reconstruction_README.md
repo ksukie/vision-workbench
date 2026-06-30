@@ -23,7 +23,7 @@ The Panorama Reconstruction module reconstructs a panorama from left and right i
 ```bash
 conda create -n vision-workbench python=3.11 -y
 conda activate vision-workbench
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 ```
 

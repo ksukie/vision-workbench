@@ -33,15 +33,15 @@ Vision Workbench 是一个本地计算机视觉学习工作台。项目把传统
 
 ## 功能模块
 
-| 模块             | 功能定位                                                           | 文档                                                                  |
-| ---------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
-|  基础 CV         | OpenCV 基础图像处理、色彩空间、通道分离、直方图、形态学与几何变换  | [README](./docs/modules/zh-CN/cv_basics_README.zh-CN.md)               |
-|  全景重构        | 左右图像重构、SIFT 匹配、人工点选、辅助点选和全景输出              | [README](./docs/modules/zh-CN/panorama_reconstruction_README.zh-CN.md) |
-|  相机诊断        | 摄像头检测、读取模式测试、实时预览、FPS、截图与录屏                | [README](./docs/modules/zh-CN/camera_diagnostics_README.zh-CN.md)      |
-|  图像分类        | ResNet18、MobileNetV3 Small 预测、预训练权重、数据集校验和基础训练 | [README](./docs/modules/zh-CN/image_classification_README.zh-CN.md)    |
-|  YOLO26 目标检测 | YOLO26 检测模型加载、摄像头实时推理、截图和录屏                    | [README](./docs/modules/zh-CN/yolo26_detection_README.zh-CN.md)        |
-|  YOLO26 分割     | YOLO26 实例分割和语义分割，支持图片和摄像头输入                    | [README](./docs/modules/zh-CN/yolo26_segmentation_README.zh-CN.md)     |
-|  YOLO26 训练     | 检测、实例分割、语义分割训练入口与数据集校验                       | [README](./docs/modules/zh-CN/yolo26_training_README.zh-CN.md)         |
+| 模块            | 功能定位                                                           | 文档                                                                  |
+| --------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------- |
+| 基础 CV         | OpenCV 基础图像处理、色彩空间、通道分离、直方图、形态学与几何变换  | [README](./docs/modules/zh-CN/cv_basics_README.zh-CN.md)               |
+| 全景重构        | 左右图像重构、SIFT 匹配、人工点选、辅助点选和全景输出              | [README](./docs/modules/zh-CN/panorama_reconstruction_README.zh-CN.md) |
+| 相机诊断        | 摄像头检测、读取模式测试、实时预览、FPS、截图与录屏                | [README](./docs/modules/zh-CN/camera_diagnostics_README.zh-CN.md)      |
+| 图像分类        | ResNet18、MobileNetV3 Small 预测、预训练权重、数据集校验和基础训练 | [README](./docs/modules/zh-CN/image_classification_README.zh-CN.md)    |
+| YOLO26 目标检测 | YOLO26 检测模型加载、摄像头实时推理、截图和录屏                    | [README](./docs/modules/zh-CN/yolo26_detection_README.zh-CN.md)        |
+| YOLO26 分割     | YOLO26 实例分割和语义分割，支持图片和摄像头输入                    | [README](./docs/modules/zh-CN/yolo26_segmentation_README.zh-CN.md)     |
+| YOLO26 训练     | 检测、实例分割、语义分割训练入口与数据集校验                       | [README](./docs/modules/zh-CN/yolo26_training_README.zh-CN.md)         |
 
 ## 快速开始
 
@@ -50,7 +50,7 @@ Vision Workbench 是一个本地计算机视觉学习工作台。项目把传统
 ```bash
 conda create -n vision-workbench python=3.11 -y
 conda activate vision-workbench
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 vision-workbench
 ```

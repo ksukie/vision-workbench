@@ -50,7 +50,7 @@ Base environment for traditional CV, panorama reconstruction, and camera diagnos
 ```bash
 conda create -n vision-workbench python=3.11 -y
 conda activate vision-workbench
-cd C:\Users\asus\Desktop\Package-Wheel\VisionWorkbench
+cd path/to/vision-workbench
 pip install -e .
 vision-workbench
 ```
