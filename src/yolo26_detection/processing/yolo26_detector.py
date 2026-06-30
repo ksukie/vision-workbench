@@ -19,6 +19,8 @@ class Yolo26Detector:
     def load_model(self, model_path: PathLike) -> None:
         self._backend.load_model(model_path)
 
+    def unload_model(self) -> None:
+        self._backend.unload_model()
+
     def detect(self, frame: ImageArray, settings: DetectionSettings) -> DetectionOutput:
         return self._backend.detect(frame, settings)
-

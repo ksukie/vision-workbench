@@ -13,7 +13,7 @@ conda create -n vision-yolo python=3.11 -y
 conda activate vision-yolo
 cd path/to/vision-workbench
 pip install -e .
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 ```
 
 ## 启动方式
@@ -45,9 +45,9 @@ models/yolo26_segmentation_models/custom/  自定义分割模型
 
 ## 任务类型
 
-| 任务 | 说明 |
-| --- | --- |
-| `segment` | 实例分割，输出对象级 mask |
+| 任务         | 说明                       |
+| ------------ | -------------------------- |
+| `segment`  | 实例分割，输出对象级 mask  |
 | `semantic` | 语义分割，输出像素类别区域 |
 
 ## 操作流程

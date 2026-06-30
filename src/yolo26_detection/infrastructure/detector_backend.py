@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import sys
 import time
+import gc
+import threading
 from pathlib import Path
 from typing import Optional, Tuple
 
@@ -18,6 +20,7 @@ class UltralyticsYolo26Backend:
         self._config = config
         self._model = None
         self._model_path = None  # type: Optional[Path]
+        self._model_lock = threading.RLock()
 
     @property
     def model_path(self) -> Optional[Path]:
@@ -27,23 +30,56 @@ class UltralyticsYolo26Backend:
         path = Path(model_path)
         if not path.exists():
             raise FileNotFoundError(f"Model file not found: {path}")
-        YOLO = self._import_yolo()
-        self._model = YOLO(str(path))
-        self._model_path = path
+        with self._model_lock:
+            self.unload_model()
+            YOLO = self._import_yolo()
+            self._model = YOLO(str(path))
+            self._model_path = path
+
+    def unload_model(self) -> None:
+        """Release the loaded YOLO model and cached accelerator memory."""
+
+        with self._model_lock:
+            model = self._model
+            self._model = None
+            self._model_path = None
+            if model is None:
+                _release_accelerator_memory()
+                return
+
+            try:
+                model.to("cpu")
+            except Exception:
+                inner_model = getattr(model, "model", None)
+                if inner_model is not None:
+                    try:
+                        inner_model.to("cpu")
+                    except Exception:
+                        pass
+            try:
+                predictor = getattr(model, "predictor", None)
+                if predictor is not None:
+                    predictor.model = None
+                    predictor.results = None
+            except Exception:
+                pass
+            del model
+        _release_accelerator_memory()
 
     def detect(self, frame: ImageArray, settings: DetectionSettings) -> DetectionOutput:
-        if self._model is None:
-            raise RuntimeError("No YOLO26 model is loaded.")
+        with self._model_lock:
+            if self._model is None:
+                raise RuntimeError("No YOLO26 model is loaded.")
 
-        started = time.perf_counter()
-        results = self._model.predict(
-            source=frame,
-            imgsz=int(settings.image_size),
-            conf=float(settings.confidence),
-            iou=float(settings.iou),
-            device=settings.normalized_device(),
-            verbose=False,
-        )
+            started = time.perf_counter()
+            results = self._model.predict(
+                source=frame,
+                imgsz=int(settings.image_size),
+                conf=float(settings.confidence),
+                iou=float(settings.iou),
+                device=settings.normalized_device(),
+                verbose=False,
+            )
         inference_ms = (time.perf_counter() - started) * 1000.0
         result = results[0]
         annotated = result.plot()
@@ -89,3 +125,24 @@ class UltralyticsYolo26Backend:
                 )
             )
         return tuple(detections)
+
+
+def _release_accelerator_memory() -> None:
+    gc.collect()
+    try:
+        import torch
+    except Exception:
+        return
+
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass
+    try:
+        mps = getattr(torch, "mps", None)
+        if mps is not None and hasattr(mps, "empty_cache"):
+            mps.empty_cache()
+    except Exception:
+        pass

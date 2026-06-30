@@ -16,6 +16,7 @@ if __package__ in (None, ""):
     from cv_basics.domain import ImageArray, ProcessingParams
     from cv_basics.ports import ImageProcessingServicePort
     from cv_basics.window.presenter import TkImagePresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
     from cv_basics.window.task_runner import TkTaskRunner
 else:
     from ..api import create_image_processing_service
@@ -23,6 +24,7 @@ else:
     from ..domain import ImageArray, ProcessingParams
     from ..ports import ImageProcessingServicePort
     from .presenter import TkImagePresenter
+    from .process_exit import arm_forced_process_exit, terminate_process
     from .task_runner import TkTaskRunner
 
 
@@ -316,8 +318,9 @@ class CvDemoWindow:
         )
 
     def close(self) -> None:
+        arm_forced_process_exit()
         self.tasks.shutdown()
-        self.root.destroy()
+        terminate_process(self.root)
 
     def _run_task(
         self,

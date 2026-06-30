@@ -58,14 +58,14 @@ vision-workbench
 Image classification:
 
 ```bash
-pip install -r requirements-classification.txt
+python scripts/install_dependencies.py classification
 image-classification-workbench
 ```
 
 YOLO26 workflows:
 
 ```bash
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 yolo26-detection-workbench
 ```
 
@@ -114,8 +114,10 @@ Base dependencies are intentionally small: NumPy, OpenCV, and Pillow.
 
 Deep-learning features are optional:
 
-- Image classification: `requirements-classification.txt`
-- YOLO26 detection, segmentation, and training: `requirements-yolo26.txt`
+- Image classification: `python scripts/install_dependencies.py classification`
+- YOLO26 detection, segmentation, and training: `python scripts/install_dependencies.py yolo26`
+
+The helper detects NVIDIA GPUs and installs CUDA 12.6 Torch wheels when available. Direct requirements installs keep the same CUDA Torch pins, while base packages continue to use the Tsinghua PyPI mirror.
 
 This keeps the entry-level installation lightweight while still allowing users to enable heavier workflows when needed.
 

@@ -49,6 +49,9 @@ class Yolo26SegmentationService:
     def load_model(self, model_path: PathLike) -> None:
         self._segmenter.load_model(model_path)
 
+    def unload_model(self) -> None:
+        self._segmenter.unload_model()
+
     def segment_image(self, image: ImageArray, settings: SegmentationSettings) -> SegmentationOutput:
         return self._segmenter.segment(image, settings)
 
@@ -86,4 +89,3 @@ def build_default_service(
         segmenter=Yolo26Segmenter(backend),
         config=config,
     )
-

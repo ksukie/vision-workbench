@@ -58,14 +58,14 @@ vision-workbench
 图像分类：
 
 ```bash
-pip install -r requirements-classification.txt
+python scripts/install_dependencies.py classification
 image-classification-workbench
 ```
 
 YOLO26 相关功能：
 
 ```bash
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 yolo26-detection-workbench
 ```
 
@@ -114,8 +114,10 @@ VisionWorkbench/
 
 深度学习能力按需安装：
 
-- 图像分类：`requirements-classification.txt`
-- YOLO26 检测、分割与训练：`requirements-yolo26.txt`
+- 图像分类：`python scripts/install_dependencies.py classification`
+- YOLO26 检测、分割与训练：`python scripts/install_dependencies.py yolo26`
+
+安装脚本会检测 NVIDIA GPU，有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel。直接使用 requirements 安装时也会固定到同一套 CUDA Torch，基础包仍然默认使用清华 PyPI 源。
 
 这样可以保证新手先用基础功能跑通项目，再根据需要启用更重的深度学习功能。
 

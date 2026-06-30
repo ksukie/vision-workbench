@@ -13,7 +13,7 @@ conda create -n vision-yolo-train python=3.11 -y
 conda activate vision-yolo-train
 cd path/to/vision-workbench
 pip install -e .
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 ```
 
 GPU training requires a PyTorch build that matches the local CUDA version. CPU training is supported but slower.

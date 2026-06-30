@@ -31,7 +31,7 @@ conda create -n vision-classification python=3.11 -y
 conda activate vision-classification
 cd path/to/vision-workbench
 pip install -e .
-pip install -r requirements-classification.txt
+python scripts/install_dependencies.py classification
 ```
 
 ## Launch

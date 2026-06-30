@@ -16,11 +16,13 @@ if __package__ in (None, ""):
     from image_classification.configuration import ImageClassificationConfig
     from image_classification.domain import ClassificationTrainingConfig, PredictionResult
     from image_classification.window.presenter import TkClassificationPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 else:
     from ..api import create_image_classification_service
     from ..configuration import ImageClassificationConfig
     from ..domain import ClassificationTrainingConfig, PredictionResult
     from .presenter import TkClassificationPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 
 
 class ImageClassificationWindow:
@@ -40,6 +42,7 @@ class ImageClassificationWindow:
             root.title("Image Classification Workbench")
             root.geometry("1160x760")
             root.minsize(980, 640)
+            root.protocol("WM_DELETE_WINDOW", self.close)
 
         self.image_path = None  # type: Optional[Path]
         self.checkpoint_path = None  # type: Optional[Path]
@@ -436,6 +439,10 @@ class ImageClassificationWindow:
         self.train_log.delete("1.0", tk.END)
         self.train_log.insert(tk.END, text)
         self.train_log.configure(state=tk.DISABLED)
+
+    def close(self) -> None:
+        arm_forced_process_exit()
+        terminate_process(self.root)
 
 
 def main() -> None:

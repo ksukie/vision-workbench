@@ -18,10 +18,12 @@ if __package__ in (None, ""):
     from yolo26_training.api import create_yolo26_training_service
     from yolo26_training.configuration import Yolo26TrainingConfig
     from yolo26_training.domain import TrainingJobConfig
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 else:
     from ..api import create_yolo26_training_service
     from ..configuration import Yolo26TrainingConfig
     from ..domain import TrainingJobConfig
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 
 
 class Yolo26TrainingWindow:
@@ -269,10 +271,14 @@ class Yolo26TrainingWindow:
             self._append_log(f"\nRuns directory: {self.config.runs_dir}\n")
 
     def close(self) -> None:
+        arm_forced_process_exit()
         if self.process is not None and self.process.poll() is None:
             self.process.terminate()
-        if hasattr(self.root, "destroy"):
-            self.root.destroy()
+            try:
+                self.process.wait(timeout=3.0)
+            except subprocess.TimeoutExpired:
+                self.process.kill()
+        terminate_process(self.root)
 
     def _current_job(self) -> TrainingJobConfig:
         data_path = Path(self.data_var.get().strip())

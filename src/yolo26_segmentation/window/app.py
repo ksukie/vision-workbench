@@ -16,11 +16,13 @@ if __package__ in (None, ""):
     from yolo26_segmentation.configuration import Yolo26SegmentationConfig
     from yolo26_segmentation.domain import ImageArray, ModelInfo, SegmentationSettings
     from yolo26_segmentation.window.presenter import TkSegmentationPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 else:
     from ..api import create_yolo26_segmentation_service
     from ..configuration import Yolo26SegmentationConfig
     from ..domain import ImageArray, ModelInfo, SegmentationSettings
     from .presenter import TkSegmentationPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 
 
 class Yolo26SegmentationWindow:
@@ -41,6 +43,7 @@ class Yolo26SegmentationWindow:
             root.geometry("1260x840")
             root.minsize(1040, 700)
             root.protocol("WM_DELETE_WINDOW", self.close)
+            root.bind("<Destroy>", self._on_destroy, add="+")
 
         self.models = []  # type: List[ModelInfo]
         self.source_image = None  # type: Optional[ImageArray]
@@ -49,6 +52,7 @@ class Yolo26SegmentationWindow:
         self.current_photo = None
         self.after_id = None  # type: Optional[str]
         self.segmenting_camera = False
+        self.closed = False
         self.last_frame_time = None  # type: Optional[float]
         self.display_fps = 0.0
 
@@ -265,10 +269,19 @@ class Yolo26SegmentationWindow:
     def stop_live(self) -> None:
         self.segmenting_camera = False
 
-    def close(self) -> None:
+    def close(self, destroy_root: bool = True) -> None:
+        arm_forced_process_exit()
+        if self.closed:
+            return
+        self.closed = True
         self.close_camera()
-        if hasattr(self.root, "destroy"):
-            self.root.destroy()
+        self.service.unload_model()
+        self.loaded_model_path = None
+        terminate_process(self.root, destroy_root=destroy_root)
+
+    def _on_destroy(self, event) -> None:
+        if event.widget is self.root and not self.closed:
+            self.close(destroy_root=False)
 
     def _schedule_camera_preview(self) -> None:
         self.after_id = self.root.after(10, self._read_camera_frame)
@@ -359,4 +372,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -28,6 +28,7 @@ if __package__ in (None, ""):
     )
     from panorama_reconstruction.window.presenter import TkImagePresenter
     from panorama_reconstruction.window.task_runner import TkTaskRunner
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 else:
     from ..api import create_panorama_reconstruction_service
     from ..configuration import CHANNEL_CHOICES, PanoramaReconstructionConfig
@@ -40,6 +41,7 @@ else:
     )
     from .presenter import TkImagePresenter
     from .task_runner import TkTaskRunner
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 
 
 class PanoramaReconstructionWindow:
@@ -360,9 +362,9 @@ class PanoramaReconstructionWindow:
         )
 
     def close(self) -> None:
+        arm_forced_process_exit()
         self.tasks.shutdown()
-        if hasattr(self.root, "destroy"):
-            self.root.destroy()
+        terminate_process(self.root)
 
     def _run_task(
         self,

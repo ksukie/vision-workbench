@@ -86,6 +86,9 @@ class Yolo26DetectionService:
     def loaded_model_path(self) -> Optional[Path]:
         return self._detector.model_path
 
+    def unload_model(self) -> None:
+        self._detector.unload_model()
+
     def detect_frame(self, frame: ImageArray, settings: DetectionSettings) -> DetectionOutput:
         return self._detector.detect(frame, settings)
 

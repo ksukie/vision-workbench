@@ -1,8 +1,15 @@
 --index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+--extra-index-url https://download.pytorch.org/whl/cu126
+--find-links https://mirrors.aliyun.com/pytorch-wheels/cu126/
 
 -r requirements.txt
 
 # Install the local YOLO26/Ultralytics source and its runtime dependencies.
 # Run this from the VisionWorkbench project root:
 # pip install -r requirements-yolo26.txt
+#
+# For automatic CUDA/CPU selection, prefer:
+# python scripts/install_dependencies.py yolo26
+torch==2.12.1+cu126
+torchvision==0.27.1+cu126
 -e ./third_party/yolo26_source

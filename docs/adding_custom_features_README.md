@@ -16,13 +16,13 @@ pip install -e .[test]
 Install image-classification dependencies when using the classification module:
 
 ```bash
-pip install -r requirements-classification.txt
+python scripts/install_dependencies.py classification
 ```
 
 Install YOLO26 dependencies when using YOLO26 modules:
 
 ```bash
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 ```
 
 Run tests:
@@ -75,6 +75,7 @@ requirements-yolo26.txt
 ```
 
 Deep-learning dependencies used only by image classification or YOLO26 modules should not be added to the base dependency set.
+Use `scripts/install_dependencies.py` for runtime installs because it can choose CUDA or CPU Torch based on the machine.
 
 <a id="cv-basics-add"></a>
 ## CV Basics Extensions

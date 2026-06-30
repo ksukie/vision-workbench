@@ -17,11 +17,13 @@ if __package__ in (None, ""):
     from yolo26_detection.configuration import Yolo26DetectionConfig
     from yolo26_detection.domain import CameraDevice, DetectionSettings, ImageArray, ModelInfo
     from yolo26_detection.window.presenter import TkDetectionPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 else:
     from ..api import create_yolo26_detection_service
     from ..configuration import Yolo26DetectionConfig
     from ..domain import CameraDevice, DetectionSettings, ImageArray, ModelInfo
     from .presenter import TkDetectionPresenter
+    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
 
 
 class Yolo26DetectionWindow:
@@ -42,6 +44,7 @@ class Yolo26DetectionWindow:
             root.geometry("1280x860")
             root.minsize(1040, 720)
             root.protocol("WM_DELETE_WINDOW", self.close)
+            root.bind("<Destroy>", self._on_destroy, add="+")
 
         self.devices = []  # type: List[CameraDevice]
         self.models = []  # type: List[ModelInfo]
@@ -61,6 +64,7 @@ class Yolo26DetectionWindow:
         self.camera_thread = None  # type: Optional[threading.Thread]
         self.preview_after_id = None  # type: Optional[str]
         self.detection_enabled = False
+        self.closed = False
         self.active_settings = DetectionSettings(
             image_size=config.default_image_size,
             confidence=config.default_confidence,
@@ -352,10 +356,11 @@ class Yolo26DetectionWindow:
             except Exception:
                 pass
             self.preview_after_id = None
-        if self.camera_thread is not None and self.camera_thread.is_alive():
-            self.camera_thread.join(timeout=1.0)
-        self.camera_thread = None
         self.service.close_camera()
+        if self.camera_thread is not None and self.camera_thread.is_alive():
+            self.camera_thread.join(timeout=10.0)
+        if self.camera_thread is not None and not self.camera_thread.is_alive():
+            self.camera_thread = None
         with self.frame_lock:
             self.latest_frame = None
             self.current_display_frame = None
@@ -469,10 +474,19 @@ class Yolo26DetectionWindow:
         self.recording_var.set("Recording: off")
         self.status_var.set(f"Saved recording: {saved}")
 
-    def close(self) -> None:
+    def close(self, destroy_root: bool = True) -> None:
+        arm_forced_process_exit()
+        if self.closed:
+            return
+        self.closed = True
         self.close_camera()
-        if hasattr(self.root, "destroy"):
-            self.root.destroy()
+        self.service.unload_model()
+        self.loaded_model_path = None
+        terminate_process(self.root, destroy_root=destroy_root)
+
+    def _on_destroy(self, event) -> None:
+        if event.widget is self.root and not self.closed:
+            self.close(destroy_root=False)
 
     def _camera_worker(self) -> None:
         last_camera_time = None  # type: Optional[float]
@@ -606,4 +620,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

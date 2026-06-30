@@ -19,6 +19,8 @@ class Yolo26Segmenter:
     def load_model(self, model_path: PathLike) -> None:
         self._backend.load_model(model_path)
 
+    def unload_model(self) -> None:
+        self._backend.unload_model()
+
     def segment(self, image: ImageArray, settings: SegmentationSettings) -> SegmentationOutput:
         return self._backend.segment(image, settings)
-

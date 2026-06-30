@@ -13,7 +13,7 @@ conda create -n vision-yolo python=3.11 -y
 conda activate vision-yolo
 cd path/to/vision-workbench
 pip install -e .
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 ```
 
 ## 启动方式

@@ -16,13 +16,13 @@ pip install -e .[test]
 图像分类功能需要额外安装：
 
 ```bash
-pip install -r requirements-classification.txt
+python scripts/install_dependencies.py classification
 ```
 
 YOLO26 相关功能需要额外安装：
 
 ```bash
-pip install -r requirements-yolo26.txt
+python scripts/install_dependencies.py yolo26
 ```
 
 执行测试：
@@ -75,6 +75,7 @@ requirements-yolo26.txt
 ```
 
 基础依赖应保持轻量。仅图像分类或 YOLO26 使用的深度学习依赖不应写入基础依赖文件。
+运行安装时优先使用 `scripts/install_dependencies.py`，它可以根据机器自动选择 CUDA 或 CPU Torch。
 
 <a id="cv-basics-add"></a>
 ## 基础 CV 扩展
