@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Optional deep-learning dependencies for image_classification.
+# Install these only when you need classification prediction or training.
+torch
+torchvision

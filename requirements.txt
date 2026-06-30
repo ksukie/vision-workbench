@@ -1,0 +1,9 @@
+numpy
+opencv-python-headless
+Pillow
+
+# YOLO26 detection is heavy and optional.
+# To enable it, use: pip install -r requirements-yolo26.txt
+
+# Image classification is also optional.
+# To enable it, use: pip install -r requirements-classification.txt

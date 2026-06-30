@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Camera Diagnostics">
+  <rect x="9" y="22" width="46" height="30" rx="7" fill="#fff7ed" stroke="#ea580c" stroke-width="3"/>
+  <path d="M22 22l4-8h13l4 8" fill="none" stroke="#ea580c" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="32" cy="37" r="10" fill="#fed7aa" stroke="#c2410c" stroke-width="3"/>
+  <circle cx="32" cy="37" r="4" fill="#0f172a"/>
+</svg>

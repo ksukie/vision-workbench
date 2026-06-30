@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="CV Basics">
+  <rect x="8" y="8" width="48" height="48" rx="10" fill="#e8f4ff" stroke="#1f77b4" stroke-width="3"/>
+  <path d="M18 20h28M18 32h28M18 44h28M20 18v28M32 18v28M44 18v28" stroke="#4b9fe1" stroke-width="2"/>
+  <circle cx="22" cy="22" r="4" fill="#22c55e"/>
+  <circle cx="42" cy="42" r="4" fill="#f59e0b"/>
+</svg>

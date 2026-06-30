@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+build/
+dist/
+*.egg-info/
+
+# Local training and runtime outputs
+runs/
+datasets/**/.cache/
+
+# Release policy: keep individual model files at or below 100 MB in Git.
+# Larger files should be downloaded locally or attached to a release asset.
+models/yolo26_models/yolo26x.pt

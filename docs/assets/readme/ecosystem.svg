@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="620" viewBox="0 0 1280 620" role="img" aria-label="Vision Workbench ecosystem overview">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f8fafc"/>
+      <stop offset="0.55" stop-color="#eef8f7"/>
+      <stop offset="1" stop-color="#f7fbff"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f766e"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.13"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0l10 5-10 5z" fill="#64748b"/>
+    </marker>
+    <style>
+      .title{font:700 30px Arial, sans-serif;fill:#0f172a}
+      .subtitle{font:400 15px Arial, sans-serif;fill:#475569}
+      .step{font:700 18px Arial, sans-serif;fill:#0f172a}
+      .hint{font:400 13px Arial, sans-serif;fill:#64748b}
+      .white{font:700 23px Arial, sans-serif;fill:#ffffff}
+      .whiteSmall{font:400 14px Arial, sans-serif;fill:#dbeafe}
+      .card{fill:#ffffff;stroke:#d4e1ee;stroke-width:2;filter:url(#shadow)}
+      .smallCard{fill:#ffffff;stroke:#d4e1ee;stroke-width:2}
+      .line{stroke:#94a3b8;stroke-width:3;fill:none;marker-end:url(#arrow)}
+      .softLine{stroke:#cbd5e1;stroke-width:2.5;fill:none}
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1280" height="620" rx="30" fill="url(#bg)"/>
+  <text x="56" y="62" class="title">Vision Workbench</text>
+  <text x="56" y="91" class="subtitle">From image input to visual algorithms, desktop workflows, model training, and reusable packages.</text>
+
+  <rect x="502" y="145" width="276" height="142" rx="26" fill="url(#core)" filter="url(#shadow)"/>
+  <text x="565" y="202" class="white">Workbench Core</text>
+  <text x="548" y="234" class="whiteSmall">API · GUI · Configuration</text>
+  <text x="577" y="257" class="whiteSmall">Layered Python modules</text>
+
+  <rect x="80" y="155" width="190" height="112" rx="20" class="card"/>
+  <text x="126" y="196" class="step">01 Input</text>
+  <text x="116" y="224" class="hint">Images · Cameras</text>
+  <text x="116" y="245" class="hint">Datasets · Weights</text>
+
+  <rect x="1010" y="155" width="190" height="112" rx="20" class="card"/>
+  <text x="1050" y="196" class="step">04 Output</text>
+  <text x="1044" y="224" class="hint">Results · Reports</text>
+  <text x="1044" y="245" class="hint">Wheel packages</text>
+
+  <rect x="318" y="160" width="145" height="100" rx="18" class="smallCard"/>
+  <text x="360" y="197" class="step">02 API</text>
+  <text x="345" y="225" class="hint">Stable calls</text>
+  <text x="345" y="246" class="hint">Reusable logic</text>
+
+  <rect x="817" y="160" width="145" height="100" rx="18" class="smallCard"/>
+  <text x="857" y="197" class="step">03 GUI</text>
+  <text x="844" y="225" class="hint">Tkinter apps</text>
+  <text x="844" y="246" class="hint">Guided tasks</text>
+
+  <path d="M270 211h47" class="line"/>
+  <path d="M463 211h38" class="line"/>
+  <path d="M778 211h38" class="line"/>
+  <path d="M962 211h47" class="line"/>
+
+  <path d="M640 287v68" class="softLine"/>
+  <path d="M168 355h944" class="softLine"/>
+  <path d="M168 355v45M326 355v45M484 355v45M642 355v45M800 355v45M958 355v45M1112 355v45" class="softLine"/>
+
+  <rect x="86" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="116" cy="432" r="13" fill="#22c55e"/>
+  <text x="138" y="431" class="step">CV Basics</text>
+  <text x="112" y="461" class="hint">Color · Filter · Geometry</text>
+
+  <rect x="244" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="274" cy="432" r="13" fill="#0ea5e9"/>
+  <text x="296" y="431" class="step">Panorama</text>
+  <text x="270" y="461" class="hint">SIFT · Manual Points</text>
+
+  <rect x="402" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="432" cy="432" r="13" fill="#f97316"/>
+  <text x="454" y="431" class="step">Camera</text>
+  <text x="428" y="461" class="hint">FPS · Capture · Record</text>
+
+  <rect x="560" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="590" cy="432" r="13" fill="#84cc16"/>
+  <text x="612" y="431" class="step">Classify</text>
+  <text x="586" y="461" class="hint">ResNet · MobileNet</text>
+
+  <rect x="718" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="748" cy="432" r="13" fill="#ef4444"/>
+  <text x="770" y="431" class="step">Detect</text>
+  <text x="744" y="461" class="hint">YOLO26 · Boxes</text>
+
+  <rect x="876" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="906" cy="432" r="13" fill="#a855f7"/>
+  <text x="928" y="431" class="step">Segment</text>
+  <text x="902" y="461" class="hint">Masks · Semantics</text>
+
+  <rect x="1034" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <circle cx="1064" cy="432" r="13" fill="#0891b2"/>
+  <text x="1086" y="431" class="step">Train</text>
+  <text x="1060" y="461" class="hint">Validate · Export</text>
+
+  <rect x="356" y="535" width="568" height="46" rx="23" fill="#ffffff" stroke="#06b6d4" stroke-width="2"/>
+  <text x="414" y="565" class="step">Learn · Extend · Package · Release</text>
+</svg>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="Segmentation">
+  <rect x="9" y="10" width="46" height="44" rx="7" fill="#f8fafc" stroke="#475569" stroke-width="3"/>
+  <path d="M15 42c8-18 18-4 23-20 6 5 10 11 11 20-8 8-24 9-34 0z" fill="#38bdf8" opacity=".8"/>
+  <path d="M18 23c5-8 14-8 20 0 1 10-14 14-20 7z" fill="#a78bfa" opacity=".85"/>
+  <path d="M39 31c7-2 12 3 10 10-7 4-13 2-14-4z" fill="#f97316" opacity=".85"/>
+</svg>

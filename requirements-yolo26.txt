@@ -1,0 +1,6 @@
+-r requirements.txt
+
+# Install the local YOLO26/Ultralytics source and its runtime dependencies.
+# Run this from the VisionWorkbench project root:
+# pip install -r requirements-yolo26.txt
+-e ./third_party/yolo26_source

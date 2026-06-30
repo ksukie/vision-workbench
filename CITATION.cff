@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+title: Vision Workbench
+message: "If you use Vision Workbench, please cite this project and the third-party projects listed in THIRD_PARTY_NOTICES.md."
+type: software
+authors:
+  - name: Shuqi Ke
+repository-code: "TBD"
+license: AGPL-3.0
+version: 0.1.0
+date-released: 2026-06-30
+references:
+  - type: software
+    title: Ultralytics YOLO
+    repository-code: "https://github.com/ultralytics/ultralytics"
+    url: "https://ultralytics.com"
+    license: AGPL-3.0

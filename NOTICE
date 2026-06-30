@@ -1,0 +1,13 @@
+Vision Workbench
+Copyright (c) 2026 Shuqi Ke
+
+Vision Workbench is released for open-source learning and research use under
+the GNU Affero General Public License version 3.0.
+
+This project includes or integrates with third-party open-source software.
+Third-party components keep their own copyright notices and license terms.
+See THIRD_PARTY_NOTICES.md for attribution and license details.
+
+This project is not an official Ultralytics project. YOLO26 and Ultralytics
+source code, model names, model weights, and related materials are attributed
+to Ultralytics and remain subject to their original license terms.
