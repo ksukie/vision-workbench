@@ -37,6 +37,7 @@ python scripts/check_release_assets.py
 
 Do not commit generated wheel or source distribution files from `dist/`.
 Build them only when preparing a release.
+Release wheels should stay lightweight: optional deep-learning dependency groups and large model weights should be documented or distributed as separate release assets.
 
 ## License Files
 

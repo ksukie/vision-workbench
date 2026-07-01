@@ -6,15 +6,15 @@
 
 YOLO26 分割模块提供实例分割和语义分割功能，支持图片输入和摄像头输入。模块用于显示 mask 可视化结果，并支持保存当前分割结果图。
 
-## 环境要求
+## 安装说明
+
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境，然后只需安装一次 YOLO26 依赖组：
 
 ```bash
-conda create -n vision-yolo python=3.11 -y
-conda activate vision-yolo
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py yolo26
 ```
+
+如果手动使用 `requirements-yolo26.txt` 安装依赖，安装后建议执行 `python scripts/install_dependencies.py doctor` 检查 Torch 构建是否匹配当前机器。
 
 ## 启动方式
 
@@ -25,7 +25,7 @@ yolo26-segmentation-workbench
 源码方式：
 
 ```bash
-python .\src\yolo26_segmentation\window\app.py
+python -m yolo26_segmentation.window.app
 ```
 
 ## 模型目录

@@ -69,16 +69,20 @@ python scripts/install_dependencies.py yolo26
 yolo26-detection-workbench
 ```
 
+When launched from `vision-workbench`, optional GUI modules run as separate child processes. Closing a child window releases that module's resources, including camera handles or CUDA memory, without closing the main window. Closing the main window stops any child module processes it started.
+
 ## Release Packages
 
 This repository keeps source code, documentation, tests, configuration, and license files. Generated build outputs such as `dist/` are not committed to the source repository.
 
-Official version packages should be published through [GitHub Releases](https://github.com/ksukie/vision-workbench/releases). Users who only want to install a packaged version can download the `.whl` file from a release page and install it locally:
+Official version packages should be published through [GitHub Releases](https://github.com/ksukie/vision-workbench/releases). Users who only want the packaged base application can download the `.whl` file from a release page and install it locally:
 
 ```bash
 pip install vision_workbench-0.1.0-py3-none-any.whl
 vision-workbench
 ```
+
+The wheel installs the Python package and entry points. It is not a complete offline runtime environment: optional deep-learning workflows still need their dependency group, and large model weights are distributed separately.
 
 Users who want to build their own package from source can run:
 
@@ -117,7 +121,7 @@ Deep-learning features are optional:
 - Image classification: `python scripts/install_dependencies.py classification`
 - YOLO26 detection, segmentation, and training: `python scripts/install_dependencies.py yolo26`
 
-The helper detects NVIDIA GPUs and installs CUDA 12.6 Torch wheels when available. Direct requirements installs keep the same CUDA Torch pins, while base packages continue to use the Tsinghua PyPI mirror.
+The helper detects NVIDIA GPUs and installs CUDA 12.6 Torch wheels when available, otherwise it chooses the CPU or platform-default Torch build. Plain `pip install -r requirements-*.txt` cannot detect GPU availability by itself, so use the helper for new environments. Base packages continue to use the Tsinghua PyPI mirror.
 
 If you install deep-learning dependencies manually with `requirements-*.txt`, run the doctor afterward:
 

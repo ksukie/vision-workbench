@@ -6,15 +6,15 @@
 
 The YOLO26 Detection module loads YOLO26 object-detection models and runs live camera inference. It supports camera selection, model selection, inference parameters, screenshots, and video recording.
 
-## Environment
+## Setup
+
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the YOLO26 dependency group once:
 
 ```bash
-conda create -n vision-yolo python=3.11 -y
-conda activate vision-yolo
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py yolo26
 ```
+
+If dependencies were installed manually from `requirements-yolo26.txt`, run `python scripts/install_dependencies.py doctor` afterward to verify the Torch build.
 
 ## Launch
 
@@ -25,7 +25,7 @@ yolo26-detection-workbench
 Source entry:
 
 ```bash
-python .\src\yolo26_detection\window\app.py
+python -m yolo26_detection.window.app
 ```
 
 ## Model Directories

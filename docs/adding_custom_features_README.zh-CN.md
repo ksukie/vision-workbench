@@ -4,7 +4,11 @@
 
 本文档说明 Vision Workbench 的二次开发方式、模块扩展位置、依赖管理规则和 wheel 打包流程。
 
+这是贡献者文档。普通运行用户只需要按根目录 [快速开始](../README.zh-CN.md#快速开始) 统一配置一次环境；各模块 README 只回指这个入口，不重复要求用户重新建环境。
+
 ## 开发环境
+
+只有在修改代码、运行测试或准备打包时才需要使用本节：
 
 ```bash
 conda create -n vision-dev python=3.11 -y
@@ -280,6 +284,8 @@ conda activate vision-user
 pip install dist/your_package.whl
 vision-workbench
 ```
+
+这个新环境验证只用于确认 wheel 的包入口是否可用。它不代表 wheel 是完整离线运行环境；可选深度学习依赖组和大型模型权重仍然需要单独安装或分发。
 
 wheel 包不应默认内置大型模型权重。模型权重建议作为项目资源或离线资源包单独交付。
 

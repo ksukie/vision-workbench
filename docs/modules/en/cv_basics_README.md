@@ -19,20 +19,11 @@ The CV Basics module provides traditional single-image computer-vision operation
 | Geometric transforms | Rotation, scaling, center crop, perspective warp |
 | Image metadata | Size, channel count, dtype, value range |
 
-## Environment
+## Setup
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start). This module has no extra optional dependencies beyond the base install.
 
-For a wheel installation:
-
-```bash
-pip install path/to/your_package.whl
-```
+For packaged releases, see [Release Packages](../../../README.md#release-packages).
 
 ## Launch
 
@@ -43,7 +34,7 @@ vision-workbench
 Source entry:
 
 ```bash
-python .\src\cv_basics\window\app.py
+python -m cv_basics.window.app
 ```
 
 ## Workflow

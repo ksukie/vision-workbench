@@ -24,15 +24,15 @@
 | `resnet18` | 经典 CNN backbone，适用于教学和基线实验 |
 | `mobilenet_v3_small` | 轻量分类 backbone，适用于低资源环境和快速演示 |
 
-## 环境要求
+## 安装说明
+
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境，然后只需安装一次图像分类依赖组：
 
 ```bash
-conda create -n vision-classification python=3.11 -y
-conda activate vision-classification
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py classification
 ```
+
+如果手动使用 `requirements-classification.txt` 安装依赖，安装后建议执行 `python scripts/install_dependencies.py doctor` 检查 Torch 构建是否匹配当前机器。
 
 ## 启动方式
 
@@ -49,7 +49,7 @@ vision-workbench
 源码方式：
 
 ```bash
-python .\src\image_classification\window\app.py
+python -m image_classification.window.app
 ```
 
 ## 数据集格式
@@ -133,19 +133,13 @@ Linux/macOS: ~/.cache/torch/hub/checkpoints
 ## 命令行训练
 
 ```bash
-image-classification-train ^
-  --data C:\path\to\classification_dataset ^
-  --model resnet18 ^
-  --epochs 5 ^
-  --imgsz 224 ^
-  --batch 16 ^
-  --device auto
+image-classification-train --data path/to/classification_dataset --model resnet18 --epochs 5 --imgsz 224 --batch 16 --device auto
 ```
 
 仅执行数据集校验：
 
 ```bash
-image-classification-train --data C:\path\to\classification_dataset --model mobilenet_v3_small --dry-run
+image-classification-train --data path/to/classification_dataset --model mobilenet_v3_small --dry-run
 ```
 
 ## Python API
@@ -156,8 +150,8 @@ from image_classification.api import (
     predict_with_pretrained,
 )
 
-report = validate_classification_dataset("C:/path/to/dataset")
-result = predict_with_pretrained("resnet18", "C:/path/to/image.jpg", topk=5)
+report = validate_classification_dataset("path/to/dataset")
+result = predict_with_pretrained("resnet18", "path/to/image.jpg", topk=5)
 ```
 
 常用函数：

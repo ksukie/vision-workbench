@@ -18,14 +18,9 @@ The Panorama Reconstruction module reconstructs a panorama from left and right i
 - Apply TPS non-rigid reconstruction.
 - Save panorama and debug outputs.
 
-## Environment
+## Setup
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start). This module has no extra optional dependencies beyond the base install.
 
 ## Launch
 
@@ -36,7 +31,7 @@ panorama-reconstruction-workbench
 Source entry:
 
 ```bash
-python .\src\panorama_reconstruction\window\app.py
+python -m panorama_reconstruction.window.app
 ```
 
 ## Input Requirements

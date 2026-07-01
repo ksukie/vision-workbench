@@ -6,15 +6,15 @@
 
 YOLO26 目标检测模块用于加载 YOLO26 检测模型，并通过摄像头进行实时目标检测。模块提供摄像头选择、模型选择、推理参数设置、截图和录屏功能。
 
-## 环境要求
+## 安装说明
+
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境，然后只需安装一次 YOLO26 依赖组：
 
 ```bash
-conda create -n vision-yolo python=3.11 -y
-conda activate vision-yolo
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py yolo26
 ```
+
+如果手动使用 `requirements-yolo26.txt` 安装依赖，安装后建议执行 `python scripts/install_dependencies.py doctor` 检查 Torch 构建是否匹配当前机器。
 
 ## 启动方式
 
@@ -25,7 +25,7 @@ yolo26-detection-workbench
 源码方式：
 
 ```bash
-python .\src\yolo26_detection\window\app.py
+python -m yolo26_detection.window.app
 ```
 
 ## 模型目录

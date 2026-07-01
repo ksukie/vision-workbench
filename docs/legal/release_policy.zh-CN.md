@@ -31,6 +31,7 @@ python scripts/check_release_assets.py
 ## 构建产物
 
 不要提交 `dist/` 目录下生成的 wheel 或源码压缩包。只有准备发布时再重新构建。
+发布 wheel 应保持轻量：可选深度学习依赖组和大型模型权重应通过文档说明或 Release Assets 单独分发。
 
 ## 许可文件
 

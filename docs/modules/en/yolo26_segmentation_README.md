@@ -6,15 +6,15 @@
 
 The YOLO26 Segmentation module provides instance segmentation and semantic segmentation for image and camera inputs. It displays mask visualization results and supports saving the current output image.
 
-## Environment
+## Setup
+
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the YOLO26 dependency group once:
 
 ```bash
-conda create -n vision-yolo python=3.11 -y
-conda activate vision-yolo
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py yolo26
 ```
+
+If dependencies were installed manually from `requirements-yolo26.txt`, run `python scripts/install_dependencies.py doctor` afterward to verify the Torch build.
 
 ## Launch
 
@@ -25,7 +25,7 @@ yolo26-segmentation-workbench
 Source entry:
 
 ```bash
-python .\src\yolo26_segmentation\window\app.py
+python -m yolo26_segmentation.window.app
 ```
 
 ## Model Directories

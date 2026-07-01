@@ -19,20 +19,11 @@
 | 几何变换 | 旋转、缩放、中心裁剪、透视变换 |
 | 图像信息 | 尺寸、通道数、数据类型、像素范围 |
 
-## 环境要求
+## 安装说明
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境。本模块只依赖基础安装，不需要额外依赖组。
 
-安装 wheel 时使用：
-
-```bash
-pip install path/to/your_package.whl
-```
+打包版本安装说明见根目录 README 的 [发布包说明](../../../README.zh-CN.md#发布包说明)。
 
 ## 启动方式
 
@@ -43,7 +34,7 @@ vision-workbench
 源码方式：
 
 ```bash
-python .\src\cv_basics\window\app.py
+python -m cv_basics.window.app
 ```
 
 ## 操作流程

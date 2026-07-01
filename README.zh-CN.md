@@ -69,16 +69,20 @@ python scripts/install_dependencies.py yolo26
 yolo26-detection-workbench
 ```
 
+从 `vision-workbench` 主界面打开的可选 GUI 模块会作为独立子进程运行。关闭子窗口只释放该模块自己的资源，包括摄像头句柄或 CUDA 显存，不会关闭主界面；关闭主界面时会结束它启动过的子模块进程。
+
 ## 发布包说明
 
 本仓库只保存源码、文档、测试、配置和许可文件。`dist/` 目录属于本地构建产物，不建议提交到源码仓库。
 
-正式版本建议通过 [GitHub Releases](https://github.com/ksukie/vision-workbench/releases) 发布。只想安装打包版本的用户，可以在 Release 页面下载 `.whl` 文件，然后本地安装：
+正式版本建议通过 [GitHub Releases](https://github.com/ksukie/vision-workbench/releases) 发布。只想安装基础打包版本的用户，可以在 Release 页面下载 `.whl` 文件，然后本地安装：
 
 ```bash
 pip install vision_workbench-0.1.0-py3-none-any.whl
 vision-workbench
 ```
+
+wheel 会安装 Python 包和命令行入口，但它不是完整的离线运行环境：深度学习相关功能仍然需要额外安装对应依赖组，大型模型权重也会单独分发。
 
 如果用户希望基于源码自己构建 wheel，可以执行：
 
@@ -117,7 +121,7 @@ VisionWorkbench/
 - 图像分类：`python scripts/install_dependencies.py classification`
 - YOLO26 检测、分割与训练：`python scripts/install_dependencies.py yolo26`
 
-安装脚本会检测 NVIDIA GPU，有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel。直接使用 requirements 安装时也会固定到同一套 CUDA Torch，基础包仍然默认使用清华 PyPI 源。
+安装脚本会检测 NVIDIA GPU，有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel，否则选择 CPU 或平台默认 Torch 构建。直接执行 `pip install -r requirements-*.txt` 无法自行检测 GPU，因此新环境优先使用安装脚本。基础包仍然默认使用清华 PyPI 源。
 
 如果手动使用 `requirements-*.txt` 安装深度学习依赖，安装后建议再执行一次检测：
 

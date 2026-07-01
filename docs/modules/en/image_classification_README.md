@@ -24,15 +24,15 @@ The Image Classification module predicts the category of an entire image. It pro
 | `resnet18` | Classic CNN backbone for teaching and baseline experiments |
 | `mobilenet_v3_small` | Lightweight backbone for low-resource environments and quick demos |
 
-## Environment
+## Setup
+
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the classification dependency group once:
 
 ```bash
-conda create -n vision-classification python=3.11 -y
-conda activate vision-classification
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py classification
 ```
+
+If dependencies were installed manually from `requirements-classification.txt`, run `python scripts/install_dependencies.py doctor` afterward to verify the Torch build.
 
 ## Launch
 
@@ -49,7 +49,7 @@ vision-workbench
 Source entry:
 
 ```bash
-python .\src\image_classification\window\app.py
+python -m image_classification.window.app
 ```
 
 ## Dataset Format
@@ -133,19 +133,13 @@ Linux/macOS: ~/.cache/torch/hub/checkpoints
 ## CLI Training
 
 ```bash
-image-classification-train ^
-  --data C:\path\to\classification_dataset ^
-  --model resnet18 ^
-  --epochs 5 ^
-  --imgsz 224 ^
-  --batch 16 ^
-  --device auto
+image-classification-train --data path/to/classification_dataset --model resnet18 --epochs 5 --imgsz 224 --batch 16 --device auto
 ```
 
 Dataset validation only:
 
 ```bash
-image-classification-train --data C:\path\to\classification_dataset --model mobilenet_v3_small --dry-run
+image-classification-train --data path/to/classification_dataset --model mobilenet_v3_small --dry-run
 ```
 
 ## Python API
@@ -156,8 +150,8 @@ from image_classification.api import (
     predict_with_pretrained,
 )
 
-report = validate_classification_dataset("C:/path/to/dataset")
-result = predict_with_pretrained("resnet18", "C:/path/to/image.jpg", topk=5)
+report = validate_classification_dataset("path/to/dataset")
+result = predict_with_pretrained("resnet18", "path/to/image.jpg", topk=5)
 ```
 
 Common functions:

@@ -6,17 +6,15 @@
 
 The YOLO26 Training module provides basic training entry points for detection, instance segmentation, and semantic segmentation tasks. Dataset validation runs before training and stops the workflow when the dataset is invalid.
 
-## Environment
+## Setup
+
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the YOLO26 dependency group once:
 
 ```bash
-conda create -n vision-yolo-train python=3.11 -y
-conda activate vision-yolo-train
-cd path/to/vision-workbench
-pip install -e .
 python scripts/install_dependencies.py yolo26
 ```
 
-GPU training requires a PyTorch build that matches the local CUDA version. CPU training is supported but slower.
+If dependencies were installed manually from `requirements-yolo26.txt`, run `python scripts/install_dependencies.py doctor` afterward to verify the Torch build. GPU training requires a CUDA-enabled PyTorch build; CPU training is supported but slower.
 
 ## Launch
 
@@ -29,13 +27,13 @@ yolo26-training-workbench
 CLI:
 
 ```bash
-yolo26-train --task detect --data C:\path\to\dataset\data.yaml --model models\yolo26_models\yolo26n.pt
+yolo26-train --task detect --data path/to/dataset/data.yaml --model models/yolo26_models/yolo26n.pt
 ```
 
 Basic script:
 
 ```bash
-python .\src\yolo26_training\train.py
+python -m yolo26_training.train
 ```
 
 ## Task Types
@@ -62,20 +60,13 @@ Datasets must provide `data.yaml` with image paths, class count, and class names
 ## CLI Training
 
 ```bash
-yolo26-train ^
-  --task detect ^
-  --data C:\path\to\dataset\data.yaml ^
-  --model C:\path\to\model.pt ^
-  --epochs 100 ^
-  --imgsz 640 ^
-  --batch 16 ^
-  --device auto
+yolo26-train --task detect --data path/to/dataset/data.yaml --model path/to/model.pt --epochs 100 --imgsz 640 --batch 16 --device auto
 ```
 
 Validation only:
 
 ```bash
-yolo26-train --task detect --data C:\path\to\data.yaml --model C:\path\to\model.pt --dry-run
+yolo26-train --task detect --data path/to/data.yaml --model path/to/model.pt --dry-run
 ```
 
 ## Basic Script
@@ -89,7 +80,7 @@ src/yolo26_training/train.py
 Run:
 
 ```bash
-python .\src\yolo26_training\train.py
+python -m yolo26_training.train
 ```
 
 ## Output Directory
@@ -105,7 +96,7 @@ The YOLO26 source generates training outputs, which commonly include weights, co
 ```python
 from yolo26_training.api import validate_dataset, list_models
 
-report = validate_dataset("C:/path/to/dataset/data.yaml", task="detect")
+report = validate_dataset("path/to/dataset/data.yaml", task="detect")
 models = list_models(task="detect")
 ```
 

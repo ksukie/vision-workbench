@@ -4,7 +4,11 @@
 
 This document describes the extension points, dependency rules, and wheel packaging workflow for Vision Workbench.
 
+This is a contributor guide. Runtime users should configure the environment once from the root [Quick Start](../README.md#quick-start); module README files point back there instead of repeating environment creation.
+
 ## Development Environment
+
+Use this section only when editing code, running tests, or preparing a package:
 
 ```bash
 conda create -n vision-dev python=3.11 -y
@@ -270,6 +274,8 @@ conda activate vision-user
 pip install dist/your_package.whl
 vision-workbench
 ```
+
+This clean-environment check validates package entry points. It does not make the wheel a complete offline runtime bundle; optional deep-learning dependency groups and large model weights are still installed or distributed separately.
 
 Large model weights should not be bundled into the default wheel. They should be distributed as project assets or offline resource packages.
 

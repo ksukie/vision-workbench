@@ -27,14 +27,9 @@ Linux:   V4L2 / ANY
 macOS:   AVFOUNDATION / ANY
 ```
 
-## 环境要求
+## 安装说明
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境。本模块只依赖基础安装，不需要额外依赖组。
 
 ## 启动方式
 
@@ -45,7 +40,7 @@ camera-diagnostics-workbench
 源码方式：
 
 ```bash
-python .\src\camera_diagnostics\window\app.py
+python -m camera_diagnostics.window.app
 ```
 
 ## 操作流程

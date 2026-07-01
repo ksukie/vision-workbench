@@ -18,14 +18,9 @@
 - TPS 薄板样条非刚性恢复。
 - 全景图与调试结果保存。
 
-## 环境要求
+## 安装说明
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+请先按根目录 [快速开始](../../../README.zh-CN.md#快速开始) 统一配置项目环境。本模块只依赖基础安装，不需要额外依赖组。
 
 ## 启动方式
 
@@ -36,7 +31,7 @@ panorama-reconstruction-workbench
 源码方式：
 
 ```bash
-python .\src\panorama_reconstruction\window\app.py
+python -m panorama_reconstruction.window.app
 ```
 
 ## 输入要求

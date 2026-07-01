@@ -27,14 +27,9 @@ Linux:   V4L2 / ANY
 macOS:   AVFOUNDATION / ANY
 ```
 
-## Environment
+## Setup
 
-```bash
-conda create -n vision-workbench python=3.11 -y
-conda activate vision-workbench
-cd path/to/vision-workbench
-pip install -e .
-```
+Use the shared project environment from the root [Quick Start](../../../README.md#quick-start). This module has no extra optional dependencies beyond the base install.
 
 ## Launch
 
@@ -45,7 +40,7 @@ camera-diagnostics-workbench
 Source entry:
 
 ```bash
-python .\src\camera_diagnostics\window\app.py
+python -m camera_diagnostics.window.app
 ```
 
 ## Workflow
