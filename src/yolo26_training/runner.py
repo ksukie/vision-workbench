@@ -18,6 +18,8 @@ else:
     from .configuration import Yolo26TrainingConfig
     from .domain import TrainingJobConfig
 
+from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, MODELS_AND_WEIGHTS, help_hint, with_help
+
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -79,10 +81,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(report.to_text(), flush=True)
     if not report.ok:
         print("\nTraining aborted because dataset validation failed.", file=sys.stderr, flush=True)
+        print(help_hint(DATASETS_AND_TRAINING), file=sys.stderr, flush=True)
         return 2
 
     if not model_path.exists():
-        print(f"\nTraining aborted because model file does not exist: {model_path}", file=sys.stderr, flush=True)
+        print(
+            with_help(f"\nTraining aborted because model file does not exist: {model_path}", MODELS_AND_WEIGHTS),
+            file=sys.stderr,
+            flush=True,
+        )
         return 2
 
     if args.dry_run:
@@ -94,7 +101,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         service.train(job)
     except Exception as exc:
-        print(f"\nTraining failed: {exc}", file=sys.stderr, flush=True)
+        print(with_help(f"\nTraining failed: {exc}", DATASETS_AND_TRAINING), file=sys.stderr, flush=True)
         return 1
 
     print("\nTraining finished.", flush=True)

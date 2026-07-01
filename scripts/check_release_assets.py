@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from vision_workbench.troubleshooting import PACKAGING_AND_RELEASE, help_hint
+
 MODEL_ROOT = ROOT / "models"
 MAX_MODEL_BYTES = 100 * 1024 * 1024
 
@@ -30,6 +35,7 @@ def main() -> int:
         size_mb = path.stat().st_size / (1024 * 1024)
         print(f"- {path.relative_to(ROOT)} ({size_mb:.2f} MB)")
     print("Move oversized files to local download, Git LFS, or release assets before publishing.")
+    print(help_hint(PACKAGING_AND_RELEASE))
     return 1
 
 

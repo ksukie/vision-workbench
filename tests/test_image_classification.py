@@ -111,3 +111,12 @@ def test_runner_dry_run_validates_without_training(tmp_path: Path) -> None:
     )
 
     assert exit_code == 0
+
+
+def test_runner_dataset_failure_prints_troubleshooting(tmp_path: Path, capsys) -> None:
+    exit_code = runner_main(["--data", str(tmp_path / "missing_dataset"), "--dry-run"])
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "docs/troubleshooting/en/datasets-and-training.md" in captured.err

@@ -43,6 +43,8 @@ else:
     from .task_runner import TkTaskRunner
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import DATA_AND_FILES, MODULE_RUNTIME_ERRORS, with_help
+
 
 class PanoramaReconstructionWindow:
     """GUI that delegates reconstruction to the application service."""
@@ -209,6 +211,7 @@ class PanoramaReconstructionWindow:
             on_success=lambda image: self._on_image_loaded(side, image_path, image),
             busy_text=f"Loading {side} image...",
             error_title="Open failed",
+            error_category=DATA_AND_FILES,
         )
 
     def load_sample_pair(self) -> None:
@@ -222,6 +225,7 @@ class PanoramaReconstructionWindow:
             on_success=lambda images: self._on_sample_pair_loaded(pair.left, pair.right, images),
             busy_text="Loading sample pair...",
             error_title="Open failed",
+            error_category=DATA_AND_FILES,
         )
 
     def reconstruct_panorama(self) -> None:
@@ -258,6 +262,7 @@ class PanoramaReconstructionWindow:
             on_success=self._on_panorama_ready,
             busy_text=busy_text,
             error_title="Reconstruction failed",
+            error_category=MODULE_RUNTIME_ERRORS,
         )
 
     def undo_point(self) -> None:
@@ -287,7 +292,7 @@ class PanoramaReconstructionWindow:
         try:
             self.point_pairs = self.service.load_point_pairs(path)
         except Exception as exc:
-            messagebox.showerror("Load failed", str(exc))
+            messagebox.showerror("Load failed", with_help(exc, DATA_AND_FILES))
             return
 
         self.pending_left_point = None
@@ -312,7 +317,7 @@ class PanoramaReconstructionWindow:
         try:
             self.service.save_point_pairs(path, self.point_pairs)
         except Exception as exc:
-            messagebox.showerror("Save failed", str(exc))
+            messagebox.showerror("Save failed", with_help(exc, DATA_AND_FILES))
             return
 
         messagebox.showinfo("Saved", f"Saved point pairs to:\n{path}")
@@ -341,6 +346,7 @@ class PanoramaReconstructionWindow:
             on_success=lambda _: messagebox.showinfo("Saved", f"Saved panorama to:\n{path}"),
             busy_text="Saving panorama...",
             error_title="Save failed",
+            error_category=DATA_AND_FILES,
         )
 
     def save_all_outputs(self) -> None:
@@ -361,6 +367,7 @@ class PanoramaReconstructionWindow:
             ),
             busy_text="Saving all outputs...",
             error_title="Save failed",
+            error_category=DATA_AND_FILES,
         )
 
     def close(self) -> None:
@@ -375,11 +382,12 @@ class PanoramaReconstructionWindow:
         on_success: Callable[[object], None],
         busy_text: str,
         error_title: str,
+        error_category: str,
     ) -> None:
         accepted = self.tasks.run(
             task=task,
             on_success=lambda value: self._task_success(value, on_success),
-            on_error=lambda exc: self._task_error(exc, error_title),
+            on_error=lambda exc: self._task_error(exc, error_title, error_category),
         )
         if not accepted:
             messagebox.showinfo("Busy", "Please wait for the current operation to finish.")
@@ -390,9 +398,9 @@ class PanoramaReconstructionWindow:
         callback(value)
         self.status_var.set("Ready.")
 
-    def _task_error(self, exc: Exception, title: str) -> None:
+    def _task_error(self, exc: Exception, title: str, category: str) -> None:
         self.status_var.set("Ready.")
-        messagebox.showerror(title, str(exc))
+        messagebox.showerror(title, with_help(exc, category))
 
     def _on_image_loaded(self, side: str, path: Path, image: object) -> None:
         image_array = cast(ImageArray, image)

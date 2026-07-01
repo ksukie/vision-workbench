@@ -25,6 +25,8 @@ else:
     from .presenter import TkDetectionPresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import CAMERA_AND_VIDEO, MODELS_AND_WEIGHTS, MODULE_RUNTIME_ERRORS, with_help
+
 
 class Yolo26DetectionWindow:
     """Camera GUI that delegates inference to the YOLO26 application service."""
@@ -251,7 +253,7 @@ class Yolo26DetectionWindow:
         try:
             self.devices = self.service.discover_cameras()
         except Exception as exc:
-            messagebox.showerror("Camera scan failed", str(exc))
+            messagebox.showerror("Camera scan failed", with_help(exc, CAMERA_AND_VIDEO))
             self.status_var.set("Camera scan failed.")
             return
 
@@ -287,7 +289,7 @@ class Yolo26DetectionWindow:
         try:
             model = self.service.add_custom_model(path)
         except Exception as exc:
-            messagebox.showerror("Model failed", str(exc))
+            messagebox.showerror("Model failed", with_help(exc, MODELS_AND_WEIGHTS))
             return
         self.models.append(model)
         self.model_box.configure(values=[item.label() for item in self.models])
@@ -314,7 +316,7 @@ class Yolo26DetectionWindow:
         try:
             model = self.service.download_official_model(name)
         except Exception as exc:
-            self.root.after(0, lambda: messagebox.showerror("Download failed", str(exc)))
+            self.root.after(0, lambda: messagebox.showerror("Download failed", with_help(exc, MODELS_AND_WEIGHTS)))
             self.root.after(0, lambda: self.status_var.set("Model download failed."))
             return
         self.root.after(0, lambda: self._on_model_downloaded(model))
@@ -336,7 +338,7 @@ class Yolo26DetectionWindow:
                 (self.config.requested_capture_width, self.config.requested_capture_height),
             )
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("Open failed", with_help(exc, CAMERA_AND_VIDEO))
             self.status_var.set("Camera open failed.")
             return
 
@@ -389,7 +391,7 @@ class Yolo26DetectionWindow:
         try:
             settings = self._current_settings()
         except Exception as exc:
-            messagebox.showerror("Invalid settings", str(exc))
+            messagebox.showerror("Invalid settings", with_help(exc, MODULE_RUNTIME_ERRORS))
             return
 
         if self.loaded_model_path != model.path:
@@ -398,7 +400,7 @@ class Yolo26DetectionWindow:
             try:
                 self.service.load_model(model.path)
             except Exception as exc:
-                messagebox.showerror("Model load failed", str(exc))
+                messagebox.showerror("Model load failed", with_help(exc, MODELS_AND_WEIGHTS))
                 self.status_var.set("Model load failed.")
                 return
             self.loaded_model_path = model.path
@@ -432,7 +434,7 @@ class Yolo26DetectionWindow:
         try:
             self.service.save_screenshot(frame, path)
         except Exception as exc:
-            messagebox.showerror("Screenshot failed", str(exc))
+            messagebox.showerror("Screenshot failed", with_help(exc, CAMERA_AND_VIDEO))
             return
         self.status_var.set(f"Saved screenshot: {path}")
 
@@ -460,7 +462,7 @@ class Yolo26DetectionWindow:
         try:
             self.service.start_recording(path, (width, height), fps)
         except Exception as exc:
-            messagebox.showerror("Recording failed", str(exc))
+            messagebox.showerror("Recording failed", with_help(exc, CAMERA_AND_VIDEO))
             return
         self.recording_path = Path(path)
         self.recording_var.set(f"Recording: {self.recording_path.name}")
@@ -544,7 +546,7 @@ class Yolo26DetectionWindow:
 
     def _handle_worker_error(self, exc: Exception) -> None:
         self.root.after(0, lambda: self.status_var.set(str(exc)))
-        self.root.after(0, lambda: messagebox.showerror("Runtime failed", str(exc)))
+        self.root.after(0, lambda: messagebox.showerror("Runtime failed", with_help(exc, MODULE_RUNTIME_ERRORS)))
         self.root.after(0, self.close_camera)
 
     def _schedule_preview(self) -> None:

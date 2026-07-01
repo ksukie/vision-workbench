@@ -25,6 +25,8 @@ else:
     from ..domain import TrainingJobConfig
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, help_hint, with_help
+
 
 class Yolo26TrainingWindow:
     """Independent GUI for dataset validation and basic YOLO26 training."""
@@ -229,7 +231,10 @@ class Yolo26TrainingWindow:
         self._append_log("\n" + report.to_text() + "\n")
         self.status_var.set("Dataset validation passed." if report.ok else "Dataset validation failed.")
         if not report.ok:
-            messagebox.showerror("Dataset invalid", "Dataset validation failed. See the log for details.")
+            messagebox.showerror(
+                "Dataset invalid",
+                with_help("Dataset validation failed. See the log for details.", DATASETS_AND_TRAINING),
+            )
         return report.ok
 
     def start_training(self) -> None:
@@ -241,7 +246,7 @@ class Yolo26TrainingWindow:
         try:
             job = self._current_job()
         except Exception as exc:
-            messagebox.showerror("Invalid settings", str(exc))
+            messagebox.showerror("Invalid settings", with_help(exc, DATASETS_AND_TRAINING))
             return
 
         command = self.service.build_runner_command(job)
@@ -249,7 +254,7 @@ class Yolo26TrainingWindow:
         try:
             self.process = self.service.start_training_process(job, cwd=self.config.yolo26_source_dir.parents[1])
         except Exception as exc:
-            messagebox.showerror("Training failed", str(exc))
+            messagebox.showerror("Training failed", with_help(exc, DATASETS_AND_TRAINING))
             self.status_var.set("Training failed to start.")
             return
 
@@ -324,7 +329,11 @@ class Yolo26TrainingWindow:
             while True:
                 item = self.log_queue.get_nowait()
                 if item == "__TRAINING_DONE__":
-                    self.status_var.set("Training finished." if self.process and self.process.returncode == 0 else "Training stopped or failed.")
+                    if self.process and self.process.returncode == 0:
+                        self.status_var.set("Training finished.")
+                    else:
+                        self.status_var.set("Training stopped or failed.")
+                        self._append_log("\n" + help_hint(DATASETS_AND_TRAINING) + "\n")
                 else:
                     self._append_log(item)
         except queue.Empty:

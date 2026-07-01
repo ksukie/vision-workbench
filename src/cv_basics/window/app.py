@@ -28,6 +28,8 @@ else:
     from .process_exit import arm_forced_process_exit, close_window
     from .task_runner import TkTaskRunner
 
+from vision_workbench.troubleshooting import DATA_AND_FILES, ENVIRONMENT, MODULE_RUNTIME_ERRORS, with_help
+
 
 class CvDemoWindow:
     """GUI that delegates image work to the application service."""
@@ -216,6 +218,7 @@ class CvDemoWindow:
             on_success=lambda image: self._on_image_loaded(image_path, image),
             busy_text="Loading image...",
             error_title="Open failed",
+            error_category=DATA_AND_FILES,
         )
 
     def save_result(self) -> None:
@@ -242,6 +245,7 @@ class CvDemoWindow:
             on_success=lambda _: messagebox.showinfo("Saved", f"Saved result to:\n{path}"),
             busy_text="Saving image...",
             error_title="Save failed",
+            error_category=DATA_AND_FILES,
         )
 
     def reset_result(self) -> None:
@@ -285,7 +289,7 @@ class CvDemoWindow:
                 env=env,
             )
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("Open failed", with_help(exc, ENVIRONMENT))
             return
         self.child_processes.append(process)
 
@@ -316,6 +320,7 @@ class CvDemoWindow:
             on_success=self._on_effect_applied,
             busy_text=f"Applying {effect}...",
             error_title="Processing failed",
+            error_category=MODULE_RUNTIME_ERRORS,
         )
 
     def close(self) -> None:
@@ -331,11 +336,12 @@ class CvDemoWindow:
         on_success: Callable[[object], None],
         busy_text: str,
         error_title: str,
+        error_category: str,
     ) -> None:
         accepted = self.tasks.run(
             task=task,
             on_success=lambda value: self._task_success(value, on_success),
-            on_error=lambda exc: self._task_error(exc, error_title),
+            on_error=lambda exc: self._task_error(exc, error_title, error_category),
         )
         if not accepted:
             messagebox.showinfo("Busy", "Please wait for the current operation to finish.")
@@ -346,9 +352,9 @@ class CvDemoWindow:
         callback(value)
         self.status_var.set("Ready.")
 
-    def _task_error(self, exc: Exception, title: str) -> None:
+    def _task_error(self, exc: Exception, title: str, category: str) -> None:
         self.status_var.set("Ready.")
-        messagebox.showerror(title, str(exc))
+        messagebox.showerror(title, with_help(exc, category))
 
     def _on_image_loaded(self, path: Path, image: object) -> None:
         self.current_path = path

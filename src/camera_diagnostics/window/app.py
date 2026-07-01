@@ -24,6 +24,8 @@ else:
     from .presenter import TkFramePresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import CAMERA_AND_VIDEO, with_help
+
 
 class CameraDiagnosticsWindow:
     """Camera testing GUI backed by the camera diagnostics service."""
@@ -152,7 +154,7 @@ class CameraDiagnosticsWindow:
         try:
             self.devices = self.service.discover_cameras()
         except Exception as exc:
-            messagebox.showerror("Camera scan failed", str(exc))
+            messagebox.showerror("Camera scan failed", with_help(exc, CAMERA_AND_VIDEO))
             self.status_var.set("Camera scan failed.")
             return
 
@@ -182,7 +184,7 @@ class CameraDiagnosticsWindow:
         try:
             self.profiles = self.service.probe_profiles(device)
         except Exception as exc:
-            messagebox.showerror("Mode probe failed", str(exc))
+            messagebox.showerror("Mode probe failed", with_help(exc, CAMERA_AND_VIDEO))
             self.profiles = [self._default_profile(device)]
 
         if not self.profiles:
@@ -203,7 +205,7 @@ class CameraDiagnosticsWindow:
         try:
             actual_profile = self.service.open_camera(device, profile)
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("Open failed", with_help(exc, CAMERA_AND_VIDEO))
             self.status_var.set("Camera open failed.")
             return
 
@@ -250,7 +252,7 @@ class CameraDiagnosticsWindow:
         try:
             self.service.save_screenshot(self.current_frame, path)
         except Exception as exc:
-            messagebox.showerror("Screenshot failed", str(exc))
+            messagebox.showerror("Screenshot failed", with_help(exc, CAMERA_AND_VIDEO))
             return
         self.status_var.set(f"Saved screenshot: {path}")
 
@@ -279,7 +281,7 @@ class CameraDiagnosticsWindow:
         try:
             self.service.start_recording(path, (frame_width, frame_height), fps)
         except Exception as exc:
-            messagebox.showerror("Recording failed", str(exc))
+            messagebox.showerror("Recording failed", with_help(exc, CAMERA_AND_VIDEO))
             return
 
         self.recording_path = Path(path)
@@ -317,7 +319,7 @@ class CameraDiagnosticsWindow:
             self.read_failures += 1
             if self.read_failures >= 5:
                 self.status_var.set(str(exc))
-                messagebox.showerror("Read failed", str(exc))
+                messagebox.showerror("Read failed", with_help(exc, CAMERA_AND_VIDEO))
                 self.close_camera()
                 return
             self._schedule_frame()

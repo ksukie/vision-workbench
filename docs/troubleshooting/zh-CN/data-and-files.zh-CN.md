@@ -1,0 +1,40 @@
+# 数据与文件排查
+
+[索引](./README.zh-CN.md) | [English](../en/data-and-files.md)
+
+本页覆盖图片打开/保存、解码/编码、点对 JSON、checkpoint 和输出路径问题。
+
+## 图片打开失败
+
+常见表现：
+
+- `Open failed`
+- `Cannot decode image file`
+- `Loaded file is not a supported image`
+
+先换用常见格式，例如 PNG 或 JPEG。确认文件没有损坏，并且当前用户有读取权限。
+
+```bash
+python -c "from PIL import Image; Image.open(r'path\to\image.png').verify(); print('ok')"
+```
+
+## 保存失败
+
+常见表现：
+
+- `Cannot encode image`
+- `Save failed`
+
+确认输出目录存在且可写。排查时优先保存为 `.png`。
+
+## 点对 JSON 加载失败
+
+全景重构点对文件必须是 JSON list，每一项都要包含 `left` 和 `right` 点。如果手动编辑过文件，建议在 GUI 中重新保存一份点对文件。
+
+## 路径问题
+
+排查时优先使用绝对路径。如果路径包含中文、特殊标点或过长目录，先复制到较短的纯英文目录，排除路径解析问题。
+
+## Checkpoint 文件
+
+请选择 `.pt` 或 `.pth` checkpoint。用于预测的 checkpoint 需要和生成它的流程匹配，尤其是图像分类的类别名称。

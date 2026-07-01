@@ -17,6 +17,9 @@ from typing import Dict, List, Optional, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "src"))
+
+from vision_workbench.troubleshooting import DEEP_LEARNING_DEPENDENCIES, ENVIRONMENT, with_help
 
 PYPI_INDEX_URL = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
 PYTORCH_OFFICIAL_BASE = "https://download.pytorch.org/whl"
@@ -83,12 +86,13 @@ def install_torch(requested: str) -> str:
     for label, source_args in sources:
         print(f"\nInstalling Torch from {label}...")
         try:
-            pip_install(*source_args, *packages)
+            pip_install(*source_args, *packages, help_category=DEEP_LEARNING_DEPENDENCIES)
             return tag
         except subprocess.CalledProcessError as exc:
             last_error = exc
             print(f"Torch install failed from {label}; trying the next source.")
 
+    print(with_help("Torch install failed from every configured source.", DEEP_LEARNING_DEPENDENCIES))
     raise SystemExit(last_error.returncode if last_error else 1)
 
 
@@ -121,8 +125,11 @@ def select_torch_tag(requested: str) -> str:
     if requested == "cuda":
         if not supports_pytorch_cuda_wheels():
             raise SystemExit(
-                "CUDA Torch pip wheels are only selected automatically on Windows/Linux x86_64. "
-                "Use --torch cpu or install the platform-specific Torch build manually."
+                with_help(
+                    "CUDA Torch pip wheels are only selected automatically on Windows/Linux x86_64. "
+                    "Use --torch cpu or install the platform-specific Torch build manually.",
+                    DEEP_LEARNING_DEPENDENCIES,
+                )
             )
         return CUDA_TAG
     if requested == "cpu":
@@ -176,7 +183,7 @@ def has_nvidia_gpu() -> bool:
 
 
 def install_yolo26() -> None:
-    pip_install("--index-url", PYPI_INDEX_URL, "-e", "./third_party/yolo26_source")
+    pip_install("--index-url", PYPI_INDEX_URL, "-e", "./third_party/yolo26_source", help_category=DEEP_LEARNING_DEPENDENCIES)
 
 
 def diagnose_torch(requested: str) -> None:
@@ -189,7 +196,7 @@ def diagnose_torch(requested: str) -> None:
 
     error = info.get("error")
     if error:
-        print(f"Import error: {error}")
+        print(with_help(f"Import error: {error}", DEEP_LEARNING_DEPENDENCIES))
 
     if torch_needs_reinstall(expected_tag, info):
         answer = input("\nTorch does not match this machine. Reinstall Torch now? [y/N] ").strip().lower()
@@ -257,15 +264,34 @@ def verify_torch(expected_tag: str) -> None:
         "print('torch.version.cuda:', torch.version.cuda); "
         "print('torch.cuda.is_available():', torch.cuda.is_available())"
     )
-    subprocess.check_call([sys.executable, "-c", code], cwd=ROOT, env=child_env())
+    try:
+        subprocess.check_call([sys.executable, "-c", code], cwd=ROOT, env=child_env())
+    except subprocess.CalledProcessError as exc:
+        print(with_help(f"Torch verification failed with exit code {exc.returncode}.", DEEP_LEARNING_DEPENDENCIES))
+        raise
     if expected_tag.startswith("cu"):
-        print("CUDA Torch was installed. If cuda.is_available() is False, update the NVIDIA driver.")
+        print(
+            with_help(
+                "CUDA Torch was installed. If cuda.is_available() is False, update the NVIDIA driver.",
+                DEEP_LEARNING_DEPENDENCIES,
+            )
+        )
 
 
-def pip_install(*args: str) -> None:
+def pip_install(*args: str, help_category: str = ENVIRONMENT) -> None:
     command = [sys.executable, "-m", "pip", "install", *args]
     print("\n+ " + " ".join(command))
-    subprocess.check_call(command, cwd=ROOT, env=child_env())
+    try:
+        subprocess.check_call(command, cwd=ROOT, env=child_env())
+    except subprocess.CalledProcessError as exc:
+        print(
+            with_help(
+                f"Dependency command failed with exit code {exc.returncode}: {' '.join(command)}",
+                help_category,
+            ),
+            file=sys.stderr,
+        )
+        raise
 
 
 def child_env() -> Dict[str, str]:

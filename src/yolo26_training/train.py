@@ -14,6 +14,7 @@ sys.path.insert(0, os.path.join(PROJECT_ROOT, "third_party", "yolo26_source"))
 
 from yolo26_training.infrastructure import YoloDetectionDatasetValidator
 from yolo26_training.configuration import Yolo26TrainingConfig
+from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, DEEP_LEARNING_DEPENDENCIES, MODELS_AND_WEIGHTS, with_help
 
 
 # 3. 修改这里：你的数据集 data.yaml 路径
@@ -39,7 +40,7 @@ RUN_NAME = "my_yolo26_train"
 
 def main():
     if DATA_YAML == r"C:\path\to\your_dataset\data.yaml":
-        print("请先打开 train.py，修改 DATA_YAML 为你自己的 data.yaml 路径。")
+        print(with_help("请先打开 train.py，修改 DATA_YAML 为你自己的 data.yaml 路径。", DATASETS_AND_TRAINING))
         return
 
     print("开始检查数据集...")
@@ -48,19 +49,17 @@ def main():
     print(report.to_text())
 
     if not report.ok:
-        print("数据集不符合要求，训练已停止。")
+        print(with_help("数据集不符合要求，训练已停止。", DATASETS_AND_TRAINING))
         return
 
     if not os.path.exists(MODEL_PATH):
-        print("模型文件不存在：")
-        print(MODEL_PATH)
+        print(with_help(f"模型文件不存在：\n{MODEL_PATH}", MODELS_AND_WEIGHTS))
         return
 
     try:
         from ultralytics import YOLO
-    except Exception:
-        print("无法导入 YOLO26 运行环境。")
-        print("请在项目根目录执行：pip install -r requirements-yolo26.txt")
+    except Exception as exc:
+        print(with_help(f"无法导入 YOLO26 运行环境。\n{exc}\n请在项目根目录执行：pip install -r requirements-yolo26.txt", DEEP_LEARNING_DEPENDENCIES))
         return
 
     print("开始训练...")
@@ -70,16 +69,20 @@ def main():
     if DEVICE != "auto":
         train_device = DEVICE
 
-    model.train(
-        data=DATA_YAML,
-        epochs=EPOCHS,
-        imgsz=IMAGE_SIZE,
-        batch=BATCH_SIZE,
-        device=train_device,
-        workers=WORKERS,
-        project=PROJECT_DIR,
-        name=RUN_NAME,
-    )
+    try:
+        model.train(
+            data=DATA_YAML,
+            epochs=EPOCHS,
+            imgsz=IMAGE_SIZE,
+            batch=BATCH_SIZE,
+            device=train_device,
+            workers=WORKERS,
+            project=PROJECT_DIR,
+            name=RUN_NAME,
+        )
+    except Exception as exc:
+        print(with_help(f"训练失败：{exc}", DATASETS_AND_TRAINING))
+        return
 
     print("训练完成。")
     print("结果目录：")

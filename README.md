@@ -71,6 +71,10 @@ yolo26-detection-workbench
 
 When launched from `vision-workbench`, optional GUI modules run as separate child processes. Closing a child window releases that module's resources, including camera handles or CUDA memory, without closing the main window. Closing the main window stops any child module processes it started.
 
+## Troubleshooting
+
+If an install command, GUI popup, camera workflow, model load, dataset validation, or training run fails, start with the [Troubleshooting Guide](./docs/troubleshooting/en/README.md). User-visible errors also print the matching troubleshooting document path.
+
 ## Release Packages
 
 This repository keeps source code, documentation, tests, configuration, and license files. Generated build outputs such as `dist/` are not committed to the source repository.

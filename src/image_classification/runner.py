@@ -18,6 +18,8 @@ else:
     from .configuration import ImageClassificationConfig
     from .domain import ClassificationTrainingConfig
 
+from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, help_hint, with_help
+
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -83,6 +85,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(report.to_text(), flush=True)
     if not report.ok:
         print("\nTraining aborted because dataset validation failed.", file=sys.stderr, flush=True)
+        print(help_hint(DATASETS_AND_TRAINING), file=sys.stderr, flush=True)
         return 2
 
     if args.dry_run:
@@ -95,7 +98,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         best_path = service.train(job)
     except Exception as exc:
-        print(f"\nTraining failed: {exc}", file=sys.stderr, flush=True)
+        print(with_help(f"\nTraining failed: {exc}", DATASETS_AND_TRAINING), file=sys.stderr, flush=True)
         return 1
 
     print("\nTraining finished.", flush=True)

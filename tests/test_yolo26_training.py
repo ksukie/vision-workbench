@@ -146,6 +146,24 @@ def test_yolo_training_runner_dry_run_validates_without_training(tmp_path: Path)
     assert exit_code == 0
 
 
+def test_yolo_training_runner_dataset_failure_prints_troubleshooting(tmp_path: Path, capsys) -> None:
+    exit_code = runner_main(
+        [
+            "--task",
+            "detect",
+            "--data",
+            str(tmp_path / "missing_data.yaml"),
+            "--model",
+            str(tmp_path / "missing_model.pt"),
+        ]
+    )
+
+    captured = capsys.readouterr()
+
+    assert exit_code == 2
+    assert "docs/troubleshooting/en/datasets-and-training.md" in captured.err
+
+
 def test_yolo_training_service_builds_runner_command(tmp_path: Path) -> None:
     config = Yolo26TrainingConfig(
         yolo26_source_dir=tmp_path / "third_party" / "yolo26_source",

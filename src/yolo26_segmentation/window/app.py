@@ -24,6 +24,14 @@ else:
     from .presenter import TkSegmentationPresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import (
+    CAMERA_AND_VIDEO,
+    DATA_AND_FILES,
+    MODELS_AND_WEIGHTS,
+    MODULE_RUNTIME_ERRORS,
+    with_help,
+)
+
 
 class Yolo26SegmentationWindow:
     """Independent GUI for instance and semantic segmentation."""
@@ -175,7 +183,7 @@ class Yolo26SegmentationWindow:
         try:
             model = self.service.add_custom_model(path, self.task_var.get())
         except Exception as exc:
-            messagebox.showerror("Model failed", str(exc))
+            messagebox.showerror("Model failed", with_help(exc, MODELS_AND_WEIGHTS))
             return
         self.models.append(model)
         self.model_box.configure(values=[item.label() for item in self.models])
@@ -195,7 +203,7 @@ class Yolo26SegmentationWindow:
         try:
             downloaded = self.service.download_official_model(model.name, model.task)
         except Exception as exc:
-            messagebox.showerror("Download failed", str(exc))
+            messagebox.showerror("Download failed", with_help(exc, MODELS_AND_WEIGHTS))
             return
         self.refresh_models()
         self.model_var.set(downloaded.label())
@@ -211,7 +219,7 @@ class Yolo26SegmentationWindow:
         try:
             self.source_image = self.service.load_image(path)
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("Open failed", with_help(exc, DATA_AND_FILES))
             return
         self.result_image = self.source_image.copy()
         self._show_image(self.result_image)
@@ -231,7 +239,7 @@ class Yolo26SegmentationWindow:
         try:
             self.service.save_image(self.result_image, path)
         except Exception as exc:
-            messagebox.showerror("Save failed", str(exc))
+            messagebox.showerror("Save failed", with_help(exc, DATA_AND_FILES))
             return
         self.status_var.set(f"Saved result: {path}")
 
@@ -239,7 +247,7 @@ class Yolo26SegmentationWindow:
         try:
             self.service.open_camera(int(self.camera_index_var.get()))
         except Exception as exc:
-            messagebox.showerror("Camera failed", str(exc))
+            messagebox.showerror("Camera failed", with_help(exc, CAMERA_AND_VIDEO))
             return
         self.status_var.set("Camera opened.")
         self._schedule_camera_preview()
@@ -296,7 +304,7 @@ class Yolo26SegmentationWindow:
         try:
             frame = self.service.read_frame()
         except Exception as exc:
-            messagebox.showerror("Camera read failed", str(exc))
+            messagebox.showerror("Camera read failed", with_help(exc, CAMERA_AND_VIDEO))
             self.close_camera()
             return
         self.source_image = frame
@@ -318,8 +326,8 @@ class Yolo26SegmentationWindow:
             if show_errors:
                 messagebox.showinfo("Missing model", "Download this model first or browse a local .pt file.")
             return
-        settings = self._current_settings()
         try:
+            settings = self._current_settings()
             if self.loaded_model_path != model.path:
                 self.service.load_model(model.path)
                 self.loaded_model_path = model.path
@@ -327,9 +335,9 @@ class Yolo26SegmentationWindow:
         except Exception as exc:
             self.segmenting_camera = False
             if show_errors:
-                messagebox.showerror("Segmentation failed", str(exc))
+                messagebox.showerror("Segmentation failed", with_help(exc, MODULE_RUNTIME_ERRORS))
             else:
-                self.status_var.set(str(exc))
+                self.status_var.set(with_help(exc, MODULE_RUNTIME_ERRORS))
             return
         self.result_image = output.annotated_frame
         self.items_var.set(f"Items: {output.item_count}")

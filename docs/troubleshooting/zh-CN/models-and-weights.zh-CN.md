@@ -1,0 +1,46 @@
+# 模型与权重排查
+
+[索引](./README.zh-CN.md) | [English](../en/models-and-weights.md)
+
+本页覆盖 YOLO26 `.pt` 文件、图像分类预训练权重、本地导入、下载和 checkpoint 问题。
+
+## 模型文件不存在
+
+常见表现：
+
+- `Model file not found`
+- `Model file does not exist`
+- `Missing model`
+
+先确认路径指向真实存在的 `.pt` 或 `.pth` 文件：
+
+```bash
+dir models
+```
+
+YOLO26 检测模型放在 `models/yolo26_models/`。YOLO26 分割模型放在 `models/yolo26_segmentation_models/`。也可以在 GUI 中点击 Browse 选择本地 `.pt` 文件。
+
+## 官方模型下载失败
+
+检查网络连接，以及 `models/` 目录是否可写。如果 GUI 下载失败，可以手动把模型文件放到期望目录，然后点击 Refresh Models。
+
+## 图像分类预训练权重
+
+图像分类 GUI 会把 TorchVision 预训练权重放在 `models/image_classification_models/pretrained/`。可使用：
+
+- Check Weights
+- Download Pretrained Weights
+- Import Local Weights
+
+如果本地导入失败，确认选择的是文件而不是目录，扩展名是 `.pth` 或 `.pt`。
+
+## Checkpoint 预测失败
+
+本项目生成的图像分类 checkpoint 会包含 `class_names`。如果提示 `Checkpoint does not contain class_names`，请使用本项目训练流程保存的模型，或重新训练。
+
+## 不支持的模型名称
+
+请使用 GUI 下拉框中的模型，或以下分类模型名称：
+
+- `resnet18`
+- `mobilenet_v3_small`

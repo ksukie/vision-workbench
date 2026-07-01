@@ -24,6 +24,14 @@ else:
     from .presenter import TkClassificationPresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
+from vision_workbench.troubleshooting import (
+    DATA_AND_FILES,
+    DATASETS_AND_TRAINING,
+    MODELS_AND_WEIGHTS,
+    MODULE_RUNTIME_ERRORS,
+    with_help,
+)
+
 
 class ImageClassificationWindow:
     """Beginner-friendly GUI for classification prediction and training."""
@@ -252,7 +260,7 @@ class ImageClassificationWindow:
             self.image_label.configure(image=self.preview_photo, text="")
             self.predict_status_var.set(f"Loaded image: {self.image_path}")
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("Open failed", with_help(exc, DATA_AND_FILES))
 
     def browse_checkpoint(self) -> None:
         path = filedialog.askopenfilename(
@@ -282,6 +290,7 @@ class ImageClassificationWindow:
             on_success=lambda info: self._on_weight_ready(info, "Downloaded"),
             busy_text=f"Downloading {model_name} weights...",
             error_title="Download failed",
+            error_category=MODELS_AND_WEIGHTS,
         )
 
     def import_local_weight(self) -> None:
@@ -297,6 +306,7 @@ class ImageClassificationWindow:
             on_success=lambda info: self._on_weight_ready(info, "Imported"),
             busy_text=f"Importing {model_name} weights...",
             error_title="Import failed",
+            error_category=MODELS_AND_WEIGHTS,
         )
 
     def _on_weight_ready(self, info: object, action: str) -> None:
@@ -318,6 +328,7 @@ class ImageClassificationWindow:
             on_success=self._show_prediction,
             busy_text="Running pretrained prediction...",
             error_title="Prediction failed",
+            error_category=MODELS_AND_WEIGHTS,
         )
 
     def predict_checkpoint(self) -> None:
@@ -337,6 +348,7 @@ class ImageClassificationWindow:
             on_success=self._show_prediction,
             busy_text="Running checkpoint prediction...",
             error_title="Prediction failed",
+            error_category=MODELS_AND_WEIGHTS,
         )
 
     def browse_dataset(self) -> None:
@@ -359,7 +371,7 @@ class ImageClassificationWindow:
         try:
             lr = float(self.lr_var.get())
         except ValueError:
-            messagebox.showerror("Invalid value", "Learning rate must be a number.")
+            messagebox.showerror("Invalid value", with_help("Learning rate must be a number.", DATASETS_AND_TRAINING))
             return
 
         job = ClassificationTrainingConfig(
@@ -382,6 +394,7 @@ class ImageClassificationWindow:
             busy_text="Training started...",
             error_title="Training failed",
             status_var=self.train_status_var,
+            error_category=DATASETS_AND_TRAINING,
         )
 
     def _run_worker(
@@ -391,6 +404,7 @@ class ImageClassificationWindow:
         busy_text: str,
         error_title: str,
         status_var: Optional[tk.StringVar] = None,
+        error_category: str = MODULE_RUNTIME_ERRORS,
     ) -> None:
         target_status = status_var or self.predict_status_var
         target_status.set(busy_text)
@@ -399,15 +413,15 @@ class ImageClassificationWindow:
             try:
                 result = task()
             except Exception as exc:
-                self.root.after(0, lambda: self._show_error(error_title, exc, target_status))
+                self.root.after(0, lambda: self._show_error(error_title, exc, target_status, error_category))
                 return
             self.root.after(0, lambda: self._show_success(result, on_success, target_status))
 
         threading.Thread(target=worker, daemon=True).start()
 
-    def _show_error(self, title: str, exc: Exception, status_var: tk.StringVar) -> None:
+    def _show_error(self, title: str, exc: Exception, status_var: tk.StringVar, category: str) -> None:
         status_var.set("Ready.")
-        messagebox.showerror(title, str(exc))
+        messagebox.showerror(title, with_help(exc, category))
 
     def _show_success(
         self,

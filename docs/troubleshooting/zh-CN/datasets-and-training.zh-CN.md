@@ -1,0 +1,74 @@
+# 数据集与训练排查
+
+[索引](./README.zh-CN.md) | [English](../en/datasets-and-training.md)
+
+本页覆盖图像分类数据集、YOLO `data.yaml`、标签和 mask 格式、校验失败、训练启动和输出权重缺失问题。
+
+## 图像分类数据集无效
+
+期望目录结构：
+
+```text
+dataset/
+  train/
+    class_a/
+    class_b/
+  val/
+    class_a/
+    class_b/
+```
+
+`train/` 和 `val/` 下的类别文件夹必须一致。每个类别文件夹至少要有一张支持格式的图片。
+
+## YOLO data.yaml 问题
+
+期望字段：
+
+```yaml
+path: path/to/dataset
+train: images/train
+val: images/val
+names: [class_a, class_b]
+```
+
+本项目基础训练器支持本地 YOLO 风格数据集。不支持自动下载数据集，也不支持直接使用 COCO JSON 标注。
+
+## 标签缺失
+
+检测和实例分割标签路径应和图片路径镜像对应：
+
+```text
+images/train/001.jpg
+labels/train/001.txt
+```
+
+检测标签格式：
+
+```text
+class x_center y_center width height
+```
+
+分割标签格式：
+
+```text
+class x1 y1 x2 y2 x3 y3 ...
+```
+
+所有坐标都必须归一化到 `0..1`。
+
+## 语义分割 Mask
+
+语义分割使用 `masks_dir` 时，mask 路径应和图片路径镜像对应，并尽量使用 PNG 或 TIF 这类无损格式。
+
+## 训练无法启动
+
+检查：
+
+- 选择的模型文件存在。
+- Epochs、image size、batch、workers 参数合法。
+- `runs/` 下输出目录可写。
+- 深度学习依赖已经安装。
+
+## best.pt 不存在
+
+如果训练结束后找不到 `best.pt`，请查看训练日志中的 YOLO 上游错误。训练可能在写出权重前已经停止。

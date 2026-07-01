@@ -1,0 +1,38 @@
+# 打包与发布排查
+
+[索引](./README.zh-CN.md) | [English](../en/packaging-and-release.md)
+
+本页覆盖 wheel 构建、`dist/`、发布资产和超过 100 MB 的模型文件。
+
+## 构建失败
+
+使用：
+
+```bash
+python -m pip install build
+python -m build
+```
+
+如果隔离构建环境无法下载依赖，可以复用当前环境：
+
+```bash
+python -m build --no-isolation
+```
+
+## dist 目录
+
+`dist/` 是本地构建产物目录，不建议提交到源码仓库。
+
+## 发布资产检查失败
+
+发布检查会阻止大模型文件进入 Git：
+
+```bash
+python scripts/check_release_assets.py
+```
+
+如果模型文件超过 100 MB，请改为本地下载说明、Git LFS 或 GitHub Release assets，再发布。
+
+## Wheel 不是完整运行环境
+
+基础 wheel 会安装 Python 包和入口命令。深度学习工作流仍然需要图像分类或 YOLO26 依赖组，大模型权重也可能需要单独分发。
