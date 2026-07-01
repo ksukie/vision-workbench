@@ -40,3 +40,7 @@ Check that the output folder is writable. Start with `.png` screenshots and `.mp
 ## Slow or Unstable Preview
 
 YOLO detection and segmentation can be heavy on CPU. Use a smaller image size, CPU-friendly model, or stop live inference before recording.
+
+## Emergency Cleanup
+
+If an abnormal exit leaves a camera or GUI process running, see [Emergency cleanup](./emergency-cleanup.md).

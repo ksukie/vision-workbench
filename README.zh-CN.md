@@ -75,6 +75,8 @@ yolo26-detection-workbench
 
 如果安装命令、GUI 弹窗、摄像头流程、模型加载、数据集校验或训练运行失败，请先查看 [问题排查指南](./docs/troubleshooting/zh-CN/README.zh-CN.md)。用户可见的错误提示也会附带对应的排查文档路径。
 
+如果异常退出后仍有 GUI 或摄像头进程残留，可先用 `python scripts/cleanup_runtime.py` 列出匹配进程，确认 dry-run 列表后再用 `python scripts/cleanup_runtime.py --kill` 清理。
+
 ## 发布包说明
 
 本仓库只保存源码、文档、测试、配置和许可文件。`dist/` 目录属于本地构建产物，不建议提交到源码仓库。

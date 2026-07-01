@@ -61,6 +61,7 @@ class Yolo26DetectionWindow:
         self.read_failures = 0
         self.loaded_model_path = None  # type: Optional[Path]
         self.recording_path = None  # type: Optional[Path]
+        self.camera_scan_running = False
 
         self.frame_lock = threading.Lock()
         self.settings_lock = threading.Lock()
@@ -98,7 +99,8 @@ class Yolo26DetectionWindow:
         toolbar = ttk.Frame(self.root, padding=(10, 10, 10, 6))
         toolbar.pack(fill=tk.X)
 
-        ttk.Button(toolbar, text="Refresh Cameras", command=self.refresh_cameras).pack(
+        self.refresh_cameras_button = ttk.Button(toolbar, text="Refresh Cameras", command=self.refresh_cameras)
+        self.refresh_cameras_button.pack(
             side=tk.LEFT,
             padx=(0, 8),
         )
@@ -111,7 +113,8 @@ class Yolo26DetectionWindow:
             width=26,
         )
         self.device_box.pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Button(toolbar, text="Open", command=self.open_camera).pack(side=tk.LEFT, padx=(0, 8))
+        self.open_camera_button = ttk.Button(toolbar, text="Open", command=self.open_camera)
+        self.open_camera_button.pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(toolbar, text="Close", command=self.close_camera).pack(side=tk.LEFT, padx=(0, 12))
 
         ttk.Label(toolbar, text="Model").pack(side=tk.LEFT, padx=(0, 6))
@@ -247,16 +250,31 @@ class Yolo26DetectionWindow:
         self.platform_var.set(f"System: {platform_info.label()}")
 
     def refresh_cameras(self) -> None:
+        if self.camera_scan_running:
+            self.status_var.set("Camera scan is already running. Please wait...")
+            return
         self.close_camera()
-        self.status_var.set("Scanning cameras...")
-        self.root.update_idletasks()
-        try:
-            self.devices = self.service.discover_cameras()
-        except Exception as exc:
-            messagebox.showerror("Camera scan failed", with_help(exc, CAMERA_AND_VIDEO))
+        self._set_camera_scan_busy("Scanning cameras, please wait...")
+
+        def worker() -> None:
+            try:
+                devices = self.service.discover_cameras()
+                error = None
+            except Exception as exc:
+                devices = []
+                error = exc
+            self.root.after(0, lambda: self._finish_camera_scan(devices, error))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_camera_scan(self, devices: List[CameraDevice], error: Optional[Exception]) -> None:
+        self._clear_camera_scan_busy()
+        if error is not None:
+            messagebox.showerror("Camera scan failed", with_help(error, CAMERA_AND_VIDEO))
             self.status_var.set("Camera scan failed.")
             return
 
+        self.devices = devices
         labels = [device.label() for device in self.devices]
         self.device_box.configure(values=labels)
         if not self.devices:
@@ -265,6 +283,20 @@ class Yolo26DetectionWindow:
             return
         self.device_var.set(labels[0])
         self.status_var.set(f"Found {len(self.devices)} camera route(s).")
+
+    def _set_camera_scan_busy(self, message: str) -> None:
+        self.camera_scan_running = True
+        self.status_var.set(message)
+        self.refresh_cameras_button.configure(state=tk.DISABLED)
+        self.open_camera_button.configure(state=tk.DISABLED)
+        self.root.configure(cursor="watch")
+        self.root.update_idletasks()
+
+    def _clear_camera_scan_busy(self) -> None:
+        self.camera_scan_running = False
+        self.refresh_cameras_button.configure(state=tk.NORMAL)
+        self.open_camera_button.configure(state=tk.NORMAL)
+        self.root.configure(cursor="")
 
     def refresh_models(self) -> None:
         self.models = self.service.list_models(include_missing_official=True)

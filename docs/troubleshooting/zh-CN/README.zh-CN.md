@@ -1,6 +1,6 @@
 # 问题排查指南
 
-[排查首页](../README.md) | [返回项目 README](../../../README.zh-CN.md) | [English](../en/README.md)
+[返回项目 README](../../../README.zh-CN.md) | [English](../en/README.md)
 
 当安装命令、GUI 弹窗、摄像头流程、模型加载、数据集校验或训练运行失败时，从这里开始排查。Vision Workbench 的用户可见错误会尽量附带对应的排查文档路径。
 
@@ -8,6 +8,7 @@
 
 | 看到的问题 | 优先查看 |
 | --- | --- |
+| 异常退出后仍存在 GUI 进程、摄像头占用、训练任务、内存或 GPU 资源残留；可在重新运行前直接执行，也可在常规排查无效时用于恢复干净运行环境 | [应急清理](./emergency-cleanup.zh-CN.md) |
 | 命令找不到、Python 导入失败、Tkinter 启动、路径或编码问题 | [环境问题](./environment.zh-CN.md) |
 | Torch、torchvision、CUDA、`nvidia-smi`、`doctor` 检查问题 | [深度学习依赖](./deep-learning-dependencies.zh-CN.md) |
 | `.pt`/`.pth` 缺失、模型下载失败、checkpoint 错误 | [模型与权重](./models-and-weights.zh-CN.md) |
@@ -29,4 +30,3 @@ python scripts/install_dependencies.py doctor
 ```
 
 反馈问题时，请尽量提供完整弹窗或终端输出、执行过的命令、错误提示附带的文档路径，以及当前安装的是基础依赖、图像分类依赖还是 YOLO26 依赖。
-

@@ -75,6 +75,8 @@ When launched from `vision-workbench`, optional GUI modules run as separate chil
 
 If an install command, GUI popup, camera workflow, model load, dataset validation, or training run fails, start with the [Troubleshooting Guide](./docs/troubleshooting/en/README.md). User-visible errors also print the matching troubleshooting document path.
 
+If a GUI or camera process is left behind after an abnormal exit, list matching project processes with `python scripts/cleanup_runtime.py`, review the dry-run list, then terminate them with `python scripts/cleanup_runtime.py --kill`.
+
 ## Release Packages
 
 This repository keeps source code, documentation, tests, configuration, and license files. Generated build outputs such as `dist/` are not committed to the source repository.

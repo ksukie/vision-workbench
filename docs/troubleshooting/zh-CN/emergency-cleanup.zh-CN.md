@@ -1,0 +1,41 @@
+# 应急清理
+
+[索引](./README.zh-CN.md) | [English](../en/emergency-cleanup.md)
+
+本页适用于 Vision Workbench 异常退出后仍存在 GUI 进程、摄像头占用、训练任务、内存或 GPU 资源残留的情况。可在重新运行项目前直接执行应急清理脚本，也可在常规排查无效时使用该脚本恢复干净运行环境。清理脚本会终止残留的项目相关进程，并由操作系统或设备驱动释放摄像头、文件句柄、内存和 GPU 显存等资源。
+
+## 安全流程
+
+以下命令都在仓库根目录执行。
+
+先列出匹配进程：
+
+```bash
+python scripts/cleanup_runtime.py
+```
+
+检查 dry-run 列表。确认列出的都是 Vision Workbench 相关进程后，再终止它们：
+
+```bash
+python scripts/cleanup_runtime.py --kill
+```
+
+只有普通终止无法释放设备时，再使用强制模式：
+
+```bash
+python scripts/cleanup_runtime.py --kill --force
+```
+
+## 匹配范围
+
+脚本只处理命令行中包含以下信号之一的进程：
+
+- Vision Workbench 入口命令，例如 `vision-workbench` 或 `yolo26-detection-workbench`。
+- 已知 Vision Workbench 模块入口，例如 `python -m yolo26_detection.window.app`。
+- 当前仓库路径。
+
+它不会有意匹配无关的普通 Python 进程。但它毕竟是进程终止工具，执行 `--kill` 前一定先看 dry-run 列表。
+
+## 如果没有匹配进程
+
+如果脚本提示没有找到 Vision Workbench 运行进程，但摄像头或 GPU 仍然像是被占用，资源可能被其他应用、驱动或操作系统持有。请检查任务管理器、关闭其他相机应用，或者在驱动不释放设备时重启电脑。

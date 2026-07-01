@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+import threading
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -57,6 +58,7 @@ class CameraDiagnosticsWindow:
         self.display_fps = 0.0
         self.read_failures = 0
         self.recording_path = None  # type: Optional[Path]
+        self.busy = False
 
         self.device_var = tk.StringVar(value="")
         self.profile_var = tk.StringVar(value="")
@@ -73,7 +75,8 @@ class CameraDiagnosticsWindow:
         toolbar = ttk.Frame(self.root, padding=(10, 10, 10, 6))
         toolbar.pack(fill=tk.X)
 
-        ttk.Button(toolbar, text="Refresh Cameras", command=self.refresh_cameras).pack(
+        self.refresh_button = ttk.Button(toolbar, text="Refresh Cameras", command=self.refresh_cameras)
+        self.refresh_button.pack(
             side=tk.LEFT,
             padx=(0, 8),
         )
@@ -88,11 +91,13 @@ class CameraDiagnosticsWindow:
         self.device_box.pack(side=tk.LEFT, padx=(0, 8))
         self.device_box.bind("<<ComboboxSelected>>", lambda _event: self.probe_profiles())
 
-        ttk.Button(toolbar, text="Probe Modes", command=self.probe_profiles).pack(
+        self.probe_button = ttk.Button(toolbar, text="Probe Modes", command=self.probe_profiles)
+        self.probe_button.pack(
             side=tk.LEFT,
             padx=(0, 8),
         )
-        ttk.Button(toolbar, text="Open", command=self.open_camera).pack(side=tk.LEFT, padx=(0, 8))
+        self.open_button = ttk.Button(toolbar, text="Open", command=self.open_camera)
+        self.open_button.pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(toolbar, text="Close", command=self.close_camera).pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(toolbar, text="Screenshot", command=self.save_screenshot).pack(
             side=tk.LEFT,
@@ -148,16 +153,31 @@ class CameraDiagnosticsWindow:
         self.platform_var.set(f"System: {platform_info.label()}")
 
     def refresh_cameras(self) -> None:
+        if self.busy:
+            self.status_var.set("Camera task is already running. Please wait...")
+            return
         self.close_camera()
-        self.status_var.set("Scanning cameras...")
-        self.root.update_idletasks()
-        try:
-            self.devices = self.service.discover_cameras()
-        except Exception as exc:
-            messagebox.showerror("Camera scan failed", with_help(exc, CAMERA_AND_VIDEO))
+        self._set_busy("Scanning cameras, please wait...")
+
+        def worker() -> None:
+            try:
+                devices = self.service.discover_cameras()
+                error = None
+            except Exception as exc:
+                devices = []
+                error = exc
+            self.root.after(0, lambda: self._finish_camera_scan(devices, error))
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_camera_scan(self, devices: List[CameraDevice], error: Optional[Exception]) -> None:
+        self._clear_busy()
+        if error is not None:
+            messagebox.showerror("Camera scan failed", with_help(error, CAMERA_AND_VIDEO))
             self.status_var.set("Camera scan failed.")
             return
 
+        self.devices = devices
         labels = [device.label() for device in self.devices]
         self.device_box.configure(values=labels)
         self.profiles = []
@@ -173,27 +193,56 @@ class CameraDiagnosticsWindow:
         self.probe_profiles()
 
     def probe_profiles(self) -> None:
+        if self.busy:
+            self.status_var.set("Camera task is already running. Please wait...")
+            return
         device = self._selected_device()
         if device is None:
             messagebox.showinfo("No camera", "Refresh and select a camera first.")
             return
 
         self.close_camera()
-        self.status_var.set("Probing read modes...")
-        self.root.update_idletasks()
-        try:
-            self.profiles = self.service.probe_profiles(device)
-        except Exception as exc:
-            messagebox.showerror("Mode probe failed", with_help(exc, CAMERA_AND_VIDEO))
-            self.profiles = [self._default_profile(device)]
+        self._set_busy(f"Probing read modes for {device.label()}, please wait...")
 
-        if not self.profiles:
-            self.profiles = [self._default_profile(device)]
+        def worker() -> None:
+            try:
+                profiles = self.service.probe_profiles(device)
+                error = None
+            except Exception as exc:
+                profiles = [self._default_profile(device)]
+                error = exc
+            self.root.after(0, lambda: self._finish_profile_probe(device, profiles, error))
 
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _finish_profile_probe(
+        self,
+        device: CameraDevice,
+        profiles: List[CaptureProfile],
+        error: Optional[Exception],
+    ) -> None:
+        self._clear_busy()
+        if error is not None:
+            messagebox.showerror("Mode probe failed", with_help(error, CAMERA_AND_VIDEO))
+        self.profiles = profiles or [self._default_profile(device)]
         labels = [profile.label() for profile in self.profiles]
         self.profile_box.configure(values=labels)
         self.profile_var.set(labels[0])
         self.status_var.set(f"Detected {len(self.profiles)} read mode(s).")
+
+    def _set_busy(self, message: str) -> None:
+        self.busy = True
+        self.status_var.set(message)
+        for button in (self.refresh_button, self.probe_button, self.open_button):
+            button.configure(state=tk.DISABLED)
+        self.root.configure(cursor="watch")
+        self.root.update_idletasks()
+
+    def _clear_busy(self) -> None:
+        self.busy = False
+        for button in (self.refresh_button, self.probe_button, self.open_button):
+            button.configure(state=tk.NORMAL)
+        self.root.configure(cursor="")
 
     def open_camera(self) -> None:
         device = self._selected_device()
