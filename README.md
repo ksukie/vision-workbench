@@ -119,6 +119,14 @@ Deep-learning features are optional:
 
 The helper detects NVIDIA GPUs and installs CUDA 12.6 Torch wheels when available. Direct requirements installs keep the same CUDA Torch pins, while base packages continue to use the Tsinghua PyPI mirror.
 
+If you install deep-learning dependencies manually with `requirements-*.txt`, run the doctor afterward:
+
+```bash
+python scripts/install_dependencies.py doctor
+```
+
+It checks whether Torch matches the current machine and asks before reinstalling Torch.
+
 This keeps the entry-level installation lightweight while still allowing users to enable heavier workflows when needed.
 
 

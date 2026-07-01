@@ -76,6 +76,7 @@ requirements-yolo26.txt
 
 Deep-learning dependencies used only by image classification or YOLO26 modules should not be added to the base dependency set.
 Use `scripts/install_dependencies.py` for runtime installs because it can choose CUDA or CPU Torch based on the machine.
+If users install `requirements-*.txt` manually, ask them to run `python scripts/install_dependencies.py doctor` afterward to verify and optionally repair the Torch build.
 
 <a id="cv-basics-add"></a>
 ## CV Basics Extensions

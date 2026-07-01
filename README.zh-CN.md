@@ -119,6 +119,14 @@ VisionWorkbench/
 
 安装脚本会检测 NVIDIA GPU，有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel。直接使用 requirements 安装时也会固定到同一套 CUDA Torch，基础包仍然默认使用清华 PyPI 源。
 
+如果手动使用 `requirements-*.txt` 安装深度学习依赖，安装后建议再执行一次检测：
+
+```bash
+python scripts/install_dependencies.py doctor
+```
+
+它会检查 Torch 是否匹配当前机器，并在需要重装 Torch 时先询问用户。
+
 这样可以保证新手先用基础功能跑通项目，再根据需要启用更重的深度学习功能。
 
 ## 开源许可

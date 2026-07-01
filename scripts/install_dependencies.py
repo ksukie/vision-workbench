@@ -36,9 +36,9 @@ def main() -> int:
     parser.add_argument(
         "target",
         nargs="?",
-        choices=("base", "classification", "yolo26", "all"),
+        choices=("base", "classification", "yolo26", "all", "doctor"),
         default="all",
-        help="Dependency group to install. Default: all.",
+        help="Dependency group to install, or 'doctor' to check Torch. Default: all.",
     )
     parser.add_argument(
         "--torch",
@@ -52,6 +52,10 @@ def main() -> int:
         help="Do not run 'pip install -e .' for the main project.",
     )
     args = parser.parse_args()
+
+    if args.target == "doctor":
+        diagnose_torch(args.torch)
+        return 0
 
     install_base(skip_project=args.skip_project)
 
@@ -173,6 +177,76 @@ def has_nvidia_gpu() -> bool:
 
 def install_yolo26() -> None:
     pip_install("--index-url", PYPI_INDEX_URL, "-e", "./third_party/yolo26_source")
+
+
+def diagnose_torch(requested: str) -> None:
+    expected_tag = select_torch_tag(requested)
+    info = inspect_torch()
+    print("\nTorch environment check")
+    print(f"Expected build: {expected_tag}")
+    for key in ("torch", "torchvision", "torch.version.cuda", "torch.cuda.is_available"):
+        print(f"{key}: {info.get(key, '--')}")
+
+    error = info.get("error")
+    if error:
+        print(f"Import error: {error}")
+
+    if torch_needs_reinstall(expected_tag, info):
+        answer = input("\nTorch does not match this machine. Reinstall Torch now? [y/N] ").strip().lower()
+        if answer in {"y", "yes"}:
+            installed_tag = install_torch(requested)
+            verify_torch(installed_tag)
+        else:
+            print("Skipped reinstall.")
+        return
+
+    print("\nTorch looks OK.")
+
+
+def inspect_torch() -> Dict[str, str]:
+    code = (
+        "import json\n"
+        "try:\n"
+        "    import torch, torchvision\n"
+        "    data = {\n"
+        "        'torch': torch.__version__,\n"
+        "        'torchvision': torchvision.__version__,\n"
+        "        'torch.version.cuda': str(torch.version.cuda),\n"
+        "        'torch.cuda.is_available': str(torch.cuda.is_available()),\n"
+        "    }\n"
+        "except Exception as exc:\n"
+        "    data = {'error': f'{type(exc).__name__}: {exc}'}\n"
+        "print(json.dumps(data))\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code],
+        cwd=ROOT,
+        env=child_env(),
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    import json
+
+    try:
+        return json.loads(result.stdout.strip().splitlines()[-1])
+    except Exception:
+        return {"error": (result.stderr or result.stdout or "unknown error").strip()}
+
+
+def torch_needs_reinstall(expected_tag: str, info: Dict[str, str]) -> bool:
+    if info.get("error"):
+        return True
+
+    torch_version = info.get("torch", "")
+    cuda_available = info.get("torch.cuda.is_available") == "True"
+
+    if expected_tag.startswith("cu"):
+        return f"+{expected_tag}" not in torch_version or not cuda_available
+    if expected_tag == CPU_TAG:
+        return "+cu" in torch_version and not has_nvidia_gpu()
+    return False
 
 
 def verify_torch(expected_tag: str) -> None:

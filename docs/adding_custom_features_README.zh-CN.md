@@ -76,6 +76,7 @@ requirements-yolo26.txt
 
 基础依赖应保持轻量。仅图像分类或 YOLO26 使用的深度学习依赖不应写入基础依赖文件。
 运行安装时优先使用 `scripts/install_dependencies.py`，它可以根据机器自动选择 CUDA 或 CPU Torch。
+如果用户手动安装 `requirements-*.txt`，建议安装后执行 `python scripts/install_dependencies.py doctor`，用于检查并按需修复 Torch 构建。
 
 <a id="cv-basics-add"></a>
 ## 基础 CV 扩展
