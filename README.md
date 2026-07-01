@@ -146,3 +146,7 @@ This keeps the entry-level installation lightweight while still allowing users t
 Vision Workbench is released as an open-source learning project under AGPL-3.0. See [LICENSE](./LICENSE).
 
 This project includes vendored Ultralytics YOLO26 source code under `third_party/yolo26_source/`. Vision Workbench is not an official Ultralytics project. YOLO26 source code and model weights remain subject to the Ultralytics license terms. See [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
+
+## Acknowledgments
+
+Thanks to [@antique798](https://github.com/antique798) for helping test Vision Workbench and providing feedback.
