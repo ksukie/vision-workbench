@@ -3,20 +3,21 @@
 from __future__ import annotations
 
 import tkinter as tk
+import os
+import subprocess
+import sys
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
-from typing import Callable, Optional, cast
+from typing import Callable, List, Optional, cast
 
 if __package__ in (None, ""):
-    import sys
-
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from cv_basics.api import create_image_processing_service
     from cv_basics.configuration import AppConfig
     from cv_basics.domain import ImageArray, ProcessingParams
     from cv_basics.ports import ImageProcessingServicePort
     from cv_basics.window.presenter import TkImagePresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
     from cv_basics.window.task_runner import TkTaskRunner
 else:
     from ..api import create_image_processing_service
@@ -24,7 +25,7 @@ else:
     from ..domain import ImageArray, ProcessingParams
     from ..ports import ImageProcessingServicePort
     from .presenter import TkImagePresenter
-    from .process_exit import arm_forced_process_exit, terminate_process
+    from .process_exit import arm_forced_process_exit, close_window
     from .task_runner import TkTaskRunner
 
 
@@ -36,12 +37,15 @@ class CvDemoWindow:
         root: tk.Tk,
         service: Optional[ImageProcessingServicePort] = None,
         config: AppConfig = AppConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.service = service or create_image_processing_service(config)
         self.config = config
+        self.exit_on_close = exit_on_close
         self.presenter = TkImagePresenter(config.preview_size)
         self.tasks = TkTaskRunner(root)
+        self.child_processes = []  # type: List[subprocess.Popen]
 
         self.root.title("Vision Workbench")
         self.root.geometry("1180x760")
@@ -251,56 +255,53 @@ class CvDemoWindow:
         self.status_var.set("Reset to original.")
 
     def open_panorama_reconstruction(self) -> None:
-        try:
-            from panorama_reconstruction.window.app import PanoramaReconstructionWindow
-        except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
-            return
-
-        window = tk.Toplevel(self.root)
-        window.title("Panorama Reconstruction Workbench")
-        window.geometry("1180x760")
-        window.minsize(980, 660)
-        window._panorama_reconstruction_app = PanoramaReconstructionWindow(window)
+        self._launch_child_process("panorama_reconstruction.window.app")
 
     def open_camera_diagnostics(self) -> None:
-        try:
-            from camera_diagnostics.window.app import CameraDiagnosticsWindow
-        except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
-            return
-
-        window = tk.Toplevel(self.root)
-        window.title("Camera Diagnostics Workbench")
-        window.geometry("1120x760")
-        window.minsize(920, 620)
-        window._camera_diagnostics_app = CameraDiagnosticsWindow(window)
+        self._launch_child_process("camera_diagnostics.window.app")
 
     def open_yolo26_detection(self) -> None:
-        try:
-            from yolo26_detection.window.app import Yolo26DetectionWindow
-        except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
-            return
-
-        window = tk.Toplevel(self.root)
-        window.title("YOLO26 Detection Workbench")
-        window.geometry("1280x860")
-        window.minsize(1040, 720)
-        window._yolo26_detection_app = Yolo26DetectionWindow(window)
+        self._launch_child_process("yolo26_detection.window.app")
 
     def open_image_classification(self) -> None:
+        self._launch_child_process("image_classification.window.app")
+
+    def _launch_child_process(self, module_name: str) -> None:
+        self._prune_child_processes()
+        project_root = Path(__file__).resolve().parents[3]
+        src_dir = Path(__file__).resolve().parents[2]
+        env = os.environ.copy()
+        existing_pythonpath = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = (
+            str(src_dir)
+            if not existing_pythonpath
+            else str(src_dir) + os.pathsep + existing_pythonpath
+        )
+        env["PYTHONNOUSERSITE"] = "1"
         try:
-            from image_classification.window.app import ImageClassificationWindow
+            process = subprocess.Popen(
+                [sys.executable, "-m", module_name],
+                cwd=str(project_root),
+                env=env,
+            )
         except Exception as exc:
             messagebox.showerror("Open failed", str(exc))
             return
+        self.child_processes.append(process)
 
-        window = tk.Toplevel(self.root)
-        window.title("Image Classification Workbench")
-        window.geometry("1160x760")
-        window.minsize(980, 640)
-        window._image_classification_app = ImageClassificationWindow(window)
+    def _prune_child_processes(self) -> None:
+        self.child_processes = [process for process in self.child_processes if process.poll() is None]
+
+    def _terminate_child_processes(self) -> None:
+        self._prune_child_processes()
+        for process in self.child_processes:
+            process.terminate()
+        for process in self.child_processes:
+            try:
+                process.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                process.kill()
+        self.child_processes.clear()
 
     def apply_effect(self) -> None:
         if self.original_image is None:
@@ -318,9 +319,11 @@ class CvDemoWindow:
         )
 
     def close(self) -> None:
-        arm_forced_process_exit()
+        if self.exit_on_close:
+            arm_forced_process_exit()
+        self._terminate_child_processes()
         self.tasks.shutdown()
-        terminate_process(self.root)
+        close_window(self.root, exit_on_close=self.exit_on_close)
 
     def _run_task(
         self,

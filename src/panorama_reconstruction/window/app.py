@@ -28,7 +28,7 @@ if __package__ in (None, ""):
     )
     from panorama_reconstruction.window.presenter import TkImagePresenter
     from panorama_reconstruction.window.task_runner import TkTaskRunner
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_panorama_reconstruction_service
     from ..configuration import CHANNEL_CHOICES, PanoramaReconstructionConfig
@@ -41,7 +41,7 @@ else:
     )
     from .presenter import TkImagePresenter
     from .task_runner import TkTaskRunner
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
 
 class PanoramaReconstructionWindow:
@@ -54,9 +54,11 @@ class PanoramaReconstructionWindow:
         self,
         root: tk.Misc,
         config: PanoramaReconstructionConfig = PanoramaReconstructionConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.config = config
+        self.exit_on_close = exit_on_close
         self.service = create_panorama_reconstruction_service(config)
         self.input_presenter = TkImagePresenter(config.preview_size)
         self.result_presenter = TkImagePresenter(config.result_preview_size)
@@ -362,9 +364,10 @@ class PanoramaReconstructionWindow:
         )
 
     def close(self) -> None:
-        arm_forced_process_exit()
+        if self.exit_on_close:
+            arm_forced_process_exit()
         self.tasks.shutdown()
-        terminate_process(self.root)
+        close_window(self.root, exit_on_close=self.exit_on_close)
 
     def _run_task(
         self,

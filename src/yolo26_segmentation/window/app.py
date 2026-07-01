@@ -16,13 +16,13 @@ if __package__ in (None, ""):
     from yolo26_segmentation.configuration import Yolo26SegmentationConfig
     from yolo26_segmentation.domain import ImageArray, ModelInfo, SegmentationSettings
     from yolo26_segmentation.window.presenter import TkSegmentationPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_yolo26_segmentation_service
     from ..configuration import Yolo26SegmentationConfig
     from ..domain import ImageArray, ModelInfo, SegmentationSettings
     from .presenter import TkSegmentationPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
 
 class Yolo26SegmentationWindow:
@@ -32,9 +32,11 @@ class Yolo26SegmentationWindow:
         self,
         root: tk.Misc,
         config: Yolo26SegmentationConfig = Yolo26SegmentationConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.config = config
+        self.exit_on_close = exit_on_close
         self.service = create_yolo26_segmentation_service(config)
         self.presenter = TkSegmentationPresenter(config.preview_size)
 
@@ -270,14 +272,15 @@ class Yolo26SegmentationWindow:
         self.segmenting_camera = False
 
     def close(self, destroy_root: bool = True) -> None:
-        arm_forced_process_exit()
+        if self.exit_on_close:
+            arm_forced_process_exit()
         if self.closed:
             return
         self.closed = True
         self.close_camera()
         self.service.unload_model()
         self.loaded_model_path = None
-        terminate_process(self.root, destroy_root=destroy_root)
+        close_window(self.root, exit_on_close=self.exit_on_close, destroy_root=destroy_root)
 
     def _on_destroy(self, event) -> None:
         if event.widget is self.root and not self.closed:

@@ -8,5 +8,13 @@
 # Install these only when you need classification prediction or training.
 # For automatic CUDA/CPU selection, prefer:
 # python scripts/install_dependencies.py classification
-torch==2.12.1+cu126
-torchvision==0.27.1+cu126
+torch==2.12.1+cu126; platform_system == "Windows" and platform_machine == "AMD64"
+torchvision==0.27.1+cu126; platform_system == "Windows" and platform_machine == "AMD64"
+torch==2.12.1+cu126; platform_system == "Linux" and platform_machine == "x86_64"
+torchvision==0.27.1+cu126; platform_system == "Linux" and platform_machine == "x86_64"
+torch==2.12.1; platform_system == "Darwin"
+torchvision==0.27.1; platform_system == "Darwin"
+torch==2.12.1; platform_system == "Windows" and platform_machine != "AMD64"
+torchvision==0.27.1; platform_system == "Windows" and platform_machine != "AMD64"
+torch==2.12.1; platform_system == "Linux" and platform_machine != "x86_64"
+torchvision==0.27.1; platform_system == "Linux" and platform_machine != "x86_64"

@@ -16,13 +16,13 @@ if __package__ in (None, ""):
     from camera_diagnostics.configuration import CameraDiagnosticsConfig
     from camera_diagnostics.domain import CameraDevice, CaptureProfile, ImageArray
     from camera_diagnostics.window.presenter import TkFramePresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_camera_diagnostics_service
     from ..configuration import CameraDiagnosticsConfig
     from ..domain import CameraDevice, CaptureProfile, ImageArray
     from .presenter import TkFramePresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
 
 class CameraDiagnosticsWindow:
@@ -32,9 +32,11 @@ class CameraDiagnosticsWindow:
         self,
         root: tk.Misc,
         config: CameraDiagnosticsConfig = CameraDiagnosticsConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.config = config
+        self.exit_on_close = exit_on_close
         self.service = create_camera_diagnostics_service(config)
         self.presenter = TkFramePresenter(config.preview_size)
 
@@ -296,9 +298,10 @@ class CameraDiagnosticsWindow:
         self.status_var.set(f"Saved recording: {saved}")
 
     def close(self) -> None:
-        arm_forced_process_exit()
+        if self.exit_on_close:
+            arm_forced_process_exit()
         self.close_camera()
-        terminate_process(self.root)
+        close_window(self.root, exit_on_close=self.exit_on_close)
 
     def _schedule_frame(self) -> None:
         self.after_id = self.root.after(10, self._read_next_frame)

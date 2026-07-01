@@ -16,13 +16,13 @@ if __package__ in (None, ""):
     from image_classification.configuration import ImageClassificationConfig
     from image_classification.domain import ClassificationTrainingConfig, PredictionResult
     from image_classification.window.presenter import TkClassificationPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_image_classification_service
     from ..configuration import ImageClassificationConfig
     from ..domain import ClassificationTrainingConfig, PredictionResult
     from .presenter import TkClassificationPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
 
 class ImageClassificationWindow:
@@ -32,9 +32,11 @@ class ImageClassificationWindow:
         self,
         root: tk.Misc,
         config: ImageClassificationConfig = ImageClassificationConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.config = config
+        self.exit_on_close = exit_on_close
         self.service = create_image_classification_service(config)
         self.presenter = TkClassificationPresenter(config.preview_size)
 
@@ -441,8 +443,9 @@ class ImageClassificationWindow:
         self.train_log.configure(state=tk.DISABLED)
 
     def close(self) -> None:
-        arm_forced_process_exit()
-        terminate_process(self.root)
+        if self.exit_on_close:
+            arm_forced_process_exit()
+        close_window(self.root, exit_on_close=self.exit_on_close)
 
 
 def main() -> None:

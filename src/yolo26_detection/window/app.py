@@ -17,13 +17,13 @@ if __package__ in (None, ""):
     from yolo26_detection.configuration import Yolo26DetectionConfig
     from yolo26_detection.domain import CameraDevice, DetectionSettings, ImageArray, ModelInfo
     from yolo26_detection.window.presenter import TkDetectionPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_yolo26_detection_service
     from ..configuration import Yolo26DetectionConfig
     from ..domain import CameraDevice, DetectionSettings, ImageArray, ModelInfo
     from .presenter import TkDetectionPresenter
-    from cv_basics.window.process_exit import arm_forced_process_exit, terminate_process
+    from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
 
 class Yolo26DetectionWindow:
@@ -33,9 +33,11 @@ class Yolo26DetectionWindow:
         self,
         root: tk.Misc,
         config: Yolo26DetectionConfig = Yolo26DetectionConfig(),
+        exit_on_close: bool = True,
     ) -> None:
         self.root = root
         self.config = config
+        self.exit_on_close = exit_on_close
         self.service = create_yolo26_detection_service(config)
         self.presenter = TkDetectionPresenter(config.preview_size)
 
@@ -475,14 +477,15 @@ class Yolo26DetectionWindow:
         self.status_var.set(f"Saved recording: {saved}")
 
     def close(self, destroy_root: bool = True) -> None:
-        arm_forced_process_exit()
+        if self.exit_on_close:
+            arm_forced_process_exit()
         if self.closed:
             return
         self.closed = True
         self.close_camera()
         self.service.unload_model()
         self.loaded_model_path = None
-        terminate_process(self.root, destroy_root=destroy_root)
+        close_window(self.root, exit_on_close=self.exit_on_close, destroy_root=destroy_root)
 
     def _on_destroy(self, event) -> None:
         if event.widget is self.root and not self.closed:

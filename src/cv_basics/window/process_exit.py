@@ -41,3 +41,20 @@ def terminate_process(root: Any, exit_code: int = 0, destroy_root: bool = True) 
             pass
 
     os._exit(exit_code)
+
+
+def close_window(root: Any, exit_on_close: bool, exit_code: int = 0, destroy_root: bool = True) -> None:
+    """Close one Tk window, or the whole process for standalone entry points."""
+
+    if exit_on_close:
+        terminate_process(root, exit_code=exit_code, destroy_root=destroy_root)
+        return
+
+    if not destroy_root:
+        return
+
+    try:
+        if hasattr(root, "destroy"):
+            root.destroy()
+    except Exception:
+        pass

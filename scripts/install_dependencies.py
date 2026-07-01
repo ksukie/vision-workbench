@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +26,7 @@ TORCH_VERSION = "2.12.1"
 TORCHVISION_VERSION = "0.27.1"
 CUDA_TAG = "cu126"
 CPU_TAG = "cpu"
+DEFAULT_TAG = "default"
 
 
 def main() -> int:
@@ -71,22 +73,7 @@ def install_base(skip_project: bool) -> None:
 
 
 def install_torch(requested: str) -> str:
-    tag = select_torch_tag(requested)
-    packages = [
-        f"torch=={TORCH_VERSION}+{tag}",
-        f"torchvision=={TORCHVISION_VERSION}+{tag}",
-    ]
-
-    sources = [
-        (
-            f"PyTorch official {tag}",
-            ["--index-url", f"{PYTORCH_OFFICIAL_BASE}/{tag}"],
-        ),
-        (
-            f"Aliyun PyTorch mirror {tag}",
-            ["--no-index", "--find-links", f"{PYTORCH_MIRROR_BASE}/{tag}/"],
-        ),
-    ]
+    tag, packages, sources = torch_install_plan(requested)
 
     last_error: Optional[subprocess.CalledProcessError] = None
     for label, source_args in sources:
@@ -101,12 +88,59 @@ def install_torch(requested: str) -> str:
     raise SystemExit(last_error.returncode if last_error else 1)
 
 
+def torch_install_plan(requested: str) -> Tuple[str, List[str], List[Tuple[str, List[str]]]]:
+    tag = select_torch_tag(requested)
+    if tag == DEFAULT_TAG:
+        packages = [
+            f"torch=={TORCH_VERSION}",
+            f"torchvision=={TORCHVISION_VERSION}",
+        ]
+        return tag, packages, [(f"Tsinghua PyPI {tag}", ["--index-url", PYPI_INDEX_URL])]
+
+    packages = [
+        f"torch=={TORCH_VERSION}+{tag}",
+        f"torchvision=={TORCHVISION_VERSION}+{tag}",
+    ]
+    return tag, packages, [
+        (
+            f"PyTorch official {tag}",
+            ["--index-url", f"{PYTORCH_OFFICIAL_BASE}/{tag}"],
+        ),
+        (
+            f"Aliyun PyTorch mirror {tag}",
+            ["--no-index", "--find-links", f"{PYTORCH_MIRROR_BASE}/{tag}/"],
+        ),
+    ]
+
+
 def select_torch_tag(requested: str) -> str:
     if requested == "cuda":
+        if not supports_pytorch_cuda_wheels():
+            raise SystemExit(
+                "CUDA Torch pip wheels are only selected automatically on Windows/Linux x86_64. "
+                "Use --torch cpu or install the platform-specific Torch build manually."
+            )
         return CUDA_TAG
     if requested == "cpu":
+        return CPU_TAG if supports_pytorch_tagged_wheels() else DEFAULT_TAG
+    if supports_pytorch_cuda_wheels() and has_nvidia_gpu():
+        return CUDA_TAG
+    if supports_pytorch_tagged_wheels():
         return CPU_TAG
-    return CUDA_TAG if has_nvidia_gpu() else CPU_TAG
+    print("Using the default PyPI Torch build for this platform.")
+    return DEFAULT_TAG
+
+
+def supports_pytorch_cuda_wheels() -> bool:
+    system = platform.system()
+    machine = platform.machine().lower()
+    return system in {"Windows", "Linux"} and machine in {"amd64", "x86_64"}
+
+
+def supports_pytorch_tagged_wheels() -> bool:
+    system = platform.system()
+    machine = platform.machine().lower()
+    return system in {"Windows", "Linux"} and machine in {"amd64", "x86_64"}
 
 
 def has_nvidia_gpu() -> bool:
