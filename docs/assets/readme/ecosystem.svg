@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="620" viewBox="0 0 1280 620" role="img" aria-label="Vision Workbench ecosystem overview">
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="840" viewBox="0 0 1280 840" role="img" aria-label="Vision Workbench expanded ecosystem overview">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#f8fafc"/>
@@ -20,32 +20,37 @@
       .subtitle{font:400 15px Arial, sans-serif;fill:#475569}
       .step{font:700 18px Arial, sans-serif;fill:#0f172a}
       .hint{font:400 13px Arial, sans-serif;fill:#64748b}
+      .mini{font:700 12px Arial, sans-serif;fill:#334155}
+      .miniCenter{font:700 12px Arial, sans-serif;fill:#334155;text-anchor:middle}
+      .footerText{font:700 18px Arial, sans-serif;fill:#0f172a;text-anchor:middle}
       .white{font:700 23px Arial, sans-serif;fill:#ffffff}
       .whiteSmall{font:400 14px Arial, sans-serif;fill:#dbeafe}
       .card{fill:#ffffff;stroke:#d4e1ee;stroke-width:2;filter:url(#shadow)}
       .smallCard{fill:#ffffff;stroke:#d4e1ee;stroke-width:2}
+      .miniCard{fill:#ffffff;stroke:#dbeafe;stroke-width:1.6}
       .line{stroke:#94a3b8;stroke-width:3;fill:none;marker-end:url(#arrow)}
       .softLine{stroke:#cbd5e1;stroke-width:2.5;fill:none}
+      .miniLine{stroke:#d4e1ee;stroke-width:2;fill:none}
     </style>
   </defs>
 
-  <rect x="0" y="0" width="1280" height="620" rx="30" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1280" height="840" rx="30" fill="url(#bg)"/>
   <text x="56" y="62" class="title">Vision Workbench</text>
   <text x="56" y="91" class="subtitle">From image input to visual algorithms, desktop workflows, model training, and reusable packages.</text>
 
   <rect x="502" y="145" width="276" height="142" rx="26" fill="url(#core)" filter="url(#shadow)"/>
   <text x="565" y="202" class="white">Workbench Core</text>
-  <text x="548" y="234" class="whiteSmall">API · GUI · Configuration</text>
+  <text x="548" y="234" class="whiteSmall">API / GUI / Configuration</text>
   <text x="577" y="257" class="whiteSmall">Layered Python modules</text>
 
   <rect x="80" y="155" width="190" height="112" rx="20" class="card"/>
   <text x="126" y="196" class="step">01 Input</text>
-  <text x="116" y="224" class="hint">Images · Cameras</text>
-  <text x="116" y="245" class="hint">Datasets · Weights</text>
+  <text x="116" y="224" class="hint">Images / Cameras</text>
+  <text x="116" y="245" class="hint">Datasets / Weights</text>
 
   <rect x="1010" y="155" width="190" height="112" rx="20" class="card"/>
   <text x="1050" y="196" class="step">04 Output</text>
-  <text x="1044" y="224" class="hint">Results · Reports</text>
+  <text x="1044" y="224" class="hint">Results / Reports</text>
   <text x="1044" y="245" class="hint">Wheel packages</text>
 
   <rect x="318" y="160" width="145" height="100" rx="18" class="smallCard"/>
@@ -67,41 +72,90 @@
   <path d="M168 355h944" class="softLine"/>
   <path d="M168 355v45M326 355v45M484 355v45M642 355v45M800 355v45M958 355v45M1112 355v45" class="softLine"/>
 
-  <rect x="86" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="93" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="116" cy="432" r="13" fill="#22c55e"/>
   <text x="138" y="431" class="step">CV Basics</text>
-  <text x="112" y="461" class="hint">Color · Filter · Geometry</text>
 
-  <rect x="244" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="251" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="274" cy="432" r="13" fill="#0ea5e9"/>
   <text x="296" y="431" class="step">Panorama</text>
-  <text x="270" y="461" class="hint">SIFT · Manual Points</text>
 
-  <rect x="402" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="409" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="432" cy="432" r="13" fill="#f97316"/>
   <text x="454" y="431" class="step">Camera</text>
-  <text x="428" y="461" class="hint">FPS · Capture · Record</text>
 
-  <rect x="560" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="567" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="590" cy="432" r="13" fill="#84cc16"/>
   <text x="612" y="431" class="step">Classify</text>
-  <text x="586" y="461" class="hint">ResNet · MobileNet</text>
 
-  <rect x="718" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="725" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="748" cy="432" r="13" fill="#ef4444"/>
   <text x="770" y="431" class="step">Detect</text>
-  <text x="744" y="461" class="hint">YOLO26 · Boxes</text>
 
-  <rect x="876" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="883" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="906" cy="432" r="13" fill="#a855f7"/>
   <text x="928" y="431" class="step">Segment</text>
-  <text x="902" y="461" class="hint">Masks · Semantics</text>
 
-  <rect x="1034" y="400" width="164" height="90" rx="18" class="smallCard"/>
+  <rect x="1037" y="400" width="150" height="82" rx="18" class="smallCard"/>
   <circle cx="1064" cy="432" r="13" fill="#0891b2"/>
   <text x="1086" y="431" class="step">Train</text>
-  <text x="1060" y="461" class="hint">Validate · Export</text>
 
-  <rect x="356" y="535" width="568" height="46" rx="23" fill="#ffffff" stroke="#06b6d4" stroke-width="2"/>
-  <text x="414" y="565" class="step">Learn · Extend · Package · Release</text>
+  <path d="M168 482v43M326 482v43M484 482v43M642 482v43M800 482v43M958 482v43M1112 482v43" class="miniLine"/>
+
+  <rect x="116" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="168" y="546" class="miniCenter">Color</text>
+  <rect x="116" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="168" y="589" class="miniCenter">Filter</text>
+  <rect x="116" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="168" y="632" class="miniCenter">Geometry</text>
+
+  <rect x="274" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="326" y="546" class="miniCenter">SIFT</text>
+  <rect x="274" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="326" y="589" class="miniCenter">Control Pts</text>
+  <rect x="274" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="326" y="632" class="miniCenter">Stitch</text>
+
+  <rect x="432" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="484" y="546" class="miniCenter">FPS</text>
+  <rect x="432" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="484" y="589" class="miniCenter">Capture</text>
+  <rect x="432" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="484" y="632" class="miniCenter">Record</text>
+
+  <rect x="590" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="642" y="546" class="miniCenter">ResNet</text>
+  <rect x="590" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="642" y="589" class="miniCenter">MobileNet</text>
+  <rect x="590" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="642" y="632" class="miniCenter">Predict</text>
+
+  <rect x="748" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="800" y="546" class="miniCenter">YOLO26</text>
+  <rect x="748" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="800" y="589" class="miniCenter">Boxes</text>
+  <rect x="748" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="800" y="632" class="miniCenter">Live Infer</text>
+
+  <rect x="906" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="958" y="546" class="miniCenter">Masks</text>
+  <rect x="906" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="958" y="589" class="miniCenter">Semantic</text>
+  <rect x="906" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="958" y="632" class="miniCenter">Instance</text>
+
+  <rect x="1060" y="525" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="1112" y="546" class="miniCenter">Validate</text>
+  <rect x="1060" y="568" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="1112" y="589" class="miniCenter">Train</text>
+  <rect x="1060" y="611" width="104" height="32" rx="12" class="miniCard"/>
+  <text x="1112" y="632" class="miniCenter">Export</text>
+
+  <path d="M168 557v11M168 600v11M326 557v11M326 600v11M484 557v11M484 600v11M642 557v11M642 600v11M800 557v11M800 600v11M958 557v11M958 600v11M1112 557v11M1112 600v11" class="miniLine"/>
+  <path d="M168 643v52M326 643v52M484 643v52M642 643v52M800 643v52M958 643v52M1112 643v52" class="softLine"/>
+  <path d="M168 695h944" class="softLine"/>
+  <path d="M640 695v17" class="softLine"/>
+
+  <rect x="356" y="712" width="568" height="54" rx="27" fill="#ffffff" stroke="#06b6d4" stroke-width="2"/>
+  <text x="640" y="746" class="footerText">Learn / Extend / Package / Release</text>
 </svg>
