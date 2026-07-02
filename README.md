@@ -174,4 +174,4 @@ This project includes vendored Ultralytics YOLO26 source code under `third_party
 
 ## Acknowledgments
 
-Thanks to [@antique798](https://github.com/antique798) for helping test Vision Workbench and providing feedback.
+2026.07.01 - Thanks to [@antique798](https://github.com/antique798) for helping test Vision Workbench and providing feedback.
