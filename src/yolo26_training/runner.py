@@ -19,6 +19,7 @@ else:
     from .domain import TrainingJobConfig
 
 from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, MODELS_AND_WEIGHTS, help_hint, with_help
+from vision_workbench.model_files import validate_complete_model_file
 
 
 def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -87,6 +88,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     if not model_path.exists():
         print(
             with_help(f"\nTraining aborted because model file does not exist: {model_path}", MODELS_AND_WEIGHTS),
+            file=sys.stderr,
+            flush=True,
+        )
+        return 2
+    try:
+        validate_complete_model_file(model_path)
+    except Exception as exc:
+        print(
+            with_help(f"\nTraining aborted because model file is incomplete or corrupt: {exc}", MODELS_AND_WEIGHTS),
             file=sys.stderr,
             flush=True,
         )

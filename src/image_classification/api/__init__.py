@@ -1,6 +1,12 @@
 """Public API package for image classification."""
 
 from .facade import (
+    ClassificationModelInfo,
+    ImageClassificationConfig,
+    ImageClassificationService,
+    PredictionItem,
+    PredictionResult,
+    PretrainedWeightInfo,
     create_image_classification_service,
     download_pretrained_weight,
     get_default_service,
@@ -18,6 +24,12 @@ from .facade import (
 )
 
 __all__ = [
+    "ClassificationModelInfo",
+    "ImageClassificationConfig",
+    "ImageClassificationService",
+    "PredictionItem",
+    "PredictionResult",
+    "PretrainedWeightInfo",
     "create_image_classification_service",
     "download_pretrained_weight",
     "get_default_service",

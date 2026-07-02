@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import Dict, List, Optional
-from urllib.parse import urlparse
+from typing import Callable, List, Optional
 
+from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
 from ..configuration import ImageClassificationConfig
 from ..domain import ClassificationModelName, PathLike, PretrainedWeightInfo
 
@@ -31,7 +31,7 @@ class PretrainedWeightManager:
             model_name=normalized,
             filename=filename,
             local_path=local_path,
-            exists=local_path.exists(),
+            exists=is_complete_model_file(local_path),
             url=_known_weight_url(normalized),
         )
 
@@ -45,6 +45,7 @@ class PretrainedWeightManager:
             raise FileNotFoundError(f"Local weight file does not exist: {source}")
         if not source.is_file():
             raise ValueError(f"Local weight path is not a file: {source}")
+        validate_complete_model_file(source)
 
         self._config.pretrained_model_dir.mkdir(parents=True, exist_ok=True)
         target = self.status(normalized).local_path
@@ -52,34 +53,17 @@ class PretrainedWeightManager:
             shutil.copy2(str(source), str(target))
         return self.status(normalized)
 
-    def download_weight(self, model_name: str) -> PretrainedWeightInfo:
+    def download_weight(
+        self,
+        model_name: str,
+        progress_callback: Callable[[int | None, int, int | None], None] | None = None,
+    ) -> PretrainedWeightInfo:
         normalized = _normalize_model_name(model_name)
         self._config.pretrained_model_dir.mkdir(parents=True, exist_ok=True)
         filename = DEFAULT_WEIGHT_FILENAMES[normalized]
         weights = _torchvision_weights(normalized)
         url = str(weights.url)
-
-        try:
-            import torch
-        except Exception as exc:
-            raise RuntimeError(
-                "Downloading pretrained weights needs torch and torchvision. "
-                "Please install them with: pip install -r requirements-classification.txt"
-            ) from exc
-
-        try:
-            torch.hub.load_state_dict_from_url(
-                url,
-                model_dir=str(self._config.pretrained_model_dir),
-                file_name=filename,
-                progress=True,
-            )
-        except TypeError:
-            torch.hub.load_state_dict_from_url(
-                url,
-                model_dir=str(self._config.pretrained_model_dir),
-                progress=True,
-            )
+        download_model_file(url, self._config.pretrained_model_dir / filename, progress_callback)
         return self.status(normalized)
 
     def local_weight_path(self, model_name: str) -> Optional[Path]:

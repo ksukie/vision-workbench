@@ -1,6 +1,6 @@
-# Models and Weights Troubleshooting
+﻿# Models and Weights Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/models-and-weights.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/模型与权重.md)
 
 This page covers YOLO26 `.pt` files, classification pretrained weights, local imports, downloads, and checkpoints.
 
@@ -24,6 +24,12 @@ For YOLO26 detection models, use `models/yolo26_models/`. For YOLO26 segmentatio
 
 Check network access and write permission to the `models/` directory. If downloading from the GUI fails, manually place the model file in the expected folder and click Refresh Models.
 
+## Incomplete or Corrupt `.pt` Files
+
+Vision Workbench downloads model files to a temporary `.pt.part` path first, validates the finished archive, and only then promotes it to `.pt`. Closing the UI or process during download leaves a partial file that is ignored on the next startup, so the model remains available for re-download.
+
+Stale or corrupt `.pt` files should be removed individually and downloaded again from the Qt model page. Temporary files matching `models/**/*.pt.part` are intentionally ignored by Git.
+
 ## Classification Pretrained Weights
 
 The classification GUI stores TorchVision pretrained weights under `models/image_classification_models/pretrained/`. Use:
@@ -36,7 +42,7 @@ If import fails, confirm the selected file is a file, not a directory, and that 
 
 ## Checkpoint Prediction Fails
 
-Classification checkpoints created by this project include `class_names`. If a checkpoint says `Checkpoint does not contain class_names`, use a model saved by the classification training workflow or retrain with this project.
+Classification checkpoints created by this project include `class_names`. The message `Checkpoint does not contain class_names` indicates that the selected file was not saved by the classification training workflow and should be replaced by a compatible checkpoint.
 
 ## Unsupported Model Name
 

@@ -1,73 +1,33 @@
-# YOLO26 Segmentation README
+﻿# YOLO26 Segmentation README
 
-[Back to README](../../../README.md) | [中文文档](../zh-CN/yolo26_segmentation_README.zh-CN.md) | [Extension Guide](../../adding_custom_features_README.md#yolo26-segmentation-add)
+[Back to README](../../../README.md) | [中文文档](../zh-CN/YOLO26分割.md) | [Extension Guide](../../adding_custom_features_README.md#yolo26-segmentation-extensions)
 
 ## Overview
 
-The YOLO26 Segmentation module provides instance segmentation and semantic segmentation for image and camera inputs. It displays mask visualization results and supports saving the current output image.
+YOLO26 Segmentation supports instance segmentation and semantic segmentation for images. It safely downloads official weights, validates local `.pt` files, and separates `-seg` and `-sem` model choices by task. The user-facing workflow is the native Qt page inside the unified Vision Workbench desktop.
 
 ## Setup
 
-Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the YOLO26 dependency group once:
+Install the optional YOLO26 dependency group once:
 
 ```bash
 python scripts/install_dependencies.py yolo26
 ```
 
-If dependencies were installed manually from `requirements-yolo26.txt`, run `python scripts/install_dependencies.py doctor` afterward to verify the Torch build.
-
 ## Launch
 
 ```bash
-yolo26-segmentation-workbench
+vision-workbench
 ```
 
-Source entry:
-
-```bash
-python -m yolo26_segmentation.window.app
-```
-
-## Model Directories
-
-```text
-third_party/yolo26_source/                 YOLO26 source
-models/yolo26_segmentation_models/         YOLO26 segmentation models
-models/yolo26_segmentation_models/custom/  Custom segmentation models
-```
-
-Model naming:
-
-```text
-*-seg.pt  Instance segmentation
-*-sem.pt  Semantic segmentation
-```
-
-## Task Types
-
-| Task | Description |
-| --- | --- |
-| `segment` | Instance segmentation with object-level masks |
-| `semantic` | Semantic segmentation with pixel-level class regions |
-
-## Workflow
-
-1. Select `segment` or `semantic` from `Task`.
-2. Select a matching model from `Model`.
-3. Use `Browse PT` for a custom model.
-4. Select `Open Image` or select a camera.
-5. Select `Run Once` for one inference pass.
-6. Select `Start Live` for live segmentation.
-7. Select `Save Result` to save the current output.
-8. Select `Stop` to stop live processing.
+Open **YOLO Segmentation** from the left navigation, choose the task and model, load an image, run segmentation, and save the result.
 
 ## Python API
 
 ```python
-from yolo26_segmentation.api import list_models, segment_image
+from yolo26_segmentation.api import segment_image
 
-models = list_models(task="segment")
-result = segment_image("input.jpg", model_path=models[0].path)
+result = segment_image("image.jpg", model_path="models/yolo26_segmentation_models/yolo26n-seg.pt")
 ```
 
 ## Source Layout
@@ -75,13 +35,14 @@ result = segment_image("input.jpg", model_path=models[0].path)
 ```text
 src/yolo26_segmentation/api/             Public API
 src/yolo26_segmentation/application/     Segmentation workflows
-src/yolo26_segmentation/configuration/   Defaults and model directories
+src/yolo26_segmentation/configuration/   Defaults and model paths
 src/yolo26_segmentation/domain/          Data models
-src/yolo26_segmentation/infrastructure/  Model discovery, image I/O, YOLO26 backend
-src/yolo26_segmentation/processing/      Segmentation processor
-src/yolo26_segmentation/window/          Tkinter GUI
+src/yolo26_segmentation/infrastructure/  Image/model/YOLO adapters
+src/yolo26_segmentation/processing/      Segmenter wrapper
+src/vision_workbench/desktop/            Unified Qt UI
+src/yolo26_segmentation/window/          Legacy Tkinter compatibility/reference code
 ```
 
 ## Secondary Development
 
-For segmentation models, mask saving, visualization, or batch workflows, see [Adding Custom Features - YOLO26 Segmentation Extensions](../../adding_custom_features_README.md#yolo26-segmentation-add).
+For task-specific model rules, rendering, saving, downloads, or runtime settings, update the service/infrastructure layers and expose controls in the Qt desktop page. See [Adding Custom Features - YOLO26 Segmentation Extensions](../../adding_custom_features_README.md#yolo26-segmentation-extensions).

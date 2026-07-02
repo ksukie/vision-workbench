@@ -1,4 +1,4 @@
-"""Troubleshooting document hints for user-visible errors."""
+﻿"""Troubleshooting document hints for user-visible errors."""
 
 from __future__ import annotations
 
@@ -27,35 +27,35 @@ class TroubleshootingDocs:
 _DOCS = {
     ENVIRONMENT: TroubleshootingDocs(
         "docs/troubleshooting/en/environment.md",
-        "docs/troubleshooting/zh-CN/environment.zh-CN.md",
+        "docs/troubleshooting/zh-CN/环境问题.md",
     ),
     DEEP_LEARNING_DEPENDENCIES: TroubleshootingDocs(
         "docs/troubleshooting/en/deep-learning-dependencies.md",
-        "docs/troubleshooting/zh-CN/deep-learning-dependencies.zh-CN.md",
+        "docs/troubleshooting/zh-CN/深度学习依赖.md",
     ),
     MODELS_AND_WEIGHTS: TroubleshootingDocs(
         "docs/troubleshooting/en/models-and-weights.md",
-        "docs/troubleshooting/zh-CN/models-and-weights.zh-CN.md",
+        "docs/troubleshooting/zh-CN/模型与权重.md",
     ),
     DATA_AND_FILES: TroubleshootingDocs(
         "docs/troubleshooting/en/data-and-files.md",
-        "docs/troubleshooting/zh-CN/data-and-files.zh-CN.md",
+        "docs/troubleshooting/zh-CN/数据与文件.md",
     ),
     CAMERA_AND_VIDEO: TroubleshootingDocs(
         "docs/troubleshooting/en/camera-and-video.md",
-        "docs/troubleshooting/zh-CN/camera-and-video.zh-CN.md",
+        "docs/troubleshooting/zh-CN/摄像头与视频.md",
     ),
     DATASETS_AND_TRAINING: TroubleshootingDocs(
         "docs/troubleshooting/en/datasets-and-training.md",
-        "docs/troubleshooting/zh-CN/datasets-and-training.zh-CN.md",
+        "docs/troubleshooting/zh-CN/数据集与训练.md",
     ),
     MODULE_RUNTIME_ERRORS: TroubleshootingDocs(
         "docs/troubleshooting/en/module-runtime-errors.md",
-        "docs/troubleshooting/zh-CN/module-runtime-errors.zh-CN.md",
+        "docs/troubleshooting/zh-CN/模块运行错误.md",
     ),
     PACKAGING_AND_RELEASE: TroubleshootingDocs(
         "docs/troubleshooting/en/packaging-and-release.md",
-        "docs/troubleshooting/zh-CN/packaging-and-release.zh-CN.md",
+        "docs/troubleshooting/zh-CN/打包与发布.md",
     ),
 }
 

@@ -1,12 +1,12 @@
-# Module Runtime Error Troubleshooting
+﻿# Module Runtime Error Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/module-runtime-errors.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/模块运行错误.md)
 
 This page covers runtime errors inside CV effects, panorama reconstruction, YOLO detection, YOLO segmentation, and classification prediction.
 
 ## CV Basics Processing Failed
 
-Try resetting the result and applying the effect again. If a custom operation was added, confirm it returns a valid grayscale or color NumPy image.
+Try resetting the result and applying the effect again. Custom operations must return a valid grayscale or color NumPy image.
 
 ## Unsupported Effect
 

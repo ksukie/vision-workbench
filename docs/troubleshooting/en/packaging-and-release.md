@@ -1,6 +1,6 @@
-# Packaging and Release Troubleshooting
+﻿# Packaging and Release Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/packaging-and-release.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/打包与发布.md)
 
 This page covers wheel builds, `dist/`, release assets, and model files larger than 100 MB.
 
@@ -31,7 +31,7 @@ The release checker blocks large model files in Git:
 python scripts/check_release_assets.py
 ```
 
-If a model file is larger than 100 MB, move it to local download instructions, Git LFS, or GitHub Release assets before publishing.
+Model files larger than 100 MB should be moved to local download instructions, Git LFS, or GitHub Release assets before publishing.
 
 ## Wheel Is Not a Complete Runtime
 

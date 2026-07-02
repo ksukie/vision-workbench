@@ -3,6 +3,7 @@
 numpy
 opencv-python-headless
 Pillow
+PySide6>=6.7
 
 # YOLO26 detection is heavy and optional.
 # To enable it, use: python scripts/install_dependencies.py yolo26

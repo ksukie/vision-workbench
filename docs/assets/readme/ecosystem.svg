@@ -60,7 +60,7 @@
 
   <rect x="817" y="160" width="145" height="100" rx="18" class="smallCard"/>
   <text x="857" y="197" class="step">03 GUI</text>
-  <text x="844" y="225" class="hint">Tkinter apps</text>
+  <text x="844" y="225" class="hint">PySide6 shell</text>
   <text x="844" y="246" class="hint">Guided tasks</text>
 
   <path d="M270 211h47" class="line"/>

@@ -1,6 +1,6 @@
-# Datasets and Training Troubleshooting
+﻿# Datasets and Training Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/datasets-and-training.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/数据集与训练.md)
 
 This page covers classification datasets, YOLO `data.yaml`, label and mask formats, validation failures, training startup, and missing output weights.
 

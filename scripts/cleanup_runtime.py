@@ -22,12 +22,6 @@ CURRENT_PID = os.getpid()
 
 ENTRY_POINTS = (
     "vision-workbench",
-    "panorama-reconstruction-workbench",
-    "camera-diagnostics-workbench",
-    "yolo26-detection-workbench",
-    "yolo26-training-workbench",
-    "yolo26-segmentation-workbench",
-    "image-classification-workbench",
 )
 
 MODULE_MARKERS = (
@@ -41,6 +35,7 @@ MODULE_MARKERS = (
     "yolo26_training.runner",
     "image_classification.runner",
 )
+
 
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(

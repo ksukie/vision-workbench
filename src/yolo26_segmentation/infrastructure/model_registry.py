@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Dict, List
-from urllib.request import urlretrieve
+from typing import Callable, Dict, List
 
+from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
 from ..configuration import Yolo26SegmentationConfig
 from ..domain import ModelInfo, PathLike
 
@@ -22,7 +22,7 @@ class Yolo26SegmentationModelRegistry:
         by_path = set()
         for name in self._config.model_names_for_task(task):
             path = self._config.model_dir / name
-            exists = path.exists()
+            exists = is_complete_model_file(path)
             if include_missing_official or exists:
                 models.append(ModelInfo(name=name, path=path, task=task, exists=exists, is_official=True))
                 by_path.add(path.resolve())
@@ -37,6 +37,8 @@ class Yolo26SegmentationModelRegistry:
                     continue
                 if task == "semantic" and "-seg" in path.name:
                     continue
+                if not is_complete_model_file(path):
+                    continue
                 models.append(ModelInfo(name=path.name, path=path, task=task, exists=True, is_official=False))
                 by_path.add(resolved)
         return models
@@ -46,13 +48,18 @@ class Yolo26SegmentationModelRegistry:
         base = self._config.official_model_base_url.rstrip("/")
         return {name: f"{base}/{name}" for name in self._config.model_names_for_task(task)}
 
-    def download_official_model(self, name: str, task: str = "segment") -> ModelInfo:
+    def download_official_model(
+        self,
+        name: str,
+        task: str = "segment",
+        progress_callback: Callable[[int | None, int, int | None], None] | None = None,
+    ) -> ModelInfo:
         task = _normalize_task(task)
         if name not in self._config.model_names_for_task(task):
             raise ValueError(f"{name} is not a configured official YOLO26 {task} model.")
         self._config.model_dir.mkdir(parents=True, exist_ok=True)
         path = self._config.model_dir / name
-        urlretrieve(self.official_model_urls(task)[name], path)
+        _download_to_path(self.official_model_urls(task)[name], path, progress_callback)
         return ModelInfo(name=name, path=path, task=task, exists=True, is_official=True)
 
     def add_custom_model(self, path: PathLike, task: str = "segment") -> ModelInfo:
@@ -61,6 +68,7 @@ class Yolo26SegmentationModelRegistry:
             raise ValueError("YOLO26 model path must be a .pt file.")
         if not model_path.exists():
             raise FileNotFoundError(f"Model file not found: {model_path}")
+        validate_complete_model_file(model_path)
         return ModelInfo(name=model_path.name, path=model_path, task=_normalize_task(task), exists=True)
 
 
@@ -69,3 +77,11 @@ def _normalize_task(task: str) -> str:
     if value in ("semantic", "sem", "semantic_segmentation"):
         return "semantic"
     return "segment"
+
+
+def _download_to_path(
+    url: str,
+    path: Path,
+    progress_callback: Callable[[int | None, int, int | None], None] | None,
+) -> None:
+    download_model_file(url, path, progress_callback)

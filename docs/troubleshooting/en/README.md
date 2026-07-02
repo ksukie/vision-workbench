@@ -1,6 +1,6 @@
-# Troubleshooting Guide
+﻿# Troubleshooting Guide
 
-[Project README](../../../README.md) | [中文](../zh-CN/README.zh-CN.md)
+[Project README](../../../README.md) | [中文](../zh-CN/问题排查指南.md)
 
 Use this guide when an install command, GUI popup, camera workflow, model load, dataset validation, or training run fails. Most user-visible errors in Vision Workbench include one of these document paths.
 
@@ -8,10 +8,10 @@ Use this guide when an install command, GUI popup, camera workflow, model load, 
 
 | If you see | Start here |
 | --- | --- |
-| After an abnormal exit, GUI processes, camera handles, training jobs, memory, or GPU resources may remain allocated; run this before restarting or after standard troubleshooting fails to restore a clean runtime environment | [Emergency cleanup](./emergency-cleanup.md) |
-| Command not found, Python import errors, Tkinter startup issues, path or encoding problems | [Environment](./environment.md) |
+| Stale GUI processes, camera handles, training jobs, memory, or GPU resources after an abnormal exit | [Emergency cleanup](./emergency-cleanup.md) |
+| `vision-workbench` not found, Python import errors, PySide6 startup issues, path or encoding problems | [Environment](./environment.md) |
 | Torch, torchvision, CUDA, `nvidia-smi`, or `doctor` problems | [Deep-learning dependencies](./deep-learning-dependencies.md) |
-| Missing `.pt`/`.pth` files, failed model downloads, checkpoint errors | [Models and weights](./models-and-weights.md) |
+| Missing `.pt`/`.pth` files, failed model downloads, incomplete downloads, checkpoint errors | [Models and weights](./models-and-weights.md) |
 | Cannot open/save images, JSON point-pair files, checkpoints, or output files | [Data and files](./data-and-files.md) |
 | Camera scan/open/read failures, screenshots, recording, device permissions | [Camera and video](./camera-and-video.md) |
 | Classification datasets, YOLO `data.yaml`, labels, masks, training aborted | [Datasets and training](./datasets-and-training.md) |

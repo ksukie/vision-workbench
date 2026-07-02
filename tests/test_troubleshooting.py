@@ -1,4 +1,4 @@
-from vision_workbench.troubleshooting import (
+﻿from vision_workbench.troubleshooting import (
     DATASETS_AND_TRAINING,
     MODULE_RUNTIME_ERRORS,
     all_doc_paths,
@@ -11,7 +11,7 @@ def test_troubleshooting_doc_paths_include_bilingual_guides() -> None:
     docs = doc_paths(DATASETS_AND_TRAINING)
 
     assert docs.english == "docs/troubleshooting/en/datasets-and-training.md"
-    assert docs.chinese == "docs/troubleshooting/zh-CN/datasets-and-training.zh-CN.md"
+    assert docs.chinese == "docs/troubleshooting/zh-CN/数据集与训练.md"
 
 
 def test_unknown_troubleshooting_category_falls_back_to_runtime_errors() -> None:

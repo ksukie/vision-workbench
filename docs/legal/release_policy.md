@@ -1,6 +1,6 @@
-# Release Policy
+﻿# Release Policy
 
-[中文文档](./release_policy.zh-CN.md) | [Back to README](../../README.md)
+[中文文档](./发布策略.md) | [Back to README](../../README.md)
 
 Vision Workbench is an open-source learning project released under AGPL-3.0.
 This policy explains what should be included in a public release.

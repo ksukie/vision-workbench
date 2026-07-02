@@ -1,9 +1,16 @@
+import zipfile
 from pathlib import Path
 
 from yolo26_training.application import build_default_service
 from yolo26_training.configuration import Yolo26TrainingConfig
-from yolo26_training.infrastructure import YoloDetectionDatasetValidator
+from yolo26_training.infrastructure import Yolo26ModelRepository, YoloDetectionDatasetValidator
 from yolo26_training.runner import main as runner_main
+
+
+def write_model_archive(path: Path) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("data.pkl", b"fake model")
 
 
 def _make_dataset(root: Path) -> Path:
@@ -127,7 +134,7 @@ def test_yolo_training_dataset_validator_accepts_semantic_mask_dataset(tmp_path:
 def test_yolo_training_runner_dry_run_validates_without_training(tmp_path: Path) -> None:
     data_yaml = _make_dataset(tmp_path / "dataset")
     model_path = tmp_path / "yolo26n.pt"
-    model_path.write_bytes(b"fake model")
+    write_model_archive(model_path)
 
     exit_code = runner_main(
         [
@@ -144,6 +151,45 @@ def test_yolo_training_runner_dry_run_validates_without_training(tmp_path: Path)
     )
 
     assert exit_code == 0
+
+
+def test_yolo_training_model_repository_filters_by_task_and_skips_bad_models(tmp_path: Path) -> None:
+    config = Yolo26TrainingConfig(
+        yolo26_source_dir=tmp_path / "third_party" / "yolo26_source",
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        segmentation_model_dir=tmp_path / "seg_models",
+        segmentation_custom_model_dir=tmp_path / "seg_models" / "custom",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    write_model_archive(config.model_dir / "yolo26n.pt")
+    write_model_archive(config.custom_model_dir / "custom-det.pt")
+    write_model_archive(config.model_dir / "wrong-seg.pt")
+    write_model_archive(config.segmentation_model_dir / "yolo26n-seg.pt")
+    write_model_archive(config.segmentation_model_dir / "yolo26n-sem.pt")
+    write_model_archive(config.segmentation_custom_model_dir / "custom-seg.pt")
+    write_model_archive(config.segmentation_custom_model_dir / "custom-sem.pt")
+    (config.segmentation_custom_model_dir / "broken-seg.pt").write_bytes(b"partial")
+
+    repository = Yolo26ModelRepository(config)
+
+    detect_names = [path.name for path in repository.list_models("detect")]
+    segment_names = [path.name for path in repository.list_models("segment")]
+    semantic_names = [path.name for path in repository.list_models("semantic")]
+
+    assert "yolo26n.pt" in detect_names
+    assert "custom-det.pt" in detect_names
+    assert "wrong-seg.pt" not in detect_names
+    assert "yolo26n-seg.pt" in segment_names
+    assert "custom-seg.pt" in segment_names
+    assert "yolo26n-sem.pt" not in segment_names
+    assert "custom-sem.pt" not in segment_names
+    assert "broken-seg.pt" not in segment_names
+    assert "yolo26n-sem.pt" in semantic_names
+    assert "custom-sem.pt" in semantic_names
+    assert "yolo26n-seg.pt" not in semantic_names
+    assert "custom-seg.pt" not in semantic_names
 
 
 def test_yolo_training_runner_dataset_failure_prints_troubleshooting(tmp_path: Path, capsys) -> None:

@@ -82,7 +82,7 @@ class UltralyticsYolo26SegmentationBackend:
         result = results[0]
         annotated = result.plot()
         item_count = _count_result_items(result)
-        names = tuple(str(value) for value in getattr(result, "names", {}).values())
+        names = _detected_class_names(result)
         return SegmentationOutput(annotated_frame=annotated, item_count=item_count, inference_ms=inference_ms, names=names)
 
     def _import_yolo(self):
@@ -109,6 +109,59 @@ def _count_result_items(result) -> int:
     if boxes is not None:
         return int(len(boxes))
     return 0
+
+
+def _detected_class_names(result) -> tuple[str, ...]:
+    boxes = getattr(result, "boxes", None)
+    if boxes is None:
+        return tuple()
+
+    class_ids = []  # type: list[int]
+    raw_classes = getattr(boxes, "cls", None)
+    if raw_classes is not None:
+        class_ids.extend(_to_int_values(raw_classes))
+    else:
+        for box in boxes:
+            values = _to_int_values(getattr(box, "cls", None))
+            if values:
+                class_ids.append(values[0])
+
+    names = _normalized_names(getattr(result, "names", {}) or {})
+    return tuple(names.get(class_id, str(class_id)) for class_id in class_ids)
+
+
+def _to_int_values(values) -> list[int]:
+    if values is None:
+        return []
+    if hasattr(values, "detach"):
+        values = values.detach()
+    if hasattr(values, "cpu"):
+        values = values.cpu()
+    if hasattr(values, "tolist"):
+        values = values.tolist()
+    if isinstance(values, (int, float)):
+        values = [values]
+    result = []
+    for value in values:
+        try:
+            result.append(int(value))
+        except (TypeError, ValueError):
+            continue
+    return result
+
+
+def _normalized_names(names) -> dict[int, str]:
+    if isinstance(names, dict):
+        items = names.items()
+    else:
+        items = enumerate(names)
+    normalized = {}
+    for key, value in items:
+        try:
+            normalized[int(key)] = str(value)
+        except (TypeError, ValueError):
+            continue
+    return normalized
 
 
 def _release_accelerator_memory() -> None:

@@ -14,4 +14,5 @@ datasets/**/.cache/
 
 # Release policy: keep individual model files at or below 100 MB in Git.
 # Larger files should be downloaded locally or attached to a release asset.
+models/**/*.pt.part
 models/yolo26_models/yolo26x.pt

@@ -63,7 +63,7 @@ class CaptureProfile:
         if self.is_default:
             return "Default"
 
-        fps_text = f"{self.fps:.0f}fps" if self.fps else "fps?"
+        fps_text = f"{self.fps:.0f}fps" if self.fps else "驱动未上报FPS"
         fourcc_text = self.fourcc or "format?"
         backend = f" [{self.backend_name}]" if self.backend_name else ""
         return f"{self.width}x{self.height} | {fps_text} | {fourcc_text}{backend}"

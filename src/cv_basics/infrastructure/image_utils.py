@@ -32,7 +32,9 @@ def normalize_loaded_image(image: ImageArray) -> ImageArray:
     if image.ndim == 3 and image.shape[2] == 4:
         return cv2.cvtColor(image, cv2.COLOR_BGRA2BGR)
     if image.ndim in (2, 3):
-        return ensure_uint8_image(image)
+        if image.dtype == np.uint8:
+            return image
+        return np.clip(image, 0, 255).astype(np.uint8)
     raise ValueError("Loaded file is not a supported image.")
 
 

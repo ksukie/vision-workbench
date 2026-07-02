@@ -24,7 +24,7 @@ class ModelInfo:
     is_official: bool = False
 
     def label(self) -> str:
-        state = "" if self.exists else " [missing]"
+        state = "" if self.exists else "（模型未下载）"
         return f"{self.name}{state}"
 
 
@@ -51,4 +51,3 @@ class SegmentationOutput:
     item_count: int
     inference_ms: float
     names: Tuple[str, ...] = tuple()
-

@@ -1,6 +1,6 @@
-# Data and File Troubleshooting
+﻿# Data and File Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/data-and-files.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/数据与文件.md)
 
 This page covers image open/save errors, decoding/encoding errors, point-pair JSON files, checkpoints, and output paths.
 
@@ -29,11 +29,11 @@ Check that the output directory exists and is writable. Use `.png` first when di
 
 ## Point-pair JSON Fails to Load
 
-Panorama point-pair files must contain a JSON list, and each item must contain `left` and `right` point values. If a saved file was edited manually, re-save it from the GUI to restore the expected structure.
+Panorama point-pair files must contain a JSON list, and each item must contain `left` and `right` point values. Manually edited files should be re-saved from the GUI to restore the expected structure.
 
 ## Path Problems
 
-Use absolute paths while diagnosing. If the path contains non-ASCII characters or special punctuation, retry from a short ASCII-only directory to rule out path parsing problems.
+Use absolute paths while diagnosing. Paths containing non-ASCII characters or special punctuation should be retried from a short ASCII-only directory to rule out path parsing problems.
 
 ## Checkpoint Files
 

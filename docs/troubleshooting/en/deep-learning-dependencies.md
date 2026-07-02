@@ -1,6 +1,6 @@
-# Deep-learning Dependency Troubleshooting
+﻿# Deep-learning Dependency Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/deep-learning-dependencies.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/深度学习依赖.md)
 
 This page covers Torch, torchvision, CUDA/CPU wheels, NVIDIA detection, and YOLO26 import problems.
 

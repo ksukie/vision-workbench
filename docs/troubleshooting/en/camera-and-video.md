@@ -1,6 +1,6 @@
-# Camera and Video Troubleshooting
+﻿# Camera and Video Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/camera-and-video.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/摄像头与视频.md)
 
 This page covers camera discovery, open failures, frame read failures, screenshots, recordings, device permissions, and device contention.
 
@@ -43,4 +43,4 @@ YOLO detection and segmentation can be heavy on CPU. Use a smaller image size, C
 
 ## Emergency Cleanup
 
-If an abnormal exit leaves a camera or GUI process running, see [Emergency cleanup](./emergency-cleanup.md).
+For abnormal exits that leave a camera or GUI process running, see [Emergency cleanup](./emergency-cleanup.md).

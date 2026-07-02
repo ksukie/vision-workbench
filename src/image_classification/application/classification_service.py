@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import gc
 from dataclasses import replace
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Tuple
 
 from ..configuration import ImageClassificationConfig
 from ..domain import (
@@ -43,6 +44,8 @@ class ImageClassificationService:
         self._model_repository = model_repository
         self._weight_manager = weight_manager
         self._backend = backend
+        self._pretrained_cache = {}  # type: Dict[Tuple[str, str, str, int], LoadedClassifier]
+        self._checkpoint_cache = {}  # type: Dict[Tuple[str, str, int], LoadedClassifier]
 
     def supported_models(self) -> List[str]:
         return list(self._config.supported_models)
@@ -79,15 +82,40 @@ class ImageClassificationService:
             return [self._weight_manager.status(model_name)]
         return self._weight_manager.status_all()
 
-    def download_pretrained_weight(self, model_name: str) -> PretrainedWeightInfo:
-        return self._weight_manager.download_weight(model_name)
+    def clear_pretrained_cache(self, model_name: Optional[str] = None) -> None:
+        if model_name is None:
+            if self._pretrained_cache:
+                self._pretrained_cache.clear()
+                _release_torch_memory()
+            return
+
+        normalized = self._weight_manager.status(model_name).model_name
+        before_count = len(self._pretrained_cache)
+        self._pretrained_cache = {
+            key: classifier
+            for key, classifier in self._pretrained_cache.items()
+            if key[0] != normalized
+        }
+        if len(self._pretrained_cache) != before_count:
+            _release_torch_memory()
+
+    def download_pretrained_weight(
+        self,
+        model_name: str,
+        progress_callback: Callable[[int | None, int, int | None], None] | None = None,
+    ) -> PretrainedWeightInfo:
+        info = self._weight_manager.download_weight(model_name, progress_callback=progress_callback)
+        self._invalidate_pretrained_cache(info.model_name)
+        return info
 
     def import_pretrained_weight(
         self,
         model_name: str,
         source_path: PathLike,
     ) -> PretrainedWeightInfo:
-        return self._weight_manager.import_weight(model_name, source_path)
+        info = self._weight_manager.import_weight(model_name, source_path)
+        self._invalidate_pretrained_cache(info.model_name)
+        return info
 
     def train(self, job: ClassificationTrainingConfig) -> Path:
         if job.model_name not in ClassificationModelName.all():
@@ -112,12 +140,20 @@ class ImageClassificationService:
         model_name: str,
         device: str = "auto",
     ) -> LoadedClassifier:
-        local_weight = self._weight_manager.local_weight_path(model_name)
-        return self._backend.load_pretrained(
+        status = self._weight_manager.status(model_name)
+        local_weight = status.local_path if status.exists else None
+        key = _pretrained_cache_key(status.model_name, device, local_weight)
+        cached = self._pretrained_cache.get(key)
+        if cached is not None:
+            return cached
+        self._evict_pretrained_cache_except(key)
+        classifier = self._backend.load_pretrained(
             model_name=model_name,
             device=device,
             weight_path=local_weight,
         )
+        self._pretrained_cache[key] = classifier
+        return classifier
 
     def load_classifier(
         self,
@@ -127,7 +163,14 @@ class ImageClassificationService:
         path = Path(model_path).expanduser()
         if not path.exists():
             raise FileNotFoundError(f"Classification model does not exist: {path}")
-        return self._backend.load_checkpoint(model_path=path, device=device)
+        key = _checkpoint_cache_key(path, device)
+        cached = self._checkpoint_cache.get(key)
+        if cached is not None:
+            return cached
+        self._evict_checkpoint_cache_except(key)
+        classifier = self._backend.load_checkpoint(model_path=path, device=device)
+        self._checkpoint_cache[key] = classifier
+        return classifier
 
     def predict_with_pretrained(
         self,
@@ -142,6 +185,27 @@ class ImageClassificationService:
             image_path=Path(image_path).expanduser(),
             topk=topk or self._config.default_topk,
         )
+
+    def _invalidate_pretrained_cache(self, model_name: str) -> None:
+        self.clear_pretrained_cache(model_name)
+
+    def _evict_pretrained_cache_except(self, keep_key: Tuple[str, str, str, int]) -> None:
+        if any(key != keep_key for key in self._pretrained_cache):
+            self._pretrained_cache = {
+                key: classifier
+                for key, classifier in self._pretrained_cache.items()
+                if key == keep_key
+            }
+            _release_torch_memory()
+
+    def _evict_checkpoint_cache_except(self, keep_key: Tuple[str, str, int]) -> None:
+        if any(key != keep_key for key in self._checkpoint_cache):
+            self._checkpoint_cache = {
+                key: classifier
+                for key, classifier in self._checkpoint_cache.items()
+                if key == keep_key
+            }
+            _release_torch_memory()
 
     def predict_with_checkpoint(
         self,
@@ -170,3 +234,34 @@ def build_default_service(
         weight_manager=PretrainedWeightManager(resolved_config),
         backend=TorchVisionClassifierBackend(),
     )
+
+
+def _pretrained_cache_key(
+    model_name: str,
+    device: str,
+    weight_path: Optional[Path],
+) -> Tuple[str, str, str, int]:
+    if weight_path is None:
+        return (model_name, device, "", 0)
+    resolved = weight_path.expanduser().resolve()
+    return (model_name, device, str(resolved), resolved.stat().st_mtime_ns)
+
+
+def _checkpoint_cache_key(model_path: Path, device: str) -> Tuple[str, str, int]:
+    resolved = model_path.expanduser().resolve()
+    return (str(resolved), device, resolved.stat().st_mtime_ns)
+
+
+def _release_torch_memory() -> None:
+    gc.collect()
+    try:
+        import torch
+    except Exception:
+        return
+
+    try:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+    except Exception:
+        pass

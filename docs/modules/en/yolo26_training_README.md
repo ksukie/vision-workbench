@@ -1,14 +1,14 @@
-# YOLO26 Training README
+﻿# YOLO26 Training README
 
-[Back to README](../../../README.md) | [中文文档](../zh-CN/yolo26_training_README.zh-CN.md) | [Extension Guide](../../adding_custom_features_README.md#yolo26-training-add)
+[Back to README](../../../README.md) | [中文文档](../zh-CN/YOLO26训练.md) | [Extension Guide](../../adding_custom_features_README.md#yolo26-training-extensions)
 
 ## Overview
 
-The YOLO26 Training module provides basic training entry points for detection, instance segmentation, and semantic segmentation tasks. Dataset validation runs before training and stops the workflow when the dataset is invalid.
+YOLO26 Training provides dataset validation and basic training for detection, instance segmentation, and semantic segmentation. The user-facing workflow is the native Qt page inside the unified Vision Workbench desktop, while `yolo26-train` remains available for command-line training.
 
 ## Setup
 
-Use the shared project environment from the root [Quick Start](../../../README.md#quick-start), then install the YOLO26 dependency group once:
+Install the optional YOLO26 dependency group once:
 
 ```bash
 python scripts/install_dependencies.py yolo26
@@ -18,22 +18,18 @@ If dependencies were installed manually from `requirements-yolo26.txt`, run `pyt
 
 ## Launch
 
-GUI:
+Qt GUI:
 
 ```bash
-yolo26-training-workbench
+vision-workbench
 ```
+
+Open **YOLO Training** from the left navigation, choose `detect`, `segment`, or `semantic`, select `data.yaml`, choose a pretrained weight file, validate the dataset, and start training.
 
 CLI:
 
 ```bash
 yolo26-train --task detect --data path/to/dataset/data.yaml --model models/yolo26_models/yolo26n.pt
-```
-
-Basic script:
-
-```bash
-python -m yolo26_training.train
 ```
 
 ## Task Types
@@ -44,18 +40,7 @@ python -m yolo26_training.train
 | `segment` | `class x1 y1 x2 y2 x3 y3 ...` |
 | `semantic` | PNG/TIF mask or polygon labels |
 
-Datasets must provide `data.yaml` with image paths, class count, and class names aligned with the actual dataset.
-
-## GUI Workflow
-
-1. Select `detect`, `segment`, or `semantic` from `Task`.
-2. Select dataset `data.yaml`.
-3. Select an initial model.
-4. Configure `Epochs`, `Image size`, `Batch size`, `Device`, and related parameters.
-5. Run dataset validation.
-6. Start training after validation succeeds.
-7. Review logs in the GUI.
-8. Review outputs under `runs/yolo26_training/`.
+The training model list is task-aware: detection weights are separate from `-seg` and `-sem` weights, and incomplete `.pt` files are skipped.
 
 ## CLI Training
 
@@ -69,27 +54,13 @@ Validation only:
 yolo26-train --task detect --data path/to/data.yaml --model path/to/model.pt --dry-run
 ```
 
-## Basic Script
-
-Configuration variables are defined at the top of:
-
-```text
-src/yolo26_training/train.py
-```
-
-Run:
-
-```bash
-python -m yolo26_training.train
-```
-
 ## Output Directory
 
 ```text
 runs/yolo26_training/
 ```
 
-The YOLO26 source generates training outputs, which commonly include weights, configuration files, logs, and metric plots.
+YOLO26 training outputs commonly include weights, configuration files, logs, and metric plots.
 
 ## Python API
 
@@ -107,12 +78,13 @@ src/yolo26_training/api/             Public API
 src/yolo26_training/application/     Training workflows
 src/yolo26_training/configuration/   Defaults and paths
 src/yolo26_training/domain/          Data models
-src/yolo26_training/infrastructure/  Dataset validation, model discovery, YOLO26 training backend
-src/yolo26_training/runner.py        CLI entry point
+src/yolo26_training/infrastructure/  Dataset validation, model discovery, YOLO backend
+src/yolo26_training/runner.py        CLI training entry point
 src/yolo26_training/train.py         Basic training script
-src/yolo26_training/window/          Tkinter GUI
+src/vision_workbench/desktop/        Unified Qt UI
+src/yolo26_training/window/          Legacy Tkinter compatibility/reference code
 ```
 
 ## Secondary Development
 
-For training tasks, parameters, dataset validation rules, or log-saving strategies, see [Adding Custom Features - YOLO26 Training Extensions](../../adding_custom_features_README.md#yolo26-training-add).
+For training tasks, parameters, dataset validation rules, or log-saving strategies, update the service/infrastructure layers and expose controls in the Qt desktop page. See [Adding Custom Features - YOLO26 Training Extensions](../../adding_custom_features_README.md#yolo26-training-extensions).

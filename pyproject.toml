@@ -4,23 +4,21 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "vision-workbench"
-version = "0.1.0"
+version = "0.2.0"
 description = "An AGPL-licensed computer-vision learning workbench with traditional CV, panorama reconstruction, camera diagnostics, classification, YOLO26 detection, segmentation, and training workflows."
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = { file = "LICENSE" }
 authors = [
     { name = "Shuqi Ke" }
 ]
-keywords = ["computer-vision", "opencv", "tkinter", "image-processing", "yolo", "education"]
+keywords = ["computer-vision", "opencv", "pyside6", "qt", "image-processing", "yolo", "education"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Education",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: GNU Affero General Public License v3",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -31,6 +29,7 @@ dependencies = [
     "numpy",
     "opencv-python-headless",
     "Pillow",
+    "PySide6>=6.7",
 ]
 
 [project.optional-dependencies]
@@ -47,13 +46,7 @@ yolo26-train = "yolo26_training.runner:main"
 image-classification-train = "image_classification.runner:main"
 
 [project.gui-scripts]
-vision-workbench = "cv_basics.window.app:main"
-panorama-reconstruction-workbench = "panorama_reconstruction.window.app:main"
-camera-diagnostics-workbench = "camera_diagnostics.window.app:main"
-yolo26-detection-workbench = "yolo26_detection.window.app:main"
-yolo26-training-workbench = "yolo26_training.window.app:main"
-yolo26-segmentation-workbench = "yolo26_segmentation.window.app:main"
-image-classification-workbench = "image_classification.window.app:main"
+vision-workbench = "vision_workbench.desktop.app:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 import cv2
 
@@ -55,8 +55,12 @@ class Yolo26DetectionService:
     def add_custom_model(self, path: PathLike) -> ModelInfo:
         return self._model_registry.add_custom_model(path)
 
-    def download_official_model(self, name: str) -> ModelInfo:
-        return self._model_registry.download_official_model(name)
+    def download_official_model(
+        self,
+        name: str,
+        progress_callback: Callable[[int | None, int, int | None], None] | None = None,
+    ) -> ModelInfo:
+        return self._model_registry.download_official_model(name, progress_callback=progress_callback)
 
     def open_camera(
         self,

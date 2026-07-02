@@ -1,3 +1,4 @@
+import zipfile
 from pathlib import Path
 from typing import Tuple
 
@@ -12,6 +13,12 @@ from image_classification.runner import main as runner_main
 def make_image(path: Path, color: Tuple[int, int, int]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     Image.new("RGB", (24, 24), color).save(path)
+
+
+def write_model_archive(path: Path, payload: bytes = b"fake weight") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(path, "w") as archive:
+        archive.writestr("data.pkl", payload)
 
 
 def make_classification_dataset(root: Path) -> Path:
@@ -86,15 +93,129 @@ def test_pretrained_weight_status_and_import(tmp_path: Path) -> None:
     )
     service = api.create_image_classification_service(config)
     source_weight = tmp_path / "source.pth"
-    source_weight.write_bytes(b"fake local weight")
+    write_model_archive(source_weight, b"fake local weight")
 
     status_before = service.pretrained_weight_status("resnet18")[0]
     status_after = service.import_pretrained_weight("resnet18", source_weight)
 
     assert not status_before.exists
     assert status_after.exists
-    assert status_after.local_path.read_bytes() == b"fake local weight"
+    assert status_after.local_path.read_bytes() == source_weight.read_bytes()
     assert status_after.filename == "resnet18-f37072fd.pth"
+
+
+def test_pretrained_weight_status_rejects_corrupt_cache(tmp_path: Path) -> None:
+    config = ImageClassificationConfig(
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        pretrained_model_dir=tmp_path / "models" / "pretrained",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = api.create_image_classification_service(config)
+    bad_weight = config.pretrained_model_dir / "resnet18-f37072fd.pth"
+    bad_weight.parent.mkdir(parents=True)
+    bad_weight.write_bytes(b"partial")
+
+    status = service.pretrained_weight_status("resnet18")[0]
+
+    assert not status.exists
+
+
+def test_pretrained_prediction_reuses_loaded_classifier(tmp_path: Path) -> None:
+    class FakeBackend:
+        def __init__(self) -> None:
+            self.load_pretrained_calls = []
+
+        def load_pretrained(self, model_name: str, device: str, weight_path: Path | None):
+            classifier = object()
+            self.load_pretrained_calls.append((model_name, device, weight_path, classifier))
+            return classifier
+
+        def predict(self, classifier, image_path: Path, topk: int):
+            return api.PredictionResult(
+                image_path=Path(image_path),
+                model_name="resnet18",
+                model_path=None,
+                inference_ms=1.0,
+                predictions=[api.PredictionItem("cat", 0.9)],
+            )
+
+    config = ImageClassificationConfig(
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        pretrained_model_dir=tmp_path / "models" / "pretrained",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = api.create_image_classification_service(config)
+    fake_backend = FakeBackend()
+    service._backend = fake_backend
+    image_path = tmp_path / "image.png"
+    make_image(image_path, (200, 40, 40))
+
+    service.predict_with_pretrained("resnet18", image_path, topk=1, device="cpu")
+    service.predict_with_pretrained("resnet18", image_path, topk=1, device="cpu")
+
+    assert len(fake_backend.load_pretrained_calls) == 1
+
+    source_weight = tmp_path / "source.pth"
+    write_model_archive(source_weight, b"new local weight")
+    service.import_pretrained_weight("resnet18", source_weight)
+    service.predict_with_pretrained("resnet18", image_path, topk=1, device="cpu")
+
+    assert len(fake_backend.load_pretrained_calls) == 2
+
+
+def test_pretrained_prediction_switch_evicts_previous_classifier(tmp_path: Path) -> None:
+    class FakeBackend:
+        def __init__(self) -> None:
+            self.load_pretrained_calls = []
+
+        def load_pretrained(self, model_name: str, device: str, weight_path: Path | None):
+            classifier = object()
+            self.load_pretrained_calls.append((model_name, device, weight_path, classifier))
+            return classifier
+
+        def predict(self, classifier, image_path: Path, topk: int):
+            model_name = next(
+                model_name
+                for model_name, _device, _weight_path, loaded in self.load_pretrained_calls
+                if loaded is classifier
+            )
+            return api.PredictionResult(
+                image_path=Path(image_path),
+                model_name=model_name,
+                model_path=None,
+                inference_ms=1.0,
+                predictions=[api.PredictionItem("cat", 0.9)],
+            )
+
+    config = ImageClassificationConfig(
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        pretrained_model_dir=tmp_path / "models" / "pretrained",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = api.create_image_classification_service(config)
+    fake_backend = FakeBackend()
+    service._backend = fake_backend
+    image_path = tmp_path / "image.png"
+    make_image(image_path, (200, 40, 40))
+
+    service.predict_with_pretrained("resnet18", image_path, topk=1, device="cpu")
+    service.predict_with_pretrained("mobilenet_v3_small", image_path, topk=1, device="cpu")
+
+    assert len(fake_backend.load_pretrained_calls) == 2
+    assert len(service._pretrained_cache) == 1
+    assert next(iter(service._pretrained_cache))[0] == "mobilenet_v3_small"
+
+    service.predict_with_pretrained("resnet18", image_path, topk=1, device="cpu")
+
+    assert len(fake_backend.load_pretrained_calls) == 3
+    assert len(service._pretrained_cache) == 1
+    assert next(iter(service._pretrained_cache))[0] == "resnet18"
 
 
 def test_runner_dry_run_validates_without_training(tmp_path: Path) -> None:

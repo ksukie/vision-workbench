@@ -1,6 +1,11 @@
 """Public API package."""
 
 from .facade import (
+    AppConfig,
+    EffectName,
+    ImageArray,
+    ImageProcessingServicePort,
+    ProcessingParams,
     apply_blur,
     apply_effect,
     center_crop_image,
@@ -35,6 +40,11 @@ from .facade import (
 )
 
 __all__ = [
+    "AppConfig",
+    "EffectName",
+    "ImageArray",
+    "ImageProcessingServicePort",
+    "ProcessingParams",
     "apply_blur",
     "apply_effect",
     "center_crop_image",

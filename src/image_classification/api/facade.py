@@ -13,6 +13,7 @@ from ..domain import (
     DatasetValidationReport,
     PathLike,
     PretrainedWeightInfo,
+    PredictionItem,
     PredictionResult,
 )
 from ..processing import LoadedClassifier

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 import cv2
 
@@ -37,8 +37,13 @@ class Yolo26SegmentationService:
     def add_custom_model(self, path: PathLike, task: str = "segment") -> ModelInfo:
         return self._model_registry.add_custom_model(path, task)
 
-    def download_official_model(self, name: str, task: str = "segment") -> ModelInfo:
-        return self._model_registry.download_official_model(name, task)
+    def download_official_model(
+        self,
+        name: str,
+        task: str = "segment",
+        progress_callback: Callable[[int | None, int, int | None], None] | None = None,
+    ) -> ModelInfo:
+        return self._model_registry.download_official_model(name, task, progress_callback=progress_callback)
 
     def load_image(self, path: PathLike) -> ImageArray:
         return load_image(path)

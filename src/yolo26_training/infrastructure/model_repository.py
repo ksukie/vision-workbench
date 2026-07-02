@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
+from vision_workbench.model_files import is_complete_model_file
 from ..configuration import Yolo26TrainingConfig
 
 
@@ -19,14 +20,21 @@ class Yolo26ModelRepository:
         models = []
         model_dir = self._config.model_dir_for_task(task)
         custom_dir = self._config.custom_model_dir_for_task(task)
+        official_paths = {model_dir / name for name in self._config.model_names_for_task(task)}
         for name in self._config.model_names_for_task(task):
             path = model_dir / name
-            if path.exists():
+            if is_complete_model_file(path):
                 models.append(path.resolve())
         for directory in (model_dir, custom_dir):
             if not directory.exists():
                 continue
             for path in sorted(directory.glob("*.pt")):
+                if path in official_paths:
+                    continue
+                if not _matches_task(path, task):
+                    continue
+                if not is_complete_model_file(path):
+                    continue
                 resolved = path.resolve()
                 if resolved not in models:
                     models.append(resolved)
@@ -49,3 +57,12 @@ def _normalize_task(task: str) -> str:
     if value not in ("detect", "segment", "semantic"):
         return "detect"
     return value
+
+
+def _matches_task(path: Path, task: str) -> bool:
+    name = path.name.lower()
+    if task == "segment":
+        return "-sem" not in name
+    if task == "semantic":
+        return "-seg" not in name
+    return "-seg" not in name and "-sem" not in name

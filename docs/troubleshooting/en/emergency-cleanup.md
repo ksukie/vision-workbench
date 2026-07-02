@@ -1,8 +1,8 @@
-# Emergency Cleanup
+﻿# Emergency Cleanup
 
-[Index](./README.md) | [中文](../zh-CN/emergency-cleanup.zh-CN.md)
+[Index](./README.md) | [中文](../zh-CN/应急清理.md)
 
-Use this page when an abnormal Vision Workbench exit leaves GUI processes, camera handles, training jobs, memory, or GPU resources allocated. Run the emergency cleanup script before restarting the project, or after standard troubleshooting fails, to restore a clean runtime environment. The script terminates stale project-related processes so the operating system or device driver can release cameras, file handles, memory, and GPU memory.
+Use this page when an abnormal Vision Workbench exit leaves GUI processes, camera handles, training jobs, memory, or GPU resources allocated. The cleanup script terminates stale project-related processes so the operating system or device driver can release cameras, file handles, memory, and GPU memory.
 
 ## Safe Workflow
 
@@ -28,14 +28,15 @@ python scripts/cleanup_runtime.py --kill --force
 
 ## What It Matches
 
-The script only targets processes whose command line contains one of these signals:
+The script targets processes whose command line contains one of these signals:
 
-- A Vision Workbench entry point, such as `vision-workbench` or `yolo26-detection-workbench`.
-- A known Vision Workbench module entry, such as `python -m yolo26_detection.window.app`.
+- The public Vision Workbench GUI entry point: `vision-workbench`.
+- Known manual module entries such as `python -m yolo26_detection.window.app`, retained for legacy compatibility.
+- Training CLI entries such as `python -m yolo26_training.runner`.
 - The current repository path.
 
 It does not intentionally match unrelated Python processes. Still, review the dry-run list before using `--kill`.
 
 ## If Nothing Is Found
 
-If the script says no Vision Workbench runtime processes were found, but the camera or GPU still looks busy, the resource may be held by another application, a driver, or the operating system. Check Task Manager, close camera apps, or reboot if the driver does not release the device.
+When the script reports no Vision Workbench runtime processes but the camera or GPU still looks busy, the resource may be held by another application, a driver, or the operating system. Check Task Manager, close camera apps, or reboot if the driver does not release the device.
