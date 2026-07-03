@@ -6,6 +6,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Tuple
 
+from vision_workbench.model_manifest import (
+    default_model_manifest_cache_path,
+    default_model_manifest_url,
+    yolo26_model_entries_for_task,
+)
+
 
 def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
@@ -72,6 +78,9 @@ class Yolo26TrainingConfig:
         "yolo26l-sem.pt",
         "yolo26x-sem.pt",
     )
+    official_model_base_url: str = "https://github.com/ultralytics/assets/releases/download/v8.4.0"
+    official_model_manifest_url: str | None = field(default_factory=default_model_manifest_url)
+    model_manifest_cache_path: Path = field(default_factory=default_model_manifest_cache_path)
     image_extensions: Tuple[str, ...] = (
         ".jpg",
         ".jpeg",
@@ -94,8 +103,15 @@ class Yolo26TrainingConfig:
         return self.custom_model_dir if task == "detect" else self.segmentation_custom_model_dir
 
     def model_names_for_task(self, task: str) -> Tuple[str, ...]:
-        if task == "segment":
-            return self.official_segment_model_names
-        if task == "semantic":
-            return self.official_semantic_model_names
-        return self.official_model_names
+        fallback = {
+            "detect": self.official_model_names,
+            "segment": self.official_segment_model_names,
+            "semantic": self.official_semantic_model_names,
+        }
+        entries = yolo26_model_entries_for_task(
+            task,
+            fallback_names_by_task=fallback,
+            base_url=self.official_model_base_url,
+            cache_path=self.model_manifest_cache_path,
+        )
+        return tuple(entry.name for entry in entries)

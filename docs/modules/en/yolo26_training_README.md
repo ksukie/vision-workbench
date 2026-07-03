@@ -62,6 +62,23 @@ runs/yolo26_training/
 
 YOLO26 training outputs commonly include weights, configuration files, logs, and metric plots.
 
+Common weight paths:
+
+```text
+runs/yolo26_training/<run_name>/weights/best.pt
+runs/yolo26_training/<run_name>/weights/last.pt
+```
+
+Prefer `best.pt` for later inference. To make trained weights appear in the detection or segmentation dropdowns, copy and rename the file into the task-specific folder, then click the page refresh button:
+
+| Task | Recommended destination | Naming suggestion |
+| --- | --- | --- |
+| `detect` | `models/yolo26_models/custom/` | `my-det.pt` |
+| `segment` | `models/yolo26_segmentation_models/custom/` | `my-seg.pt` |
+| `semantic` | `models/yolo26_segmentation_models/custom/` | `my-sem.pt` |
+
+See [Trained Model Loading And API Notes](./trained_model_loading_and_api_README.md) for trained-weight placement, dropdown discovery, and Python API notes.
+
 ## Python API
 
 ```python

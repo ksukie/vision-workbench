@@ -6,6 +6,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Tuple
 
+from vision_workbench.model_manifest import (
+    default_model_manifest_cache_path,
+    default_model_manifest_url,
+)
+
 
 def project_root() -> Path:
     return Path(__file__).resolve().parents[3]
@@ -45,6 +50,8 @@ class Yolo26SegmentationConfig:
         "yolo26x-sem.pt",
     )
     official_model_base_url: str = "https://github.com/ultralytics/assets/releases/download/v8.4.0"
+    official_model_manifest_url: str | None = field(default_factory=default_model_manifest_url)
+    model_manifest_cache_path: Path = field(default_factory=default_model_manifest_cache_path)
     task_options: Tuple[str, ...] = ("segment", "semantic")
     device_options: Tuple[str, ...] = ("auto", "cpu", "cuda", "mps")
     image_size_options: Tuple[int, ...] = (640, 960, 1280, 2048)
@@ -56,4 +63,3 @@ class Yolo26SegmentationConfig:
 
     def model_names_for_task(self, task: str) -> Tuple[str, ...]:
         return self.official_semantic_model_names if task == "semantic" else self.official_segment_model_names
-

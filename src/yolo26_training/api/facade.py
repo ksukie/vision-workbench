@@ -41,3 +41,7 @@ def validate_dataset(
 
 def list_models(task: str = "detect") -> List[Path]:
     return get_default_service().list_models(task)
+
+
+def refresh_model_manifest() -> int:
+    return get_default_service().refresh_model_manifest()

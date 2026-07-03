@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List
 
+from vision_workbench.model_manifest import refresh_model_manifest
 from vision_workbench.model_files import is_complete_model_file
 from ..configuration import Yolo26TrainingConfig
 
@@ -46,6 +47,13 @@ class Yolo26ModelRepository:
         if models:
             return models[0]
         return self._config.model_dir_for_task(task) / self._config.model_names_for_task(task)[0]
+
+    def refresh_model_manifest(self) -> int:
+        entries = refresh_model_manifest(
+            self._config.official_model_manifest_url,
+            self._config.model_manifest_cache_path,
+        )
+        return len(entries)
 
 
 def _normalize_task(task: str) -> str:

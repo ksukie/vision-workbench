@@ -11,6 +11,9 @@ def test_sample_pair_is_packaged() -> None:
 
     assert pair.left.exists()
     assert pair.right.exists()
+    # The packaged filenames are historical; the returned pair keeps spatial semantics.
+    assert pair.left.name == "right.png"
+    assert pair.right.name == "left.png"
 
 
 def test_panorama_reconstruction_from_sample_pair(tmp_path: Path) -> None:

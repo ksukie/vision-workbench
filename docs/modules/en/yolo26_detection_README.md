@@ -24,6 +24,18 @@ vision-workbench
 
 Open **YOLO Detection** from the left navigation. The model dropdown shows full paths when expanded and only the selected file name when collapsed. Incomplete or corrupt model files are not treated as usable weights.
 
+## Custom Weight Locations
+
+The detection page scans:
+
+```text
+models/yolo26_models/
+models/yolo26_models/custom/
+~/.vision_workbench/models/yolo26_models/
+```
+
+After training, copy `runs/yolo26_training/<run_name>/weights/best.pt` to a name like `models/yolo26_models/custom/my-det.pt`, then click refresh in the detection page to show it in the model dropdown.
+
 ## Python API
 
 ```python

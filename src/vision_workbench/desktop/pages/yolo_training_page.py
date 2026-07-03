@@ -26,12 +26,13 @@ from PySide6.QtWidgets import (
 )
 
 from vision_workbench.model_files import validate_complete_model_file
-from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, help_hint, with_help
+from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, MODELS_AND_WEIGHTS, help_hint, with_help
 from yolo26_training.api import create_yolo26_training_service
 from yolo26_training.application import Yolo26TrainingService
 from yolo26_training.configuration import Yolo26TrainingConfig
 from yolo26_training.domain import TrainingJobConfig
 
+from ..task_runner import QtTaskRunner
 from ..widgets import SELECTED_DISPLAY_ROLE
 from ..widgets import NoWheelComboBox as QComboBox
 from ..widgets import NoWheelSpinBox as QSpinBox
@@ -51,6 +52,12 @@ class TrainingProcessPayload:
     started_ms: float
 
 
+@dataclass(frozen=True)
+class ModelManifestPayload:
+    entry_count: int
+    total_ms: float
+
+
 class YoloTrainingPage(QWidget):
     """Native Qt implementation of the YOLO26 training workflow."""
 
@@ -65,6 +72,7 @@ class YoloTrainingPage(QWidget):
         super().__init__(parent)
         self.config = config
         self.service = service or create_yolo26_training_service(config)
+        self.tasks = QtTaskRunner(self)
         self.process = None  # type: QProcess | None
         self._process_started_at = None  # type: float | None
         self.models = []  # type: list[Path]
@@ -86,7 +94,8 @@ class YoloTrainingPage(QWidget):
         self.model_label = QLabel("预训练权重")
         self.model_combo = QComboBox()
         self.model_combo.setMinimumWidth(260)
-        self.browse_model_button = make_button("选择权重文件")
+        self.browse_model_button = make_button("选择本地权重文件")
+        self.browse_model_button.setToolTip("从本地磁盘选择一个 .pt 训练初始权重")
         self.refresh_models_button = make_button("查找权重")
 
         self.epochs_label = QLabel("轮数")
@@ -255,7 +264,7 @@ class YoloTrainingPage(QWidget):
         self.choose_dataset_button.clicked.connect(self.choose_dataset)
         self.validate_button.clicked.connect(self.validate_dataset)
         self.browse_model_button.clicked.connect(self.choose_model)
-        self.refresh_models_button.clicked.connect(self.refresh_models)
+        self.refresh_models_button.clicked.connect(self.refresh_model_catalog)
         self.start_button.clicked.connect(self.start_training)
         self.stop_button.clicked.connect(self.stop_training)
         self.open_runs_button.clicked.connect(self.open_runs_dir)
@@ -277,7 +286,7 @@ class YoloTrainingPage(QWidget):
     def choose_model(self) -> None:
         path, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "选择 YOLO26 预训练权重",
+            "选择本地 YOLO26 预训练权重",
             str(self.config.model_dir_for_task(self.current_task())),
             "PyTorch 权重 (*.pt);;所有文件 (*.*)",
         )
@@ -309,6 +318,21 @@ class YoloTrainingPage(QWidget):
                     break
         self._update_info()
         self._update_action_states()
+
+    def refresh_model_catalog(self) -> None:
+        refresher = getattr(self.service, "refresh_model_manifest", None)
+        if not callable(refresher):
+            self.refresh_models()
+            return
+        accepted = self.tasks.run(
+            task=self._refresh_model_manifest,
+            on_success=self._on_model_manifest_refreshed,
+            on_error=self._on_model_manifest_error,
+        )
+        if not accepted:
+            QMessageBox.information(self, "正在处理", "请等待当前任务完成。")
+            return
+        self._set_status("正在刷新模型目录...")
 
     def validate_dataset(self) -> bool:
         data_path = self.dataset_edit.text().strip()
@@ -377,6 +401,24 @@ class YoloTrainingPage(QWidget):
             if not self.process.waitForFinished(3000):
                 self.process.kill()
                 self.process.waitForFinished(1000)
+        self.tasks.shutdown()
+
+    def _refresh_model_manifest(self) -> ModelManifestPayload:
+        started_at = time.perf_counter()
+        refresher = getattr(self.service, "refresh_model_manifest")
+        entry_count = int(refresher())
+        return ModelManifestPayload(entry_count=entry_count, total_ms=(time.perf_counter() - started_at) * 1000.0)
+
+    def _on_model_manifest_refreshed(self, payload: ModelManifestPayload) -> None:
+        self.refresh_models()
+        if payload.entry_count:
+            self._set_status(f"模型目录已刷新：{payload.entry_count} 项（{payload.total_ms:.1f} ms）。")
+        else:
+            self._set_status(f"模型列表已重新扫描（{payload.total_ms:.1f} ms）。")
+
+    def _on_model_manifest_error(self, exc: Exception) -> None:
+        self._set_status("模型目录刷新失败。")
+        QMessageBox.critical(self, "刷新模型目录失败", with_help(exc, MODELS_AND_WEIGHTS))
 
     def _current_job(self) -> TrainingJobConfig:
         data_path = Path(self.dataset_edit.text().strip())

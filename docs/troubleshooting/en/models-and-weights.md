@@ -24,6 +24,22 @@ For YOLO26 detection models, use `models/yolo26_models/`. For YOLO26 segmentatio
 
 Check network access and write permission to the `models/` directory. If downloading from the GUI fails, manually place the model file in the expected folder and click Refresh Models.
 
+## Remote Model Manifest
+
+The YOLO26 pages read the local manifest cache plus bundled defaults when filling model dropdowns. Set `VISION_WORKBENCH_MODEL_MANIFEST_URL` to a JSON manifest URL if you maintain a remote catalog. Clicking Refresh Models updates the cache at `~/.vision_workbench/cache/model_manifest.json` and then repopulates the dropdown; without network access, the cached or bundled model list is still used.
+
+Minimal manifest shape:
+
+```json
+{
+  "schema_version": 1,
+  "models": [
+    {"family": "yolo26", "task": "detect", "name": "yolo26n.pt", "url": "https://example.com/yolo26n.pt"},
+    {"family": "yolo26", "tasks": ["segment"], "name": "yolo26n-seg.pt", "url": "https://example.com/yolo26n-seg.pt"}
+  ]
+}
+```
+
 ## Incomplete or Corrupt `.pt` Files
 
 Vision Workbench downloads model files to a temporary `.pt.part` path first, validates the finished archive, and only then promotes it to `.pt`. Closing the UI or process during download leaves a partial file that is ignored on the next startup, so the model remains available for re-download.

@@ -190,8 +190,8 @@ class PanoramaPage(QWidget):
         self._busy = False
         self._completion_status = None  # type: Optional[str]
 
-        self.open_left_button = make_button("打开左图", primary=True)
-        self.open_right_button = make_button("打开右图", primary=True)
+        self.open_left_button = make_button("打开左图（参考）", primary=True)
+        self.open_right_button = make_button("打开右图（待拼接）", primary=True)
         self.sample_button = make_button("加载示例")
         self.reconstruct_button = make_button("重建全景", primary=True)
         self.save_panorama_button = make_button("保存全景")
@@ -233,12 +233,12 @@ class PanoramaPage(QWidget):
         for label in (self.mode_label, self.channel_label):
             style_form_label(label)
 
-        self.left_preview = ClickablePreviewPanel("左图", "请打开左图")
-        self.right_preview = ClickablePreviewPanel("右图", "请打开右图")
+        self.left_preview = ClickablePreviewPanel("左图（参考）", "请打开左图（参考）")
+        self.right_preview = ClickablePreviewPanel("右图（待拼接）", "请打开右图（待拼接）")
         self.point_count_label = QLabel("")
         self.point_count_label.setObjectName("MutedText")
         self.point_count_label.setWordWrap(True)
-        self.point_hint_label = QLabel("手动模式下先点左图，再点右图，至少 3 组点对。")
+        self.point_hint_label = QLabel("手动模式下先点左图（参考），再点右图（待拼接），至少 3 组点对。")
         self.point_hint_label.setObjectName("MutedText")
         self.point_hint_label.setWordWrap(True)
         self.info_label = QLabel("")
@@ -284,7 +284,7 @@ class PanoramaPage(QWidget):
 
         title = QLabel("全景拼接")
         title.setObjectName("PageTitle")
-        subtitle = QLabel("加载左右图像，选择自动 SIFT 或控制点方式生成全景图。")
+        subtitle = QLabel("加载左图（参考）和右图（待拼接），选择自动 SIFT 或控制点方式生成全景图。")
         subtitle.setObjectName("PageSubtitle")
         layout.addWidget(title)
         layout.addWidget(subtitle)
@@ -317,7 +317,7 @@ class PanoramaPage(QWidget):
             ("panorama", "全景图", "重建结果会显示在这里"),
             ("matches", "匹配关系", "匹配或控制点可视化会显示在这里"),
             ("mapped", "映射检查", "映射检查图会显示在这里"),
-            ("warped", "右图变换", "右图变换结果会显示在这里"),
+            ("warped", "待拼接图变换", "右图（待拼接）变换结果会显示在这里"),
         ]:
             panel = PreviewPanel(title_text, empty_text)
             panel.setMinimumHeight(360)
@@ -478,7 +478,7 @@ class PanoramaPage(QWidget):
 
     def reconstruct_panorama(self) -> None:
         if self.left_image is None or self.right_image is None:
-            QMessageBox.information(self, "缺少图像", "请先加载左图和右图。")
+            QMessageBox.information(self, "缺少图像", "请先加载左图（参考）和右图（待拼接）。")
             return
 
         mode = self.current_mode()
@@ -487,7 +487,7 @@ class PanoramaPage(QWidget):
                 QMessageBox.information(self, "控制点不足", "请至少添加 3 组左右控制点。")
                 return
             if self.pending_left_point is not None:
-                QMessageBox.information(self, "点对未完成", "请先在右图点击匹配点。")
+                QMessageBox.information(self, "点对未完成", "请先在右图（待拼接）点击匹配点。")
                 return
 
         left = self.left_image.copy()
@@ -546,7 +546,7 @@ class PanoramaPage(QWidget):
     def undo_point(self) -> None:
         if self.pending_left_point is not None:
             self.pending_left_point = None
-            self._set_status("已撤销待匹配的左图点。")
+            self._set_status("已撤销待匹配的左图（参考）点。")
         elif self.point_pairs:
             self.point_pairs.pop()
             self._set_status("已撤销上一组控制点。")
@@ -735,7 +735,7 @@ class PanoramaPage(QWidget):
         self._clear_result()
         self._refresh_input_images()
         self.last_timing_text = f"加载 {payload.load_ms:.1f} ms"
-        self._completion_status = f"左右图像已加载（{self.last_timing_text}）。"
+        self._completion_status = f"左图（参考）和右图（待拼接）已加载（{self.last_timing_text}）。"
         self._update_metrics()
         self._update_action_states()
 
@@ -796,13 +796,13 @@ class PanoramaPage(QWidget):
 
         if self.pending_left_point is None:
             if side != "left":
-                QMessageBox.information(self, "点选顺序", "请先在左图选择一个点。")
+                QMessageBox.information(self, "点选顺序", "请先在左图（参考）选择一个点。")
                 return
             self.pending_left_point = point
-            self._set_status("已选择左图点，请在右图选择匹配点。")
+            self._set_status("已选择左图（参考）点，请在右图（待拼接）选择匹配点。")
         else:
             if side != "right":
-                QMessageBox.information(self, "点选顺序", "请在右图选择匹配点。")
+                QMessageBox.information(self, "点选顺序", "请在右图（待拼接）选择匹配点。")
                 return
             self.point_pairs.append((self.pending_left_point, point))
             self.pending_left_point = None
@@ -890,14 +890,14 @@ class PanoramaPage(QWidget):
     def _update_metrics(self) -> None:
         point_text = f"点对：{len(self.point_pairs)}"
         if self.pending_left_point is not None:
-            point_text += " | 左图点待匹配"
+            point_text += " | 左图（参考）点待匹配"
         self.point_count_label.setText(point_text)
 
         parts = []
         if self.left_path is not None:
-            parts.append(f"左图：{self.left_path.name}")
+            parts.append(f"左图（参考）：{self.left_path.name}")
         if self.right_path is not None:
-            parts.append(f"右图：{self.right_path.name}")
+            parts.append(f"右图（待拼接）：{self.right_path.name}")
         parts.append(f"模式：{self.current_mode()}")
         if self.current_mode() == MODE_AUTO:
             parts.append(f"通道：{self.channel_combo.currentText()}")
@@ -916,7 +916,7 @@ class PanoramaPage(QWidget):
 
 
 def _side_label(side: str) -> str:
-    return "左图" if side == "left" else "右图"
+    return "左图（参考）" if side == "left" else "右图（待拼接）"
 
 
 def _reconstruction_busy_text(mode: str) -> str:

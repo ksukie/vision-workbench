@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable, Dict, List
 
+from vision_workbench.model_manifest import refresh_model_manifest, yolo26_model_entries_for_task
 from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
 from ..configuration import Yolo26SegmentationConfig
 from ..domain import ModelInfo, PathLike
@@ -20,11 +21,11 @@ class Yolo26SegmentationModelRegistry:
         task = _normalize_task(task)
         models = []
         by_path = set()
-        for name in self._config.model_names_for_task(task):
-            path = self._config.model_dir / name
+        for entry in self._official_model_entries(task):
+            path = self._config.model_dir / entry.name
             exists = is_complete_model_file(path)
             if include_missing_official or exists:
-                models.append(ModelInfo(name=name, path=path, task=task, exists=exists, is_official=True))
+                models.append(ModelInfo(name=entry.name, path=path, task=task, exists=exists, is_official=True))
                 by_path.add(path.resolve())
         for directory in (self._config.model_dir, self._config.custom_model_dir):
             if not directory.exists():
@@ -45,8 +46,14 @@ class Yolo26SegmentationModelRegistry:
 
     def official_model_urls(self, task: str = "segment") -> Dict[str, str]:
         task = _normalize_task(task)
-        base = self._config.official_model_base_url.rstrip("/")
-        return {name: f"{base}/{name}" for name in self._config.model_names_for_task(task)}
+        return {entry.name: entry.url for entry in self._official_model_entries(task)}
+
+    def refresh_model_manifest(self) -> int:
+        entries = refresh_model_manifest(
+            self._config.official_model_manifest_url,
+            self._config.model_manifest_cache_path,
+        )
+        return len(entries)
 
     def download_official_model(
         self,
@@ -55,11 +62,12 @@ class Yolo26SegmentationModelRegistry:
         progress_callback: Callable[[int | None, int, int | None], None] | None = None,
     ) -> ModelInfo:
         task = _normalize_task(task)
-        if name not in self._config.model_names_for_task(task):
+        model_urls = self.official_model_urls(task)
+        if name not in model_urls:
             raise ValueError(f"{name} is not a configured official YOLO26 {task} model.")
         self._config.model_dir.mkdir(parents=True, exist_ok=True)
         path = self._config.model_dir / name
-        _download_to_path(self.official_model_urls(task)[name], path, progress_callback)
+        _download_to_path(model_urls[name], path, progress_callback)
         return ModelInfo(name=name, path=path, task=task, exists=True, is_official=True)
 
     def add_custom_model(self, path: PathLike, task: str = "segment") -> ModelInfo:
@@ -70,6 +78,17 @@ class Yolo26SegmentationModelRegistry:
             raise FileNotFoundError(f"Model file not found: {model_path}")
         validate_complete_model_file(model_path)
         return ModelInfo(name=model_path.name, path=model_path, task=_normalize_task(task), exists=True)
+
+    def _official_model_entries(self, task: str):
+        return yolo26_model_entries_for_task(
+            task,
+            fallback_names_by_task={
+                "segment": self._config.official_segment_model_names,
+                "semantic": self._config.official_semantic_model_names,
+            },
+            base_url=self._config.official_model_base_url,
+            cache_path=self._config.model_manifest_cache_path,
+        )
 
 
 def _normalize_task(task: str) -> str:

@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import List, Optional
+
+import cv2
+import numpy as np
 
 from ..application import Yolo26DetectionService, build_default_service
 from ..configuration import Yolo26DetectionConfig
@@ -33,6 +37,10 @@ def list_models(include_missing_official: bool = True) -> List[ModelInfo]:
     return get_default_service().list_models(include_missing_official)
 
 
+def refresh_model_manifest() -> int:
+    return get_default_service().refresh_model_manifest()
+
+
 def add_custom_model(path: PathLike) -> ModelInfo:
     return get_default_service().add_custom_model(path)
 
@@ -55,3 +63,21 @@ def detect_objects(
         service.load_model(model_path)
     return service.detect_frame(frame, settings)
 
+
+def detect_image(
+    image_path: PathLike,
+    model_path: Optional[PathLike] = None,
+    settings: DetectionSettings = DetectionSettings(),
+) -> DetectionOutput:
+    """Load one image path and run YOLO26 detection."""
+
+    return detect_objects(_load_image_bgr(image_path), model_path=model_path, settings=settings)
+
+
+def _load_image_bgr(path: PathLike) -> ImageArray:
+    image_path = Path(path).expanduser()
+    data = np.fromfile(str(image_path), dtype=np.uint8)
+    image = cv2.imdecode(data, cv2.IMREAD_COLOR)
+    if image is None:
+        raise ValueError(f"Cannot read image: {image_path}")
+    return image

@@ -4,7 +4,7 @@
 
 ## Overview
 
-Panorama Reconstruction stitches left/right images with automatic SIFT matching, manual point selection, and assisted manual workflows. The user-facing workflow is the native Qt page inside the unified Vision Workbench desktop.
+Panorama Reconstruction stitches a left reference image and a right image to stitch with automatic SIFT matching, manual point selection, and assisted manual workflows. The user-facing workflow is the native Qt page inside the unified Vision Workbench desktop.
 
 ## Launch
 
@@ -12,14 +12,14 @@ Panorama Reconstruction stitches left/right images with automatic SIFT matching,
 vision-workbench
 ```
 
-Open **Panorama Reconstruction** from the left navigation, load the left and right images, choose automatic or manual mode, then reconstruct and save outputs.
+Open **Panorama Reconstruction** from the left navigation, load the left reference image and the right image to stitch, choose automatic or manual mode, then reconstruct and save outputs. The algorithm maps the right image into the left reference coordinate system.
 
 ## Python API
 
 ```python
-from panorama_reconstruction.api import reconstruct_panorama
+from panorama_reconstruction.api import reconstruct_panorama_from_paths
 
-result = reconstruct_panorama("left.png", "right.png")
+result = reconstruct_panorama_from_paths("left_reference.png", "right_to_stitch.png")
 ```
 
 ## Source Layout

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import List, Optional
 
 from ..application import Yolo26SegmentationService, build_default_service
@@ -29,13 +30,17 @@ def list_models(task: str = "segment") -> List[ModelInfo]:
     return get_default_service().list_models(task)
 
 
+def refresh_model_manifest() -> int:
+    return get_default_service().refresh_model_manifest()
+
+
 def segment_image(
-    image: ImageArray,
+    image: ImageArray | PathLike,
     model_path: Optional[PathLike] = None,
     settings: SegmentationSettings = SegmentationSettings(),
 ) -> SegmentationOutput:
     service = get_default_service()
     if model_path is not None:
         service.load_model(model_path)
-    return service.segment_image(image, settings)
-
+    image_array = service.load_image(image) if isinstance(image, (str, Path)) else image
+    return service.segment_image(image_array, settings)

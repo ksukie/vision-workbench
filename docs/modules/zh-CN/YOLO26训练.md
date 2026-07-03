@@ -62,6 +62,23 @@ runs/yolo26_training/
 
 YOLO26 训练输出通常包含权重、配置、日志和指标图。
 
+常见权重路径：
+
+```text
+runs/yolo26_training/<run_name>/weights/best.pt
+runs/yolo26_training/<run_name>/weights/last.pt
+```
+
+通常优先使用 `best.pt`。如果要让训练后的模型出现在检测或分割页面下拉框中，请复制并重命名到对应目录，然后点击页面里的“查找/刷新模型”按钮：
+
+| 训练任务 | 推荐放置位置 | 命名建议 |
+| --- | --- | --- |
+| `detect` | `models/yolo26_models/custom/` | `my-det.pt` |
+| `segment` | `models/yolo26_segmentation_models/custom/` | `my-seg.pt` |
+| `semantic` | `models/yolo26_segmentation_models/custom/` | `my-sem.pt` |
+
+更完整的训练后模型加载、下拉框扫描和 Python 接口说明见 [训练后模型加载与接口说明](./训练后模型加载与接口说明.md)。
+
 ## Python API
 
 ```python

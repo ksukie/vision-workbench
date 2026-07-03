@@ -24,6 +24,18 @@ vision-workbench
 
 在左侧导航打开 **YOLO 检测**。模型下拉框展开时显示完整路径，收起后只显示文件名。不完整或损坏的模型文件不会被视为可用权重。
 
+## 自定义权重位置
+
+检测页面会扫描：
+
+```text
+models/yolo26_models/
+models/yolo26_models/custom/
+~/.vision_workbench/models/yolo26_models/
+```
+
+训练完成后，把 `runs/yolo26_training/<run_name>/weights/best.pt` 复制为类似 `models/yolo26_models/custom/my-det.pt`，再点击检测页面的刷新按钮即可出现在模型下拉框中。
+
 ## Python API
 
 ```python

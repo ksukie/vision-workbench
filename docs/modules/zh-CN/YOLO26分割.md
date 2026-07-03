@@ -22,6 +22,17 @@ vision-workbench
 
 在左侧导航打开 **YOLO 分割**，选择任务和模型，加载图片，运行分割并保存结果。
 
+## 自定义权重位置
+
+分割页面会扫描：
+
+```text
+models/yolo26_segmentation_models/
+models/yolo26_segmentation_models/custom/
+```
+
+实例分割训练完成后，把 `best.pt` 复制为类似 `models/yolo26_segmentation_models/custom/my-seg.pt`。语义分割建议命名为 `my-sem.pt`。命名中的 `-seg` 和 `-sem` 会帮助页面按任务过滤模型。
+
 ## Python API
 
 ```python

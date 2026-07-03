@@ -1,11 +1,13 @@
 import zipfile
 from pathlib import Path
 
+import numpy as np
 import pytest
 
+import yolo26_segmentation.api.facade as segmentation_facade
 from yolo26_segmentation.api import create_yolo26_segmentation_service
 from yolo26_segmentation.configuration import Yolo26SegmentationConfig
-from yolo26_segmentation.domain import SegmentationSettings
+from yolo26_segmentation.domain import SegmentationOutput, SegmentationSettings
 from yolo26_segmentation.infrastructure import Yolo26SegmentationModelRegistry
 from yolo26_segmentation.infrastructure.segmentation_backend import _detected_class_names
 from vision_workbench.model_files import ModelFileError
@@ -74,6 +76,40 @@ def test_segmentation_model_registry_rejects_invalid_custom_model(tmp_path: Path
 def test_segmentation_settings_normalized_device() -> None:
     assert SegmentationSettings(device="auto").normalized_device() is None
     assert SegmentationSettings(device="cpu").normalized_device() == "cpu"
+
+
+def test_segment_image_facade_accepts_image_path(tmp_path: Path) -> None:
+    image_path = tmp_path / "sample.png"
+
+    class FakeService:
+        def __init__(self) -> None:
+            self.loaded = None
+            self.loaded_image = None
+            self.segmented_shape = None
+
+        def load_model(self, model_path):
+            self.loaded = Path(model_path)
+
+        def load_image(self, path):
+            self.loaded_image = Path(path)
+            return np.zeros((8, 10, 3), dtype=np.uint8)
+
+        def segment_image(self, image, settings):
+            self.segmented_shape = np.asarray(image).shape
+            return SegmentationOutput(annotated_frame=image, item_count=0, inference_ms=1.0)
+
+    service = FakeService()
+    old_service = segmentation_facade._default_service
+    segmentation_facade._default_service = service
+    try:
+        result = segmentation_facade.segment_image(image_path, model_path=tmp_path / "model.pt")
+    finally:
+        segmentation_facade._default_service = old_service
+
+    assert service.loaded == tmp_path / "model.pt"
+    assert service.loaded_image == image_path
+    assert service.segmented_shape == (8, 10, 3)
+    assert result.inference_ms == 1.0
 
 
 def test_segmentation_service_can_be_created_without_loading_model(tmp_path: Path) -> None:

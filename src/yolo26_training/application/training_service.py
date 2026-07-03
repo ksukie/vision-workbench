@@ -44,6 +44,9 @@ class Yolo26TrainingService:
     def list_models(self, task: str = "detect") -> List[Path]:
         return self._model_repository.list_models(task)
 
+    def refresh_model_manifest(self) -> int:
+        return self._model_repository.refresh_model_manifest()
+
     def default_model(self, task: str = "detect") -> Path:
         return self._model_repository.default_model(task)
 

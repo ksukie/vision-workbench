@@ -110,7 +110,7 @@ class PanoramaReconstructionService:
 
     def get_sample_image_paths(self) -> ImagePairPaths:
         asset_dir = Path(__file__).resolve().parents[1] / "assets" / "buildingImgs"
-        return ImagePairPaths(left=asset_dir / "left.png", right=asset_dir / "right.png")
+        return ImagePairPaths(left=asset_dir / "right.png", right=asset_dir / "left.png")
 
 
 def build_default_service(

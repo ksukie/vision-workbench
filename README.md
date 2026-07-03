@@ -37,15 +37,15 @@ The project is organized as a complete learning pipeline: public Python APIs, a 
 
 ## Modules
 
-| Module | Scope | Documentation |
-| --- | --- | --- |
-| <img src="./docs/assets/readme/icons/cv.svg" width="28" alt=""> CV Basics | OpenCV image processing, color spaces, channel splitting, histograms, morphology, and geometric transforms | [README](./docs/modules/en/cv_basics_README.md) |
-| <img src="./docs/assets/readme/icons/panorama.svg" width="28" alt=""> Panorama Reconstruction | Left-right image stitching, SIFT matching, manual control points, assisted points, and panorama output | [README](./docs/modules/en/panorama_reconstruction_README.md) |
-| <img src="./docs/assets/readme/icons/camera.svg" width="28" alt=""> Camera Diagnostics | Camera discovery, read-mode probing, live preview, FPS, screenshots, and recording | [README](./docs/modules/en/camera_diagnostics_README.md) |
-| <img src="./docs/assets/readme/icons/classification.svg" width="28" alt=""> Image Classification | ResNet18 and MobileNetV3 Small prediction, pretrained weights, dataset validation, and basic training | [README](./docs/modules/en/image_classification_README.md) |
-| <img src="./docs/assets/readme/icons/detection.svg" width="28" alt=""> YOLO26 Detection | YOLO26 model loading, image detection, live camera inference, screenshots, and downloads | [README](./docs/modules/en/yolo26_detection_README.md) |
-| <img src="./docs/assets/readme/icons/segmentation.svg" width="28" alt=""> YOLO26 Segmentation | YOLO26 instance and semantic segmentation for images | [README](./docs/modules/en/yolo26_segmentation_README.md) |
-| <img src="./docs/assets/readme/icons/training.svg" width="28" alt=""> YOLO26 Training | Detection, instance segmentation, and semantic segmentation training with dataset validation | [README](./docs/modules/en/yolo26_training_README.md) |
+| Module                   | Scope                                                                                                      | Documentation                                                |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+|  CV Basics               | OpenCV image processing, color spaces, channel splitting, histograms, morphology, and geometric transforms | [README](./docs/modules/en/cv_basics_README.md)               |
+|  Panorama Reconstruction | Left-right image stitching, SIFT matching, manual control points, assisted points, and panorama output     | [README](./docs/modules/en/panorama_reconstruction_README.md) |
+|  Camera Diagnostics      | Camera discovery, read-mode probing, live preview, FPS, screenshots, and recording                         | [README](./docs/modules/en/camera_diagnostics_README.md)      |
+|  Image Classification    | ResNet18 and MobileNetV3 Small prediction, pretrained weights, dataset validation, and basic training      | [README](./docs/modules/en/image_classification_README.md)    |
+|  YOLO26 Detection        | YOLO26 model loading, image detection, live camera inference, screenshots, and downloads                   | [README](./docs/modules/en/yolo26_detection_README.md)        |
+|  YOLO26 Segmentation     | YOLO26 instance and semantic segmentation for images                                                       | [README](./docs/modules/en/yolo26_segmentation_README.md)     |
+|  YOLO26 Training         | Detection, instance segmentation, and semantic segmentation training with dataset validation               | [README](./docs/modules/en/yolo26_training_README.md)         |
 
 ## Quick Start
 

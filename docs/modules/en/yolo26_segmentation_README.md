@@ -22,6 +22,17 @@ vision-workbench
 
 Open **YOLO Segmentation** from the left navigation, choose the task and model, load an image, run segmentation, and save the result.
 
+## Custom Weight Locations
+
+The segmentation page scans:
+
+```text
+models/yolo26_segmentation_models/
+models/yolo26_segmentation_models/custom/
+```
+
+After instance segmentation training, copy `best.pt` to a name like `models/yolo26_segmentation_models/custom/my-seg.pt`. For semantic segmentation, prefer a name like `my-sem.pt`. The `-seg` and `-sem` suffixes help the page filter models by task.
+
 ## Python API
 
 ```python

@@ -52,6 +52,9 @@ class Yolo26DetectionService:
     def list_models(self, include_missing_official: bool = True) -> List[ModelInfo]:
         return self._model_registry.list_models(include_missing_official)
 
+    def refresh_model_manifest(self) -> int:
+        return self._model_registry.refresh_model_manifest()
+
     def add_custom_model(self, path: PathLike) -> ModelInfo:
         return self._model_registry.add_custom_model(path)
 

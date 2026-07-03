@@ -82,6 +82,12 @@ class CameraScanPayload:
 
 
 @dataclass(frozen=True)
+class ModelManifestPayload:
+    entry_count: int
+    total_ms: float
+
+
+@dataclass(frozen=True)
 class OpenCameraPayload:
     camera: CameraDevice
     total_ms: float
@@ -168,7 +174,7 @@ class YoloDetectionPage(QWidget):
         self.detect_button = make_button("检测图片", primary=True)
         self.save_result_button = make_button("保存检测图")
         self.refresh_models_button = make_button("查找模型")
-        self.browse_model_button = make_button("选择模型文件")
+        self.browse_model_button = make_button("选择本地模型文件")
         self.download_model_button = make_button("下载所选模型")
         self.refresh_cameras_button = make_button("查找相机", primary=True)
         self.open_camera_button = make_button("打开相机", primary=True)
@@ -189,6 +195,8 @@ class YoloDetectionPage(QWidget):
             self.stop_live_button,
         ):
             button.setMinimumWidth(112)
+
+        self.browse_model_button.setToolTip("从本地磁盘选择一个 .pt 模型文件")
 
         self.model_label = QLabel("模型")
         self.model_combo = QComboBox()
@@ -345,7 +353,7 @@ class YoloDetectionPage(QWidget):
         self.open_image_button.clicked.connect(self.open_image)
         self.detect_button.clicked.connect(self.detect_image)
         self.save_result_button.clicked.connect(self.save_result)
-        self.refresh_models_button.clicked.connect(self.refresh_models)
+        self.refresh_models_button.clicked.connect(self.refresh_model_catalog)
         self.browse_model_button.clicked.connect(self.browse_model)
         self.download_model_button.clicked.connect(self.download_selected_model)
         self.refresh_cameras_button.clicked.connect(self.refresh_cameras)
@@ -493,6 +501,19 @@ class YoloDetectionPage(QWidget):
         self._show_model_status()
         self._update_action_states()
 
+    def refresh_model_catalog(self) -> None:
+        refresher = getattr(self.service, "refresh_model_manifest", None)
+        if not callable(refresher):
+            self.refresh_models()
+            return
+        self._run_task(
+            task=self._refresh_model_manifest,
+            on_success=self._on_model_manifest_refreshed,
+            busy_text="正在刷新模型目录...",
+            error_title="刷新模型目录失败",
+            error_category=MODELS_AND_WEIGHTS,
+        )
+
     def refresh_cameras(self) -> None:
         self.close_live_camera(show_status=False)
         if not self._reserve_camera_resource():
@@ -617,7 +638,7 @@ class YoloDetectionPage(QWidget):
     def browse_model(self) -> None:
         path, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "选择 YOLO26 PT 模型",
+            "选择本地 YOLO26 PT 模型",
             "",
             "PyTorch 模型 (*.pt);;所有文件 (*.*)",
         )
@@ -770,6 +791,12 @@ class YoloDetectionPage(QWidget):
         )
         return ModelPayload(model=model, total_ms=_elapsed_ms(started_at))
 
+    def _refresh_model_manifest(self) -> ModelManifestPayload:
+        started_at = time.perf_counter()
+        refresher = getattr(self.service, "refresh_model_manifest")
+        entry_count = int(refresher())
+        return ModelManifestPayload(entry_count=entry_count, total_ms=_elapsed_ms(started_at))
+
     def _discover_cameras(self) -> CameraScanPayload:
         started_at = time.perf_counter()
         cameras = self.service.discover_cameras()
@@ -910,6 +937,14 @@ class YoloDetectionPage(QWidget):
         self._completion_status = f"模型已下载到 {payload.model.path}（{self.last_timing_text}）。"
         self._show_model_status()
         QMessageBox.information(self, "下载完成", f"模型已下载到：\n{payload.model.path}")
+
+    def _on_model_manifest_refreshed(self, value: object) -> None:
+        payload = cast(ModelManifestPayload, value)
+        self.refresh_models()
+        if payload.entry_count:
+            self._completion_status = f"模型目录已刷新：{payload.entry_count} 项（{payload.total_ms:.1f} ms）。"
+        else:
+            self._completion_status = f"模型列表已重新扫描（{payload.total_ms:.1f} ms）。"
 
     def _download_progress_callback(self, action_text: str, path: Path):
         def callback(percent: int | None, downloaded_bytes: int, total_bytes: int | None) -> None:

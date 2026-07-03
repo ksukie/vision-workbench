@@ -626,8 +626,8 @@ def test_panorama_page_builds_without_loading_images_and_resizes(qt_app):
     page = PanoramaPage(service=service)
     try:
         assert service.load_calls == []
-        assert page.open_left_button.text() == "打开左图"
-        assert page.open_right_button.text() == "打开右图"
+        assert page.open_left_button.text() == "打开左图（参考）"
+        assert page.open_right_button.text() == "打开右图（待拼接）"
         assert page.reconstruct_button.text() == "重建全景"
         assert not page.reconstruct_button.isEnabled()
         assert page.channel_combo.isEnabled()
@@ -1299,7 +1299,7 @@ def test_classification_page_uses_chinese_labels_and_compact_layout(qt_app):
         assert page.open_button.text() == "打开图片"
         assert page.predict_pretrained_button.text() == "预测"
         assert page.check_weights_button.text() == "检查权重"
-        assert page.browse_checkpoint_button.text() == "选择模型文件"
+        assert page.browse_checkpoint_button.text() == "选择本地模型文件"
         assert page.predict_checkpoint_button.text() == "预测自定义模型"
         assert page.model_label.text() == "模型"
         assert page.device_label.text() == "设备"

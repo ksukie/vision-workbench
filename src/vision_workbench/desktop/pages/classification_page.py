@@ -146,7 +146,8 @@ class ClassificationPage(QWidget):
         self.check_weights_button = make_button("检查权重")
         self.download_weights_button = make_button("下载权重")
         self.import_weights_button = make_button("导入权重")
-        self.browse_checkpoint_button = make_button("选择模型文件")
+        self.browse_checkpoint_button = make_button("选择本地模型文件")
+        self.browse_checkpoint_button.setToolTip("从本地磁盘选择一个 .pt 或 .pth checkpoint")
         self.predict_checkpoint_button = make_button("预测自定义模型")
         for button in (
             self.open_button,
@@ -477,7 +478,7 @@ class ClassificationPage(QWidget):
     def browse_checkpoint(self) -> None:
         path, _selected_filter = QFileDialog.getOpenFileName(
             self,
-            "选择分类模型文件",
+            "选择本地分类模型文件",
             "",
             "PyTorch 模型 (*.pt *.pth);;所有文件 (*.*)",
         )
