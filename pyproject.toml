@@ -55,5 +55,5 @@ where = ["src"]
 panorama_reconstruction = ["assets/buildingImgs/*.png"]
 
 [tool.pytest.ini_options]
-pythonpath = ["src"]
+pythonpath = [".", "src"]
 testpaths = ["tests"]

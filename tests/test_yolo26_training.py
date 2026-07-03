@@ -225,3 +225,52 @@ def test_yolo_training_service_builds_runner_command(tmp_path: Path) -> None:
     assert service.default_model().name == "yolo26n.pt"
     assert service.default_model("segment").name == "yolo26n-seg.pt"
     assert service.default_model("semantic").name == "yolo26n-sem.pt"
+
+
+def test_yolo_training_service_registers_best_weight_by_task(tmp_path: Path) -> None:
+    config = Yolo26TrainingConfig(
+        yolo26_source_dir=tmp_path / "third_party" / "yolo26_source",
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        segmentation_model_dir=tmp_path / "seg_models",
+        segmentation_custom_model_dir=tmp_path / "seg_models" / "custom",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = build_default_service(config)
+    run_dir = config.runs_dir / "scratch_train"
+    write_model_archive(run_dir / "weights" / "best.pt")
+
+    detect_path = service.copy_best_weight(run_dir, task="detect")
+    segment_path = service.copy_best_weight(run_dir, task="segment")
+    semantic_path = service.copy_best_weight(run_dir, task="semantic")
+
+    assert detect_path == config.custom_model_dir / "scratch_train-det.pt"
+    assert segment_path == config.segmentation_custom_model_dir / "scratch_train-seg.pt"
+    assert semantic_path == config.segmentation_custom_model_dir / "scratch_train-sem.pt"
+    assert detect_path.exists()
+    assert segment_path.exists()
+    assert semantic_path.exists()
+
+
+def test_yolo_training_service_registers_best_weight_without_overwriting(tmp_path: Path) -> None:
+    config = Yolo26TrainingConfig(
+        yolo26_source_dir=tmp_path / "third_party" / "yolo26_source",
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        segmentation_model_dir=tmp_path / "seg_models",
+        segmentation_custom_model_dir=tmp_path / "seg_models" / "custom",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = build_default_service(config)
+    run_dir = config.runs_dir / "scratch_train"
+    write_model_archive(run_dir / "weights" / "best.pt")
+
+    first = service.copy_best_weight(run_dir, task="detect")
+    second = service.copy_best_weight(run_dir, task="detect")
+
+    assert first.name == "scratch_train-det.pt"
+    assert second.name == "scratch_train-det-2.pt"
+    assert first.exists()
+    assert second.exists()

@@ -45,3 +45,11 @@ def list_models(task: str = "detect") -> List[Path]:
 
 def refresh_model_manifest() -> int:
     return get_default_service().refresh_model_manifest()
+
+
+def copy_best_weight(
+    run_dir: PathLike,
+    target_name: Optional[str] = None,
+    task: str = "detect",
+) -> Path:
+    return get_default_service().copy_best_weight(run_dir, target_name=target_name, task=task)

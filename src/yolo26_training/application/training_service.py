@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from typing import List, Optional
 
+from vision_workbench.model_files import validate_complete_model_file
+
 from ..configuration import Yolo26TrainingConfig
 from ..domain import DatasetValidationReport, PathLike, TrainingJobConfig
 from ..infrastructure import Yolo26ModelRepository, Yolo26TrainingBackend, YoloDetectionDatasetValidator
@@ -116,16 +118,59 @@ class Yolo26TrainingService:
             bufsize=1,
         )
 
-    def copy_best_weight(self, run_dir: PathLike, target_name: Optional[str] = None) -> Path:
+    def copy_best_weight(
+        self,
+        run_dir: PathLike,
+        target_name: Optional[str] = None,
+        task: str = "detect",
+    ) -> Path:
+        task = _normalize_task(task)
         run_path = Path(run_dir)
         best_path = run_path / "weights" / "best.pt"
         if not best_path.exists():
             raise FileNotFoundError(f"best.pt not found: {best_path}")
-        self._config.custom_model_dir.mkdir(parents=True, exist_ok=True)
-        output_name = target_name or f"{run_path.name}_best.pt"
-        output_path = self._config.custom_model_dir / output_name
+        validate_complete_model_file(best_path)
+
+        target_dir = self._config.custom_model_dir_for_task(task)
+        target_dir.mkdir(parents=True, exist_ok=True)
+        output_name = _registered_weight_name(run_path.name, task, target_name)
+        output_path = _unique_path(target_dir / output_name)
         shutil.copy2(best_path, output_path)
         return output_path
+
+
+def _normalize_task(task: str) -> str:
+    value = str(task or "detect").strip().lower()
+    if value in ("seg", "instance", "instance_segmentation"):
+        return "segment"
+    if value in ("sem", "semantic_segmentation"):
+        return "semantic"
+    if value not in ("detect", "segment", "semantic"):
+        return "detect"
+    return value
+
+
+def _registered_weight_name(run_name: str, task: str, target_name: Optional[str]) -> str:
+    if target_name:
+        name = Path(target_name).name
+        return name if name.lower().endswith(".pt") else f"{name}.pt"
+    suffix = {
+        "detect": "det",
+        "segment": "seg",
+        "semantic": "sem",
+    }[task]
+    stem = Path(run_name).stem or "best"
+    return f"{stem}-{suffix}.pt"
+
+
+def _unique_path(path: Path) -> Path:
+    if not path.exists():
+        return path
+    for index in range(2, 1000):
+        candidate = path.with_name(f"{path.stem}-{index}{path.suffix}")
+        if not candidate.exists():
+            return candidate
+    raise FileExistsError(f"Too many existing registered weights for {path.name}")
 
 
 def build_default_service(

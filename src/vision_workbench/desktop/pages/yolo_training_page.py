@@ -75,6 +75,8 @@ class YoloTrainingPage(QWidget):
         self.tasks = QtTaskRunner(self)
         self.process = None  # type: QProcess | None
         self._process_started_at = None  # type: float | None
+        self._active_job = None  # type: TrainingJobConfig | None
+        self._last_completed_job = None  # type: TrainingJobConfig | None
         self.models = []  # type: list[Path]
 
         self.task_label = QLabel("任务")
@@ -144,6 +146,8 @@ class YoloTrainingPage(QWidget):
 
         self.start_button = make_button("开始训练", primary=True)
         self.stop_button = make_button("停止训练", danger=True)
+        self.register_best_button = make_button("加入模型库")
+        self.register_best_button.setToolTip("将最近一次成功训练的 weights/best.pt 复制到当前任务的自定义模型目录")
         self.open_runs_button = make_button("打开输出目录")
 
         for button in (
@@ -153,6 +157,7 @@ class YoloTrainingPage(QWidget):
             self.refresh_models_button,
             self.start_button,
             self.stop_button,
+            self.register_best_button,
             self.open_runs_button,
         ):
             button.setMinimumWidth(112)
@@ -247,6 +252,7 @@ class YoloTrainingPage(QWidget):
         action_row.setSpacing(10)
         action_row.addWidget(self.start_button)
         action_row.addWidget(self.stop_button)
+        action_row.addWidget(self.register_best_button)
         action_row.addWidget(self.open_runs_button)
         action_row.addStretch(1)
         layout.addLayout(action_row)
@@ -267,6 +273,7 @@ class YoloTrainingPage(QWidget):
         self.refresh_models_button.clicked.connect(self.refresh_model_catalog)
         self.start_button.clicked.connect(self.start_training)
         self.stop_button.clicked.connect(self.stop_training)
+        self.register_best_button.clicked.connect(self.register_best_weight)
         self.open_runs_button.clicked.connect(self.open_runs_dir)
 
     def current_task(self) -> str:
@@ -370,6 +377,8 @@ class YoloTrainingPage(QWidget):
 
         command = self.service.build_runner_command(job)
         self._append_log("\n开始训练：\n" + " ".join(command) + "\n\n")
+        self._active_job = job
+        self._last_completed_job = None
         self._start_process(command)
 
     def stop_training(self) -> None:
@@ -387,6 +396,24 @@ class YoloTrainingPage(QWidget):
             os.startfile(str(self.config.runs_dir))
         else:
             self._append_log(f"\n输出目录：{self.config.runs_dir}\n")
+
+    def register_best_weight(self) -> None:
+        job = self._last_completed_job
+        if job is None:
+            QMessageBox.information(self, "没有可登记权重", "请先完成一次训练。")
+            return
+        run_dir = job.project_dir / job.run_name
+        try:
+            output_path = self.service.copy_best_weight(run_dir, task=job.task)
+        except Exception as exc:
+            QMessageBox.critical(self, "登记失败", with_help(exc, MODELS_AND_WEIGHTS))
+            return
+
+        self._append_log(f"\n最佳权重已加入模型库：{output_path}\n")
+        self.refresh_models()
+        self._select_model_path(output_path)
+        self._set_status(f"最佳权重已加入模型库：{output_path.name}")
+        self._update_info("最佳权重已加入模型库。")
 
     def current_model_path(self) -> Path | None:
         value = self.model_combo.currentData()
@@ -469,7 +496,9 @@ class YoloTrainingPage(QWidget):
         if not process.waitForStarted(3000):
             self.process = None
             self._process_started_at = None
+            self._active_job = None
             QMessageBox.critical(self, "训练失败", with_help("训练进程未能启动。", DATASETS_AND_TRAINING))
+            self._update_action_states()
             return
         self._set_status("训练运行中...")
         self._update_action_states()
@@ -487,10 +516,13 @@ class YoloTrainingPage(QWidget):
             elapsed = f"（{(time.perf_counter() - self._process_started_at) * 1000.0:.1f} ms）"
         self._append_log(f"\n训练进程退出，代码：{exit_code} {elapsed}\n")
         if exit_code == 0:
-            status = "训练完成。"
+            self._last_completed_job = self._active_job
+            status = "训练完成，可加入模型库。"
         else:
+            self._last_completed_job = None
             status = "训练停止或失败。"
             self._append_log("\n" + help_hint(DATASETS_AND_TRAINING) + "\n")
+        self._active_job = None
         self.process = None
         self._process_started_at = None
         self._set_status(status)
@@ -513,6 +545,17 @@ class YoloTrainingPage(QWidget):
         index = self.model_combo.count() - 1
         self.model_combo.setItemData(index, path.name, SELECTED_DISPLAY_ROLE)
         self.model_combo.setItemData(index, str(path), Qt.ItemDataRole.ToolTipRole)
+
+    def _select_model_path(self, path: Path) -> None:
+        target = path.resolve()
+        for index in range(self.model_combo.count()):
+            try:
+                candidate = Path(str(self.model_combo.itemData(index))).resolve()
+            except OSError:
+                continue
+            if candidate == target:
+                self.model_combo.setCurrentIndex(index)
+                return
 
     def _append_log(self, text: str) -> None:
         self.log_text.moveCursor(QTextCursor.MoveOperation.End)
@@ -555,6 +598,7 @@ class YoloTrainingPage(QWidget):
         self.resume_check.setEnabled(not running)
         self.start_button.setEnabled(not running)
         self.stop_button.setEnabled(running)
+        self.register_best_button.setEnabled(not running and self._last_completed_job is not None)
         self.open_runs_button.setEnabled(not running)
 
 

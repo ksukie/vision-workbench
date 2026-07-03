@@ -90,6 +90,8 @@ src/vision_workbench/desktop/pages/panorama_page.py
 
 Put algorithms in `processing/`, file/workflow orchestration in `application/`, public functions in `api/`, and UI controls in the Qt page.
 
+Note: `left` and `right` in panorama reconstruction are semantic roles, not filenames. `left` is the reference image, `right` is the image to stitch, and the algorithm should warp `right` into the `left` coordinate system. Some historical sample assets may have filenames that do not match the spatial semantics; relying on filenames can produce correct output with confusing UI semantics.
+
 ## Camera Diagnostics Extensions
 
 Scope: camera backends, read modes, exposure/settings, screenshot, recording, and resource ownership.
@@ -168,12 +170,33 @@ src/vision_workbench/desktop/pages/yolo_training_page.py
 
 Keep dataset/model validation in infrastructure or the CLI runner. Keep command construction in the service layer. The Qt page should collect parameters, show logs, and launch the runner process.
 
+## YOLO26 Model Discovery Notes
+
+Project-local models, per-user models, bundled defaults, remote manifests, and local manifest caches should be merged through the registry/repository layer before reaching services and APIs. Qt dropdowns should read only the local merged result; startup refresh or the user-facing "refresh model list" action may update the remote manifest cache. The reason is that network access is unstable, and binding dropdown population directly to network calls can freeze the UI, break offline use, or create hard-to-reproduce failures.
+
+Task filtering is a development invariant: detection models should not match `-seg` or `-sem` suffixes, instance segmentation should prefer `-seg`, and semantic segmentation should prefer `-sem`. User-facing instructions for copying trained `best.pt` files belong in the YOLO26 training module docs; this guide owns discovery order, validation policy, cache policy, and tests.
+
+When adding a model source or task, update `configuration/settings.py`, the `infrastructure` registry/repository, the `application` refresh interface, `api/facade.py`, Qt refresh behavior, and matching tests together. Missing one layer commonly appears as "the file exists but the dropdown does not show it", which is expensive to debug.
+
+## Qt Copy Notes
+
+Copy that involves file picking and model selection must name the source clearly. Use "select local model file" or "select local weight file" for disk pickers, "select model" for existing dropdown choices, and "refresh model list" for rescanning or cache updates. Button copy is part of workflow semantics: vague labels make users confuse local file selection, dropdown selection, and remote/local cache refresh.
+
+If UI copy carries workflow meaning, such as "left reference image / right image to stitch" in panorama reconstruction or "local" in model picker buttons, lock it in Qt UI tests so later refactors do not make the workflow ambiguous again.
+
+## Documentation Ownership Notes
+
+The root README should contain installation, launch, and the true quick start. Module READMEs should contain the user workflow for that module. Trained-model loading, dropdown discovery, and Python API notes belong under the YOLO26 training module. Troubleshooting docs should capture symptoms and fixes. This contributor guide should record structural constraints, root causes, and extension notes.
+
+This split matters because these topics are easy to duplicate and easy to let drift. Keep "why it is designed this way" and "what to update when coding" in contributor docs, and keep "what users do next" in module docs.
+
 ## Packaging Checklist
 
 Before preparing a release or commit:
 
 ```bash
 python -m compileall -q src
+python scripts/check_markdown_links.py
 python -m pytest -q
 python scripts/cleanup_runtime.py
 git status --short
