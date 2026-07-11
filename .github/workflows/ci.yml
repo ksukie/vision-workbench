@@ -17,7 +17,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PYTHONNOUSERSITE: "1"
-      QT_QPA_PLATFORM: ${{ runner.os == 'Linux' && 'offscreen' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
