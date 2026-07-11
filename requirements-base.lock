@@ -189,3 +189,8 @@ shiboken6==6.11.1 \
     #   pyside6
     #   pyside6-addons
     #   pyside6-essentials
+tomli==2.4.1 ; python_version < "3.11" \
+    --hash=sha256:0d85819802132122da43cb86656f8d1f8c6587d54ae7dcaf30e90533028b49fe
+    # via
+    #   -r requirements.txt
+    #   pyside6

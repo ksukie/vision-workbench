@@ -4,6 +4,7 @@ numpy==2.0.2
 opencv-python-headless==4.13.0.92
 Pillow==12.2.0
 PySide6==6.11.1
+tomli==2.4.1; python_version < "3.11"
 
 # YOLO26 detection is heavy and optional.
 # To enable it, use: python scripts/install_dependencies.py yolo26
