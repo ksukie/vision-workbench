@@ -29,7 +29,7 @@ jobs:
         run: python -m pip_audit --requirement requirements-base.lock --strict --no-deps --disable-pip
       - name: Generate CycloneDX SBOM
         run: cyclonedx-py environment --output-format JSON --output-file sbom.cdx.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: vision-workbench-sbom
           path: sbom.cdx.json
