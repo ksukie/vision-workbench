@@ -7,6 +7,7 @@ from typing import Callable, Dict, List
 
 from vision_workbench.model_manifest import refresh_model_manifest, yolo26_model_entries_for_task
 from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
+from vision_workbench.trusted_models import trusted_model_download_hosts
 from ..configuration import Yolo26SegmentationConfig
 from ..domain import ModelInfo, PathLike
 
@@ -62,12 +63,20 @@ class Yolo26SegmentationModelRegistry:
         progress_callback: Callable[[int | None, int, int | None], None] | None = None,
     ) -> ModelInfo:
         task = _normalize_task(task)
-        model_urls = self.official_model_urls(task)
-        if name not in model_urls:
+        model_entries = {entry.name: entry for entry in self._official_model_entries(task)}
+        if name not in model_entries:
             raise ValueError(f"{name} is not a configured official YOLO26 {task} model.")
         self._config.model_dir.mkdir(parents=True, exist_ok=True)
+        entry = model_entries[name]
         path = self._config.model_dir / name
-        _download_to_path(model_urls[name], path, progress_callback)
+        download_model_file(
+            entry.url,
+            path,
+            progress_callback,
+            expected_sha256=entry.sha256,
+            expected_size=entry.size_bytes,
+            allowed_hosts=trusted_model_download_hosts(),
+        )
         return ModelInfo(name=name, path=path, task=task, exists=True, is_official=True)
 
     def add_custom_model(self, path: PathLike, task: str = "segment") -> ModelInfo:
@@ -96,11 +105,3 @@ def _normalize_task(task: str) -> str:
     if value in ("semantic", "sem", "semantic_segmentation"):
         return "semantic"
     return "segment"
-
-
-def _download_to_path(
-    url: str,
-    path: Path,
-    progress_callback: Callable[[int | None, int, int | None], None] | None,
-) -> None:
-    download_model_file(url, path, progress_callback)

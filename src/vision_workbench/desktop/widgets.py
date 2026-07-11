@@ -35,6 +35,14 @@ def make_button(text: str, *, primary: bool = False, danger: bool = False) -> QP
 
     button = QPushButton(text)
     button.setCursor(Qt.CursorShape.PointingHandCursor)
+    button.setAccessibleName(text)
+    shortcut = {
+        "打开图片": "Ctrl+O",
+        "保存结果": "Ctrl+S",
+        "开始训练": "Ctrl+Return",
+    }.get(text)
+    if shortcut:
+        button.setShortcut(shortcut)
     if primary:
         button.setProperty("variant", "primary")
     elif danger:
@@ -49,6 +57,13 @@ def style_form_label(label: QLabel) -> QLabel:
     label.setMinimumHeight(42)
     label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Expanding)
     return label
+
+
+def associate_form_label(label: QLabel, control: QWidget) -> None:
+    """Expose a visual form label as the accessible name and keyboard buddy."""
+
+    label.setBuddy(control)
+    control.setAccessibleName(label.text().strip())
 
 
 class _CenteredItemDelegate(QStyledItemDelegate):
@@ -157,9 +172,12 @@ class ParameterSlider(QWidget):
         self.slider.setValue(value)
         self.slider.setMinimumWidth(130)
         self.slider.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.label.setBuddy(self.slider)
+        self.slider.setAccessibleName(label)
 
         self.value_label = QLabel(str(value))
         self.value_label.setObjectName("SliderValue")
+        self.value_label.setAccessibleName(f"{label}当前值")
         self.value_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.value_label.setMinimumWidth(38)
 

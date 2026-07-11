@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from pathlib import Path
@@ -10,6 +11,18 @@ from typing import List, Optional
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from vision_workbench.runtime_security import (
+    configure_isolated_python_environment,
+    configure_restricted_model_loading,
+    validate_run_name,
+)
+
+# Apply isolation before importing PIL, NumPy, Torch adapters, or application services.
+configure_isolated_python_environment()
+configure_restricted_model_loading()
+
+if __package__ in (None, ""):
     from image_classification.application import build_default_service
     from image_classification.configuration import ImageClassificationConfig
     from image_classification.domain import ClassificationTrainingConfig
@@ -59,13 +72,21 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    configure_isolated_python_environment()
     args = parse_args(argv)
     config = ImageClassificationConfig()
     service = build_default_service(config)
 
     dataset_dir = Path(args.data).expanduser()
     project_dir = Path(args.project).expanduser() if args.project else config.runs_dir
-    run_name = args.name or _default_run_name(dataset_dir, args.model)
+    try:
+        run_name = validate_run_name(
+            args.name or _default_run_name(dataset_dir, args.model),
+            field_name="training run name",
+        )
+    except ValueError as exc:
+        print(with_help(f"Invalid training run name: {exc}", DATASETS_AND_TRAINING), file=sys.stderr)
+        return 2
     job = ClassificationTrainingConfig(
         model_name=args.model,
         dataset_dir=dataset_dir,
@@ -96,7 +117,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         return 0
 
     try:
-        best_path = service.train(job)
+        best_path = service.train(job, progress_callback=_print_progress)
     except Exception as exc:
         print(with_help(f"\nTraining failed: {exc}", DATASETS_AND_TRAINING), file=sys.stderr, flush=True)
         return 1
@@ -110,6 +131,10 @@ def _default_run_name(dataset_dir: Path, model_name: str) -> str:
     raw = f"{dataset_dir.name}_{model_name}"
     safe = re.sub(r"[^A-Za-z0-9_.-]+", "_", raw).strip("_")
     return safe or "classification_train"
+
+
+def _print_progress(metrics: dict[str, float | int]) -> None:
+    print("VW_METRIC " + json.dumps(metrics, ensure_ascii=False, sort_keys=True), flush=True)
 
 
 if __name__ == "__main__":

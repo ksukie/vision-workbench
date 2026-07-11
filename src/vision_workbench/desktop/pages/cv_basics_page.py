@@ -251,6 +251,8 @@ class CvBasicsPage(QWidget):
 
         effect_label = QLabel("效果")
         effect_label.setMinimumWidth(76)
+        effect_label.setBuddy(self.effect_combo)
+        self.effect_combo.setAccessibleName("效果")
         for label, effect_name in EFFECT_LABELS:
             self.effect_combo.addItem(label, effect_name)
         default_label = EFFECT_NAME_TO_ZH.get(self.config.default_effect)

@@ -5,6 +5,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Dict, List, Optional, Sequence
 
+from vision_workbench.input_limits import MAX_DATASET_IMAGES, read_bounded_text
+
 from ..configuration import Yolo26TrainingConfig
 from ..domain import DatasetValidationReport, DatasetValidationSummary, PathLike
 
@@ -60,6 +62,10 @@ class YoloDetectionDatasetValidator:
 
         train_images = self._collect_images(root, config.get("train"), "train", errors, warnings)
         val_images = self._collect_images(root, config.get("val"), "val", errors, warnings)
+        if len(train_images) + len(val_images) > MAX_DATASET_IMAGES:
+            errors.append(f"Dataset exceeds the {MAX_DATASET_IMAGES:,} image safety limit.")
+            train_images = train_images[:MAX_DATASET_IMAGES]
+            val_images = val_images[: max(0, MAX_DATASET_IMAGES - len(train_images))]
         if not train_images:
             errors.append("No training images found. Check the 'train' path in data.yaml.")
         if not val_images:
@@ -254,9 +260,9 @@ class YoloDetectionDatasetValidator:
     def _read_image_list(self, list_path: Path, root: Path, warnings: List[str]) -> List[Path]:
         images = []
         try:
-            lines = list_path.read_text(encoding="utf-8").splitlines()
+            lines = read_bounded_text(list_path, encoding="utf-8").splitlines()
         except UnicodeDecodeError:
-            lines = list_path.read_text(encoding="gbk").splitlines()
+            lines = read_bounded_text(list_path, encoding="gbk").splitlines()
         for line in lines:
             stripped = line.strip()
             if not stripped:
@@ -465,8 +471,7 @@ def _load_dataset_yaml(yaml_path: Path) -> Dict[str, object]:
     except Exception:
         return _load_minimal_yaml(yaml_path)
 
-    with yaml_path.open("r", encoding="utf-8") as handle:
-        data = yaml.safe_load(handle) or {}
+    data = yaml.safe_load(read_bounded_text(yaml_path, encoding="utf-8")) or {}
     if not isinstance(data, dict):
         raise ValueError("data.yaml must contain a mapping.")
     return data
@@ -475,7 +480,7 @@ def _load_dataset_yaml(yaml_path: Path) -> Dict[str, object]:
 def _load_minimal_yaml(yaml_path: Path) -> Dict[str, object]:
     data = {}  # type: Dict[str, object]
     current_key = None  # type: Optional[str]
-    lines = yaml_path.read_text(encoding="utf-8").splitlines()
+    lines = read_bounded_text(yaml_path, encoding="utf-8").splitlines()
     for raw_line in lines:
         line = raw_line.split("#", 1)[0].rstrip()
         if not line.strip():

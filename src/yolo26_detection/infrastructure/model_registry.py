@@ -7,6 +7,7 @@ from typing import Callable, Dict, List, Union
 
 from vision_workbench.model_manifest import refresh_model_manifest, yolo26_model_entries_for_task
 from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
+from vision_workbench.trusted_models import trusted_model_download_hosts
 from ..configuration import Yolo26DetectionConfig
 from ..domain import ModelInfo
 
@@ -56,13 +57,20 @@ class Yolo26ModelRegistry:
         name: str,
         progress_callback: Callable[[int | None, int, int | None], None] | None = None,
     ) -> ModelInfo:
-        model_urls = self.official_model_urls()
-        if name not in model_urls:
+        model_entries = {entry.name: entry for entry in self._official_model_entries()}
+        if name not in model_entries:
             raise ValueError(f"{name} is not a configured official YOLO26 detection model.")
         self._config.model_dir.mkdir(parents=True, exist_ok=True)
-        url = model_urls[name]
+        entry = model_entries[name]
         path = self._config.model_dir / name
-        _download_to_path(url, path, progress_callback)
+        download_model_file(
+            entry.url,
+            path,
+            progress_callback,
+            expected_sha256=entry.sha256,
+            expected_size=entry.size_bytes,
+            allowed_hosts=trusted_model_download_hosts(),
+        )
         return ModelInfo(name=name, path=path, exists=True, is_official=True)
 
     def add_custom_model(self, path: Union[Path, str]) -> ModelInfo:
@@ -81,11 +89,3 @@ class Yolo26ModelRegistry:
             base_url=self._config.official_model_base_url,
             cache_path=self._config.model_manifest_cache_path,
         )
-
-
-def _download_to_path(
-    url: str,
-    path: Path,
-    progress_callback: Callable[[int | None, int, int | None], None] | None,
-) -> None:
-    download_model_file(url, path, progress_callback)

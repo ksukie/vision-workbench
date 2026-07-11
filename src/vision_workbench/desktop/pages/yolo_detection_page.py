@@ -36,6 +36,7 @@ from vision_workbench.troubleshooting import (
     with_help,
 )
 from vision_workbench.model_files import model_file_issue
+from vision_workbench.input_limits import validate_image_file
 from yolo26_detection.api import create_yolo26_detection_service
 from yolo26_detection.application import Yolo26DetectionService
 from yolo26_detection.configuration import Yolo26DetectionConfig
@@ -48,7 +49,14 @@ from ..widgets import SELECTED_DISPLAY_ROLE
 from ..widgets import NoWheelComboBox as QComboBox
 from ..widgets import NoWheelDoubleSpinBox as QDoubleSpinBox
 from ..widgets import NoWheelSpinBox as QSpinBox
-from ..widgets import PreviewPanel, SectionCard, make_button, set_download_progress, style_form_label
+from ..widgets import (
+    PreviewPanel,
+    SectionCard,
+    associate_form_label,
+    make_button,
+    set_download_progress,
+    style_form_label,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -245,6 +253,15 @@ class YoloDetectionPage(QWidget):
             self.camera_label,
         ):
             style_form_label(label)
+        for label, control in (
+            (self.model_label, self.model_combo),
+            (self.device_label, self.device_combo),
+            (self.image_size_label, self.image_size_spin),
+            (self.conf_label, self.conf_spin),
+            (self.iou_label, self.iou_spin),
+            (self.camera_label, self.camera_combo),
+        ):
+            associate_form_label(label, control)
 
         self.live_status_label = QLabel("实时：未打开")
         self.live_status_label.setObjectName("MutedText")
@@ -1357,6 +1374,7 @@ class YoloDetectionPage(QWidget):
 
 
 def _load_image_bgr(path: Path) -> ImageArray:
+    path = validate_image_file(path)
     data = np.fromfile(str(path), dtype=np.uint8)
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
     if image is None:

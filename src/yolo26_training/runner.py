@@ -10,6 +10,18 @@ from typing import List, Optional
 
 if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from vision_workbench.runtime_security import (
+    configure_isolated_python_environment,
+    configure_restricted_model_loading,
+    validate_run_name,
+)
+
+# Apply isolation before importing dataset parsers, model adapters, or Ultralytics.
+configure_isolated_python_environment()
+configure_restricted_model_loading()
+
+if __package__ in (None, ""):
     from yolo26_training.application import build_default_service
     from yolo26_training.configuration import Yolo26TrainingConfig
     from yolo26_training.domain import TrainingJobConfig
@@ -51,6 +63,7 @@ def parse_args(argv: Optional[List[str]] = None) -> argparse.Namespace:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
+    configure_isolated_python_environment()
     args = parse_args(argv)
     config = Yolo26TrainingConfig()
     service = build_default_service(config)
@@ -58,7 +71,14 @@ def main(argv: Optional[List[str]] = None) -> int:
     data_path = Path(args.data).expanduser()
     model_path = Path(args.model).expanduser()
     project_dir = Path(args.project).expanduser() if args.project else config.runs_dir
-    run_name = args.name or _default_run_name(data_path, model_path)
+    try:
+        run_name = validate_run_name(
+            args.name or _default_run_name(data_path, model_path),
+            field_name="training run name",
+        )
+    except ValueError as exc:
+        print(with_help(f"Invalid training run name: {exc}", DATASETS_AND_TRAINING), file=sys.stderr)
+        return 2
     job = TrainingJobConfig(
         task=args.task,
         data_yaml=data_path,

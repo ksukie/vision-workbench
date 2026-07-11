@@ -37,7 +37,14 @@ from ..widgets import SELECTED_DISPLAY_ROLE
 from ..widgets import NoWheelComboBox as QComboBox
 from ..widgets import NoWheelDoubleSpinBox as QDoubleSpinBox
 from ..widgets import NoWheelSpinBox as QSpinBox
-from ..widgets import PreviewPanel, SectionCard, make_button, set_download_progress, style_form_label
+from ..widgets import (
+    PreviewPanel,
+    SectionCard,
+    associate_form_label,
+    make_button,
+    set_download_progress,
+    style_form_label,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -168,6 +175,15 @@ class YoloSegmentationPage(QWidget):
             self.iou_label,
         ):
             style_form_label(label)
+        for label, control in (
+            (self.task_label, self.task_combo),
+            (self.model_label, self.model_combo),
+            (self.device_label, self.device_combo),
+            (self.image_size_label, self.image_size_spin),
+            (self.conf_label, self.conf_spin),
+            (self.iou_label, self.iou_spin),
+        ):
+            associate_form_label(label, control)
 
         for button in (
             self.refresh_models_button,

@@ -13,12 +13,16 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Mapping, Sequence
+from urllib.parse import urlparse
 from urllib.request import Request, urlopen
+
+from vision_workbench.trusted_models import YOLO26_ASSETS_V8_4_0
 
 
 MODEL_MANIFEST_ENV_VAR = "VISION_WORKBENCH_MODEL_MANIFEST_URL"
 MODEL_MANIFEST_USER_AGENT = "VisionWorkbench/0.2 model-manifest"
 YOLO26_FAMILY = "yolo26"
+MAX_MANIFEST_BYTES = 2 * 1024 * 1024
 
 
 class ModelManifestError(ValueError):
@@ -67,6 +71,8 @@ def refresh_model_manifest(
     if not manifest_url:
         return tuple()
 
+    _validate_manifest_url(manifest_url)
+
     request = Request(
         manifest_url,
         headers={
@@ -75,7 +81,12 @@ def refresh_model_manifest(
         },
     )
     with urlopen(request, timeout=timeout_seconds) as response:
-        payload = json.loads(response.read().decode("utf-8"))
+        final_url = response.geturl() if hasattr(response, "geturl") else manifest_url
+        _validate_manifest_url(final_url)
+        raw_payload = response.read(MAX_MANIFEST_BYTES + 1)
+    if len(raw_payload) > MAX_MANIFEST_BYTES:
+        raise ModelManifestError("Model manifest exceeds the 2 MiB safety limit.")
+    payload = json.loads(raw_payload.decode("utf-8"))
 
     entries = parse_model_manifest(payload)
     cache_path.parent.mkdir(parents=True, exist_ok=True)
@@ -94,6 +105,8 @@ def load_cached_model_manifest(cache_path: Path) -> tuple[ModelManifestEntry, ..
     if not cache_path.is_file():
         return tuple()
     try:
+        if cache_path.stat().st_size > MAX_MANIFEST_BYTES:
+            return tuple()
         payload = json.loads(cache_path.read_text(encoding="utf-8"))
         return parse_model_manifest(payload)
     except Exception:
@@ -132,12 +145,17 @@ def default_yolo26_model_entries(
         normalized_task = _normalize_yolo26_task(task)
         for name in names:
             safe_name = _safe_model_name(name, YOLO26_FAMILY)
+            pinned = YOLO26_ASSETS_V8_4_0.get(safe_name)
+            if base == "https://github.com/ultralytics/assets/releases/download/v8.4.0" and pinned is None:
+                raise ModelManifestError(f"Official YOLO26 asset is missing pinned metadata: {safe_name}")
             entries.append(
                 ModelManifestEntry(
                     family=YOLO26_FAMILY,
                     task=normalized_task,
                     name=safe_name,
                     url=f"{base}/{safe_name}",
+                    size_bytes=pinned[0] if pinned else None,
+                    sha256=pinned[1] if pinned else None,
                     source="bundled-default",
                 )
             )
@@ -155,11 +173,29 @@ def merge_model_entries(
     seen = set()
     for fallback in fallback_entries:
         key = _entry_key(fallback)
-        merged.append(cached_by_key.get(key, fallback))
+        cached = cached_by_key.get(key)
+        if fallback.sha256:
+            if cached is not None and cached.sha256 == fallback.sha256:
+                merged.append(
+                    ModelManifestEntry(
+                        family=fallback.family,
+                        task=fallback.task,
+                        name=fallback.name,
+                        url=cached.url,
+                        size_bytes=fallback.size_bytes,
+                        sha256=fallback.sha256,
+                        license_name=cached.license_name or fallback.license_name,
+                        source=cached.source or fallback.source,
+                    )
+                )
+            else:
+                merged.append(fallback)
+        else:
+            merged.append(cached or fallback)
         seen.add(key)
     for cached in cached_entries:
         key = _entry_key(cached)
-        if key not in seen:
+        if key not in seen and cached.sha256 and cached.size_bytes:
             merged.append(cached)
             seen.add(key)
     return tuple(merged)
@@ -207,10 +243,11 @@ def _entries_from_raw_model(raw_model: object) -> tuple[ModelManifestEntry, ...]
     url = str(raw_model.get("url") or raw_model.get("download_url") or "").strip()
     if not url:
         raise ModelManifestError(f"Model manifest entry for {name} is missing a URL.")
+    _validate_model_url(url, name)
 
     tasks = _manifest_tasks(raw_model)
     size_bytes = _optional_int(raw_model.get("size_bytes") or raw_model.get("size"))
-    sha256 = _optional_str(raw_model.get("sha256"))
+    sha256 = _optional_sha256(raw_model.get("sha256"))
     license_name = _optional_str(raw_model.get("license") or raw_model.get("license_name"))
     source = _optional_str(raw_model.get("source"))
 
@@ -289,4 +326,30 @@ def _optional_int(value: object) -> int | None:
         parsed = int(value)
     except (TypeError, ValueError):
         return None
-    return parsed if parsed >= 0 else None
+    return parsed if parsed > 0 else None
+
+
+def _optional_sha256(value: object) -> str | None:
+    text = _optional_str(value)
+    if text is None:
+        return None
+    normalized = text.lower()
+    if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+        raise ModelManifestError("Model manifest sha256 values must contain exactly 64 hexadecimal characters.")
+    return normalized
+
+
+def _validate_model_url(url: str, name: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"https", "file"}:
+        raise ModelManifestError(f"Model manifest URL for {name} must use HTTPS or file://.")
+    if parsed.scheme == "https" and not parsed.netloc:
+        raise ModelManifestError(f"Model manifest URL for {name} is missing a host.")
+
+
+def _validate_manifest_url(url: str) -> None:
+    parsed = urlparse(url)
+    if parsed.scheme not in {"https", "file"}:
+        raise ModelManifestError("Remote model manifests require HTTPS or an explicit local file URL.")
+    if parsed.scheme == "https" and not parsed.netloc:
+        raise ModelManifestError("Remote model manifest URL is missing a host.")

@@ -82,6 +82,9 @@ class WindowTitleBar(QFrame):
         self.minimize_button.setToolTip("最小化")
         self.maximize_button.setToolTip("最大化 / 还原")
         self.close_button.setToolTip("关闭")
+        self.minimize_button.setAccessibleName("最小化窗口")
+        self.maximize_button.setAccessibleName("最大化或还原窗口")
+        self.close_button.setAccessibleName("关闭窗口")
         self.minimize_button.clicked.connect(window.showMinimized)
         self.maximize_button.clicked.connect(window.toggle_maximized)
         self.close_button.clicked.connect(window.close)
@@ -131,7 +134,7 @@ class WindowTitleBar(QFrame):
     def _make_window_button(self, text: str, *, close: bool = False) -> QPushButton:
         button = QPushButton(text)
         button.setObjectName("WindowCloseButton" if close else "WindowControlButton")
-        button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        button.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         button.setCursor(Qt.CursorShape.PointingHandCursor)
         return button
 
@@ -223,12 +226,15 @@ class MainWindow(QMainWindow):
         section_label.setObjectName("SidebarSectionLabel")
         sidebar_layout.addWidget(section_label)
 
-        for item in NAV_ITEMS:
+        for index, item in enumerate(NAV_ITEMS, start=1):
             button = QPushButton(item.label)
             button.setObjectName("NavButton")
             button.setCheckable(True)
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setToolTip(item.description)
+            button.setAccessibleName(f"工作流：{item.label}")
+            button.setAccessibleDescription(item.description)
+            button.setShortcut(f"Alt+{index}")
             button.clicked.connect(lambda _checked=False, key=item.key: self.set_current_page(key))
             self.button_group.addButton(button)
             self.nav_buttons[item.key] = button

@@ -86,6 +86,12 @@ QPushButton#WindowControlButton:hover {
     color: #334155;
 }
 
+QPushButton#WindowControlButton:focus,
+QPushButton#WindowCloseButton:focus {
+    border: 1px solid #0a84ff;
+    background: #eef6ff;
+}
+
 QPushButton#WindowCloseButton {
     background: transparent;
     border: 0;
@@ -148,6 +154,32 @@ QFrame#PreviewPanel {
     background: #ffffff;
     border: 1px solid #dde5f0;
     border-radius: 8px;
+}
+
+QTabWidget#WorkflowTabs::pane {
+    border: 0;
+    background: transparent;
+}
+
+QTabWidget#WorkflowTabs QTabBar::tab {
+    background: #e9eef5;
+    border: 1px solid #d6deea;
+    border-bottom: 0;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    padding: 9px 24px;
+    margin-right: 6px;
+    color: #475569;
+}
+
+QTabWidget#WorkflowTabs QTabBar::tab:selected {
+    background: #ffffff;
+    color: #075fbd;
+    font-weight: 600;
+}
+
+QTabWidget#WorkflowTabs QTabBar::tab:focus {
+    border-color: #0a84ff;
 }
 
 QScrollArea#PageScrollArea {
@@ -273,6 +305,14 @@ QPushButton:hover {
 
 QPushButton:pressed {
     background: #eef2f7;
+}
+
+QPushButton:focus {
+    border-color: #0a84ff;
+}
+
+QCheckBox:focus {
+    color: #075fbd;
 }
 
 QPushButton:disabled {

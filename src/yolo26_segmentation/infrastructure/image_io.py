@@ -6,12 +6,13 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from vision_workbench.input_limits import validate_image_file
 
 from ..domain import ImageArray, PathLike
 
 
 def load_image(path: PathLike) -> ImageArray:
-    image_path = Path(path)
+    image_path = validate_image_file(Path(path))
     data = np.fromfile(str(image_path), dtype=np.uint8)
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
     if image is None:
@@ -45,4 +46,3 @@ def bgr_to_rgb(image: ImageArray) -> ImageArray:
     if image.ndim == 3 and image.shape[2] == 4:
         return cv2.cvtColor(image, cv2.COLOR_BGRA2RGBA)
     raise ValueError("Image must be grayscale, BGR, or BGRA.")
-

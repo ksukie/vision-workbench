@@ -6,6 +6,7 @@ from pathlib import Path
 
 import cv2
 import numpy as np
+from vision_workbench.input_limits import validate_image_file
 
 from ..domain import ImageArray, PathLike
 from .image_utils import ensure_color_bgr, ensure_uint8_image
@@ -15,9 +16,7 @@ class OpenCvImageRepository:
     """Load and save images, including Windows paths with non-ASCII text."""
 
     def load(self, path: PathLike) -> ImageArray:
-        image_path = Path(path)
-        if not image_path.exists():
-            raise FileNotFoundError(f"Image file does not exist: {image_path}")
+        image_path = validate_image_file(Path(path))
 
         data = np.fromfile(str(image_path), dtype=np.uint8)
         image = cv2.imdecode(data, cv2.IMREAD_UNCHANGED)

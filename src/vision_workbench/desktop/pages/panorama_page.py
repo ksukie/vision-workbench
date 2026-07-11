@@ -42,7 +42,7 @@ from vision_workbench.troubleshooting import DATA_AND_FILES, MODULE_RUNTIME_ERRO
 from ..image_presenter import QtImagePresenter
 from ..task_runner import QtTaskRunner
 from ..widgets import NoWheelComboBox as QComboBox
-from ..widgets import PreviewPanel, SectionCard, make_button, style_form_label
+from ..widgets import PreviewPanel, SectionCard, associate_form_label, make_button, style_form_label
 
 
 logger = logging.getLogger(__name__)
@@ -232,6 +232,8 @@ class PanoramaPage(QWidget):
         self.channel_combo.setMinimumWidth(112)
         for label in (self.mode_label, self.channel_label):
             style_form_label(label)
+        associate_form_label(self.mode_label, self.mode_combo)
+        associate_form_label(self.channel_label, self.channel_combo)
 
         self.left_preview = ClickablePreviewPanel("左图（参考）", "请打开左图（参考）")
         self.right_preview = ClickablePreviewPanel("右图（待拼接）", "请打开右图（待拼接）")

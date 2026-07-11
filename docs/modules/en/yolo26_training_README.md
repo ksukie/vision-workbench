@@ -26,6 +26,8 @@ vision-workbench
 
 Open **YOLO Training** from the left navigation, choose `detect`, `segment`, or `semantic`, select `data.yaml`, choose a pretrained weight file, validate the dataset, and start training.
 
+If you do not have a dataset yet, **Create Sample Dataset** builds a minimal valid fixture for the current task. Run the environment check, apply the recommended batch size, and use a small epoch count for the first smoke run. Training can be stopped and already-written upstream checkpoints are preserved.
+
 CLI:
 
 ```bash

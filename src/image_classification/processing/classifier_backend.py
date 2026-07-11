@@ -5,9 +5,11 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Tuple
+from typing import Any, Callable, List, Optional, Tuple
 
 from PIL import Image
+from vision_workbench.input_limits import validate_image_file
+from vision_workbench.runtime_security import confined_child_path, configure_restricted_model_loading
 
 from ..domain import (
     ClassificationModelName,
@@ -32,7 +34,11 @@ class LoadedClassifier:
 class TorchVisionClassifierBackend:
     """Training and prediction backend using torch and torchvision."""
 
-    def train(self, config: ClassificationTrainingConfig) -> Path:
+    def train(
+        self,
+        config: ClassificationTrainingConfig,
+        progress_callback: Callable[[dict[str, float | int]], None] | None = None,
+    ) -> Path:
         torch, nn, optim, datasets, transforms, models = _require_torchvision()
         device = _normalize_device(torch, config.device)
         train_transform = _build_transform(transforms, config.image_size, is_train=True)
@@ -74,7 +80,11 @@ class TorchVisionClassifierBackend:
             lr=config.learning_rate,
         )
 
-        run_dir = config.output_dir / config.run_name
+        run_dir = confined_child_path(
+            config.output_dir,
+            config.run_name,
+            field_name="classification training run name",
+        )
         run_dir.mkdir(parents=True, exist_ok=True)
         best_path = run_dir / "best.pt"
         last_path = run_dir / "last.pt"
@@ -82,6 +92,8 @@ class TorchVisionClassifierBackend:
 
         for epoch in range(max(1, int(config.epochs))):
             model.train()
+            running_loss = 0.0
+            batch_count = 0
             for images, labels in train_loader:
                 images = images.to(device)
                 labels = labels.to(device)
@@ -90,6 +102,8 @@ class TorchVisionClassifierBackend:
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
+                running_loss += float(loss.detach().item())
+                batch_count += 1
 
             val_acc = _evaluate(torch, model, val_loader, device)
             _save_checkpoint(
@@ -113,6 +127,16 @@ class TorchVisionClassifierBackend:
                     image_size=config.image_size,
                     epoch=epoch + 1,
                     val_accuracy=val_acc,
+                )
+            if progress_callback is not None:
+                progress_callback(
+                    {
+                        "epoch": epoch + 1,
+                        "epochs": max(1, int(config.epochs)),
+                        "train_loss": running_loss / max(1, batch_count),
+                        "val_accuracy": val_acc,
+                        "best_accuracy": best_acc,
+                    }
                 )
 
         return best_path
@@ -149,7 +173,10 @@ class TorchVisionClassifierBackend:
     ) -> LoadedClassifier:
         torch, nn, optim, datasets, transforms, models = _require_torchvision()
         resolved_device = _normalize_device(torch, device)
-        checkpoint = torch.load(str(model_path), map_location=resolved_device)
+        configure_restricted_model_loading()
+        checkpoint = torch.load(str(model_path), map_location=resolved_device, weights_only=True)
+        if not isinstance(checkpoint, dict):
+            raise ValueError("Checkpoint must contain a dictionary of model metadata and tensors.")
         model_name = str(checkpoint.get("model_name", ClassificationModelName.RESNET18))
         class_names = list(checkpoint.get("class_names", []))
         image_size = int(checkpoint.get("image_size", 224))
@@ -186,6 +213,7 @@ class TorchVisionClassifierBackend:
     ) -> PredictionResult:
         torch, nn, optim, datasets, transforms, models = _require_torchvision()
         transform = _build_transform(transforms, classifier.image_size, is_train=False)
+        image_path = validate_image_file(image_path)
         with Image.open(image_path) as image:
             image = image.convert("RGB")
             tensor = transform(image).unsqueeze(0).to(classifier.device)
@@ -216,6 +244,7 @@ class TorchVisionClassifierBackend:
 
 
 def _require_torchvision() -> Tuple[Any, Any, Any, Any, Any, Any]:
+    configure_restricted_model_loading()
     try:
         import torch
         from torch import nn, optim
@@ -338,7 +367,8 @@ def _freeze_parameters(model: Any) -> None:
 
 
 def _load_weight_file(torch: Any, model: Any, weight_path: Path) -> None:
-    raw = torch.load(str(weight_path), map_location="cpu")
+    configure_restricted_model_loading()
+    raw = torch.load(str(weight_path), map_location="cpu", weights_only=True)
     state_dict = raw.get("state_dict", raw) if isinstance(raw, dict) else raw
     if not isinstance(state_dict, dict):
         raise ValueError(f"Unsupported pretrained weight file: {weight_path}")

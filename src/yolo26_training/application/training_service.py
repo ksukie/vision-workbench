@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import List, Optional
 
 from vision_workbench.model_files import validate_complete_model_file
+from vision_workbench.runtime_security import confined_child_path, validate_run_name
 
 from ..configuration import Yolo26TrainingConfig
 from ..domain import DatasetValidationReport, PathLike, TrainingJobConfig
@@ -53,6 +54,7 @@ class Yolo26TrainingService:
         return self._model_repository.default_model(task)
 
     def train(self, job: TrainingJobConfig) -> object:
+        self._validate_output_path(job)
         report = self.validate_dataset(
             job.data_yaml,
             task=job.task,
@@ -64,6 +66,7 @@ class Yolo26TrainingService:
         return self._backend.train(job)
 
     def build_runner_command(self, job: TrainingJobConfig) -> List[str]:
+        self._validate_output_path(job)
         command = [
             sys.executable,
             "-m",
@@ -96,6 +99,11 @@ class Yolo26TrainingService:
         command.extend(job.extra_args)
         return command
 
+    @staticmethod
+    def _validate_output_path(job: TrainingJobConfig) -> None:
+        run_name = validate_run_name(job.run_name, field_name="YOLO training run name")
+        confined_child_path(job.project_dir, run_name, field_name="YOLO training run name")
+
     def start_training_process(
         self,
         job: TrainingJobConfig,
@@ -108,6 +116,9 @@ class Yolo26TrainingService:
         env["PYTHONPATH"] = (
             str(src_dir) if not current_pythonpath else str(src_dir) + os.pathsep + current_pythonpath
         )
+        env["PYTHONNOUSERSITE"] = "1"
+        env.setdefault("ULTRALYTICS_SAFE_LOAD", "true")
+        env.setdefault("TORCH_FORCE_WEIGHTS_ONLY_LOAD", "1")
         return subprocess.Popen(
             command,
             cwd=str(cwd or self._config.yolo26_source_dir.parents[1]),

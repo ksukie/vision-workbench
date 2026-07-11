@@ -9,6 +9,8 @@ import threading
 from pathlib import Path
 from typing import Optional, Tuple
 
+from vision_workbench.runtime_security import configure_restricted_model_loading
+
 from ..configuration import Yolo26DetectionConfig
 from ..domain import DetectionBox, DetectionOutput, DetectionSettings, ImageArray, PathLike
 
@@ -91,6 +93,7 @@ class UltralyticsYolo26Backend:
         )
 
     def _import_yolo(self):
+        configure_restricted_model_loading()
         source_dir = self._config.yolo26_source_dir
         if source_dir.exists():
             source_text = str(source_dir.resolve())

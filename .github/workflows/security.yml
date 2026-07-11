@@ -1,0 +1,35 @@
+name: Security
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "23 3 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    env:
+      PYTHONNOUSERSITE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install audited environment
+        run: |
+          python -m pip install --require-hashes --requirement requirements-base.lock
+          python -m pip install pip-audit==2.10.1 cyclonedx-bom==7.3.0
+          python -m pip install --no-deps --editable .
+      - name: Audit Python dependencies
+        run: python -m pip_audit --requirement requirements-base.lock --strict --no-deps --disable-pip
+      - name: Generate CycloneDX SBOM
+        run: cyclonedx-py environment --output-format JSON --output-file sbom.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vision-workbench-sbom
+          path: sbom.cdx.json

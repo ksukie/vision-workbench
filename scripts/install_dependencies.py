@@ -21,9 +21,8 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from vision_workbench.troubleshooting import DEEP_LEARNING_DEPENDENCIES, ENVIRONMENT, with_help
 
-PYPI_INDEX_URL = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
+PYPI_INDEX_URL = os.environ.get("VISION_WORKBENCH_PYPI_INDEX", "https://pypi.org/simple")
 PYTORCH_OFFICIAL_BASE = "https://download.pytorch.org/whl"
-PYTORCH_MIRROR_BASE = "https://mirrors.aliyun.com/pytorch-wheels"
 
 TORCH_VERSION = "2.12.1"
 TORCHVISION_VERSION = "0.27.1"
@@ -103,7 +102,7 @@ def torch_install_plan(requested: str) -> Tuple[str, List[str], List[Tuple[str, 
             f"torch=={TORCH_VERSION}",
             f"torchvision=={TORCHVISION_VERSION}",
         ]
-        return tag, packages, [(f"Tsinghua PyPI {tag}", ["--index-url", PYPI_INDEX_URL])]
+        return tag, packages, [(f"configured PyPI {tag}", ["--index-url", PYPI_INDEX_URL])]
 
     packages = [
         f"torch=={TORCH_VERSION}+{tag}",
@@ -113,10 +112,6 @@ def torch_install_plan(requested: str) -> Tuple[str, List[str], List[Tuple[str, 
         (
             f"PyTorch official {tag}",
             ["--index-url", f"{PYTORCH_OFFICIAL_BASE}/{tag}"],
-        ),
-        (
-            f"Aliyun PyTorch mirror {tag}",
-            ["--no-index", "--find-links", f"{PYTORCH_MIRROR_BASE}/{tag}/"],
         ),
     ]
 

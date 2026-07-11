@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional, cast
 
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import QProcess, QProcessEnvironment, QTimer, Signal, Qt
 from PySide6.QtGui import QPixmap, QTextCursor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -24,6 +26,7 @@ from PySide6.QtWidgets import (
     QProgressBar,
     QScrollArea,
     QSplitter,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -39,6 +42,9 @@ from image_classification.api import (
 from image_classification.domain import ClassificationTrainingConfig, DatasetValidationReport
 from vision_workbench.model_files import model_file_issue
 from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, DATA_AND_FILES, MODELS_AND_WEIGHTS, with_help
+from vision_workbench.runtime_security import validate_run_name
+from vision_workbench.sample_data import create_classification_sample_dataset
+from vision_workbench.runtime_diagnostics import TrainingEnvironmentReport, inspect_training_environment
 
 from ..task_runner import QtTaskRunner
 from ..widgets import NoWheelDoubleSpinBox as QDoubleSpinBox
@@ -53,12 +59,6 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class PredictionPayload:
     result: PredictionResult
-    total_ms: float
-
-
-@dataclass(frozen=True)
-class TrainingPayload:
-    best_path: Path
     total_ms: float
 
 
@@ -78,6 +78,11 @@ class ClassificationPage(QWidget):
         self.config = config
         self.service = service or create_image_classification_service(config)
         self.tasks = QtTaskRunner(self)
+        self.training_process = None  # type: QProcess | None
+        self._active_training_job = None  # type: ClassificationTrainingConfig | None
+        self._training_output_buffer = ""
+        self._training_stop_requested = False
+        self._recommended_batch_size = None  # type: int | None
 
         self.image_path = None  # type: Optional[Path]
         self.checkpoint_path = None  # type: Optional[Path]
@@ -109,6 +114,13 @@ class ClassificationPage(QWidget):
         self.topk_label = QLabel("Top-K")
         for label in (self.model_label, self.device_label, self.topk_label):
             style_form_label(label)
+        for label, control in (
+            (self.model_label, self.model_combo),
+            (self.device_label, self.device_combo),
+            (self.topk_label, self.topk_spin),
+        ):
+            label.setBuddy(control)
+            control.setAccessibleName(label.text())
 
         self.preview_panel = PreviewPanel("输入图像", "请打开一张图片")
         self.results_list = QListWidget()
@@ -166,6 +178,7 @@ class ClassificationPage(QWidget):
         self.train_dataset_edit.setMinimumWidth(320)
         self.select_dataset_button = make_button("选择数据集", primary=True)
         self.validate_dataset_button = make_button("验证数据集")
+        self.sample_dataset_button = make_button("创建示例数据")
 
         self.train_model_label = QLabel("模型")
         self.train_model_combo = QComboBox()
@@ -179,11 +192,12 @@ class ClassificationPage(QWidget):
         self.train_device_combo.setCurrentText("auto")
         self.train_device_combo.setMinimumWidth(112)
 
-        self.train_epochs_label = QLabel("Epochs")
+        self.train_epochs_label = QLabel("轮数")
         self.train_epochs_spin = QSpinBox()
         self.train_epochs_spin.setRange(1, 500)
         self.train_epochs_spin.setValue(config.default_epochs)
         self.train_epochs_spin.setMinimumWidth(92)
+        self.train_epochs_spin.setToolTip("完整遍历训练集的次数。先用 3～5 轮确认数据和流程。")
 
         self.train_image_size_label = QLabel("图像尺寸")
         self.train_image_size_spin = QSpinBox()
@@ -191,12 +205,14 @@ class ClassificationPage(QWidget):
         self.train_image_size_spin.setSingleStep(32)
         self.train_image_size_spin.setValue(config.default_image_size)
         self.train_image_size_spin.setMinimumWidth(92)
+        self.train_image_size_spin.setToolTip("分类输入尺寸。尺寸越大越占显存，通常从 224 开始。")
 
-        self.train_batch_label = QLabel("Batch")
+        self.train_batch_label = QLabel("批量")
         self.train_batch_spin = QSpinBox()
         self.train_batch_spin.setRange(1, 256)
         self.train_batch_spin.setValue(config.default_batch_size)
         self.train_batch_spin.setMinimumWidth(92)
+        self.train_batch_spin.setToolTip("每批图片数。显存不足时降低到 8、4 或 1。")
 
         self.train_lr_label = QLabel("学习率")
         self.train_lr_spin = QDoubleSpinBox()
@@ -205,17 +221,25 @@ class ClassificationPage(QWidget):
         self.train_lr_spin.setSingleStep(0.0005)
         self.train_lr_spin.setValue(config.default_learning_rate)
         self.train_lr_spin.setMinimumWidth(118)
+        self.train_lr_spin.setToolTip("优化器步长。迁移学习通常先保留默认值 0.001。")
 
         self.train_run_name_label = QLabel("运行名称")
         self.train_run_name_edit = QLineEdit("classification_train")
         self.train_run_name_edit.setMinimumWidth(180)
+        self.train_run_name_edit.setToolTip("仅填写名称，不要输入目录、斜杠或 ..。")
 
         self.train_pretrained_check = QCheckBox("使用预训练权重")
         self.train_pretrained_check.setChecked(True)
+        self.train_pretrained_check.setToolTip("新手和小数据集建议保持启用。")
         self.train_freeze_check = QCheckBox("冻结 backbone")
         self.train_freeze_check.setChecked(True)
+        self.train_freeze_check.setToolTip("只训练分类头，速度更快且更不容易过拟合。")
         self.start_training_button = make_button("开始训练", primary=True)
         self.start_training_button.setMinimumWidth(132)
+        self.stop_training_button = make_button("停止训练", danger=True)
+        self.stop_training_button.setMinimumWidth(112)
+        self.jump_to_training_button = make_button("前往训练设置")
+        self.jump_to_training_button.setToolTip("滚动到本页下方的分类训练区域")
 
         self.train_log = QTextEdit()
         self.train_log.setReadOnly(True)
@@ -226,6 +250,26 @@ class ClassificationPage(QWidget):
         self.train_status_label = QLabel("")
         self.train_status_label.setObjectName("MutedText")
         self.train_status_label.setWordWrap(True)
+
+        self.train_hint_label = QLabel(
+            "新手建议：保持“预训练权重”和“冻结 backbone”，先训练 3～5 轮；显存不足时降低批量。"
+        )
+        self.train_hint_label.setObjectName("ParameterHint")
+        self.train_hint_label.setWordWrap(True)
+
+        self.train_progress = QProgressBar()
+        self.train_progress.setRange(0, max(1, config.default_epochs))
+        self.train_progress.setValue(0)
+        self.train_progress.setFormat("等待训练")
+        self.train_metric_label = QLabel("尚未开始训练。")
+        self.train_metric_label.setObjectName("MutedText")
+        self.train_metric_label.setWordWrap(True)
+        self.check_environment_button = make_button("检查训练环境")
+        self.apply_batch_button = make_button("应用推荐批量")
+        self.apply_batch_button.setEnabled(False)
+        self.environment_label = QLabel("尚未检查训练环境。")
+        self.environment_label.setObjectName("MutedText")
+        self.environment_label.setWordWrap(True)
 
         for label in (
             self.train_dataset_label,
@@ -239,10 +283,26 @@ class ClassificationPage(QWidget):
         ):
             style_form_label(label)
 
+        for label, control in (
+            (self.train_dataset_label, self.train_dataset_edit),
+            (self.train_model_label, self.train_model_combo),
+            (self.train_device_label, self.train_device_combo),
+            (self.train_epochs_label, self.train_epochs_spin),
+            (self.train_image_size_label, self.train_image_size_spin),
+            (self.train_batch_label, self.train_batch_spin),
+            (self.train_lr_label, self.train_lr_spin),
+            (self.train_run_name_label, self.train_run_name_edit),
+        ):
+            label.setBuddy(control)
+            control.setAccessibleName(label.text())
+
         self.content = None  # type: QWidget | None
         self.controls_layout = None  # type: QGridLayout | None
         self.splitter = None  # type: QSplitter | None
         self.results_panel = None  # type: QWidget | None
+        self.page_scroll_area = None  # type: QScrollArea | None
+        self.training_panel = None  # type: QWidget | None
+        self.mode_tabs = None  # type: QTabWidget | None
         self._compact_layout = None  # type: bool | None
 
         self._build_ui()
@@ -261,6 +321,7 @@ class ClassificationPage(QWidget):
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.page_scroll_area = scroll_area
 
         content = QWidget()
         content.setObjectName("PageContent")
@@ -275,17 +336,32 @@ class ClassificationPage(QWidget):
         title.setObjectName("PageTitle")
         subtitle = QLabel("使用预训练模型或自定义模型文件进行 Top-K 分类预测。")
         subtitle.setObjectName("PageSubtitle")
-        layout.addWidget(title)
+        title_row = QHBoxLayout()
+        title_row.addWidget(title)
+        title_row.addStretch(1)
+        title_row.addWidget(self.jump_to_training_button)
+        layout.addLayout(title_row)
         layout.addWidget(subtitle)
+
+        self.mode_tabs = QTabWidget()
+        self.mode_tabs.setObjectName("WorkflowTabs")
+        prediction_tab = QWidget()
+        prediction_layout = QVBoxLayout(prediction_tab)
+        prediction_layout.setContentsMargins(0, 14, 0, 0)
+        prediction_layout.setSpacing(16)
+        training_tab = QWidget()
+        training_layout = QVBoxLayout(training_tab)
+        training_layout.setContentsMargins(0, 14, 0, 0)
+        training_layout.setSpacing(16)
 
         controls_card = SectionCard("预测")
         self.controls_layout = QGridLayout()
         self.controls_layout.setHorizontalSpacing(10)
         self.controls_layout.setVerticalSpacing(10)
         controls_card.content_layout.addLayout(self.controls_layout)
-        layout.addWidget(controls_card)
-        layout.addWidget(self.busy_label)
-        layout.addWidget(self.busy_progress)
+        prediction_layout.addWidget(controls_card)
+        prediction_layout.addWidget(self.busy_label)
+        prediction_layout.addWidget(self.busy_progress)
 
         self.splitter = QSplitter(Qt.Orientation.Horizontal)
         self.splitter.addWidget(self.preview_panel)
@@ -293,9 +369,14 @@ class ClassificationPage(QWidget):
         self.splitter.addWidget(self.results_panel)
         self.splitter.setSizes([2, 1])
         self.splitter.setMinimumHeight(420)
-        layout.addWidget(self.splitter, 1)
-        layout.addWidget(self.info_label)
-        layout.addWidget(self._build_training_panel())
+        prediction_layout.addWidget(self.splitter, 1)
+        prediction_layout.addWidget(self.info_label)
+        self.training_panel = self._build_training_panel()
+        training_layout.addWidget(self.training_panel)
+        training_layout.addStretch(1)
+        self.mode_tabs.addTab(prediction_tab, "预测")
+        self.mode_tabs.addTab(training_tab, "训练")
+        layout.addWidget(self.mode_tabs, 1)
 
         scroll_area.setWidget(content)
         root_layout.addWidget(scroll_area)
@@ -308,7 +389,7 @@ class ClassificationPage(QWidget):
         return panel
 
     def _build_training_panel(self) -> QWidget:
-        panel = SectionCard("训练")
+        panel = SectionCard("训练", "数据集需包含 train/ 和 val/，两者下的类别文件夹必须一致。")
         grid = QGridLayout()
         grid.setHorizontalSpacing(10)
         grid.setVerticalSpacing(10)
@@ -317,6 +398,7 @@ class ClassificationPage(QWidget):
         grid.addWidget(self.train_dataset_edit, 0, 1, 1, 4)
         grid.addWidget(self.select_dataset_button, 0, 5)
         grid.addWidget(self.validate_dataset_button, 0, 6)
+        grid.addWidget(self.sample_dataset_button, 0, 7)
 
         grid.addWidget(self.train_model_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
         grid.addWidget(self.train_model_combo, 1, 1)
@@ -340,9 +422,18 @@ class ClassificationPage(QWidget):
         options.addWidget(self.train_freeze_check)
         options.addStretch(1)
         options.addWidget(self.start_training_button)
+        options.addWidget(self.stop_training_button)
 
         panel.content_layout.addLayout(grid)
         panel.content_layout.addLayout(options)
+        panel.content_layout.addWidget(self.train_hint_label)
+        environment_row = QHBoxLayout()
+        environment_row.addWidget(self.check_environment_button)
+        environment_row.addWidget(self.apply_batch_button)
+        environment_row.addWidget(self.environment_label, 1)
+        panel.content_layout.addLayout(environment_row)
+        panel.content_layout.addWidget(self.train_progress)
+        panel.content_layout.addWidget(self.train_metric_label)
         panel.content_layout.addWidget(self.train_log)
         panel.content_layout.addWidget(self.train_status_label)
         return panel
@@ -359,7 +450,17 @@ class ClassificationPage(QWidget):
         self.download_progress_changed.connect(self._on_download_progress)
         self.select_dataset_button.clicked.connect(self.select_training_dataset)
         self.validate_dataset_button.clicked.connect(self.validate_training_dataset)
+        self.sample_dataset_button.clicked.connect(self.create_sample_training_dataset)
         self.start_training_button.clicked.connect(self.start_training)
+        self.stop_training_button.clicked.connect(self.stop_training)
+        self.train_dataset_edit.textChanged.connect(self._update_action_states)
+        self.jump_to_training_button.clicked.connect(self.show_training_panel)
+        self.check_environment_button.clicked.connect(self.check_training_environment)
+        self.apply_batch_button.clicked.connect(self.apply_recommended_batch)
+
+    def show_training_panel(self) -> None:
+        if self.mode_tabs is not None:
+            self.mode_tabs.setCurrentIndex(1)
 
     def resizeEvent(self, event) -> None:  # noqa: N802
         super().resizeEvent(event)
@@ -610,17 +711,64 @@ class ClassificationPage(QWidget):
             error_category=DATASETS_AND_TRAINING,
         )
 
+    def create_sample_training_dataset(self) -> None:
+        target = self.config.dataset_dir / "quickstart"
+        try:
+            dataset_dir = create_classification_sample_dataset(target)
+        except Exception as exc:
+            QMessageBox.critical(self, "示例数据创建失败", with_help(exc, DATASETS_AND_TRAINING))
+            return
+        self.train_dataset_edit.setText(str(dataset_dir))
+        self._set_train_log(
+            f"已创建分类示例数据集：\n{dataset_dir}\n\n"
+            "该数据集只用于验证训练流程，不代表真实模型效果。"
+        )
+        self.train_status_label.setText("示例数据已创建，可以验证后试跑。")
+
+    def check_training_environment(self) -> None:
+        self._run_task(
+            task=lambda: inspect_training_environment(self.config.runs_dir),
+            on_success=self._on_environment_checked,
+            busy_text="正在检查训练环境...",
+            progress_text="正在检查 Torch、加速器和输出磁盘...",
+            error_title="环境检查失败",
+            error_category=DATASETS_AND_TRAINING,
+        )
+
+    def _on_environment_checked(self, value: object) -> None:
+        report = value
+        if not isinstance(report, TrainingEnvironmentReport):
+            return
+        self._recommended_batch_size = report.recommended_batch_size
+        self.environment_label.setText(report.to_text())
+        self.environment_label.setToolTip(report.to_text())
+        self.apply_batch_button.setEnabled(True)
+        self._completion_status = "训练环境检查完成。" if report.ok else "训练环境存在需要处理的问题。"
+
+    def apply_recommended_batch(self) -> None:
+        if self._recommended_batch_size is not None:
+            self.train_batch_spin.setValue(self._recommended_batch_size)
+
     def start_training(self) -> None:
         dataset_dir = self._training_dataset_path()
         if dataset_dir is None:
             QMessageBox.information(self, "没有数据集", "请先选择分类数据集目录。")
             return
 
+        try:
+            run_name = validate_run_name(
+                self.train_run_name_edit.text().strip() or "classification_train",
+                field_name="训练运行名",
+            )
+        except ValueError as exc:
+            QMessageBox.critical(self, "运行名称无效", with_help(exc, DATASETS_AND_TRAINING))
+            return
+
         job = ClassificationTrainingConfig(
             model_name=self.train_model_combo.currentText(),
             dataset_dir=dataset_dir,
             output_dir=self.config.runs_dir,
-            run_name=self.train_run_name_edit.text().strip() or "classification_train",
+            run_name=run_name,
             epochs=self.train_epochs_spin.value(),
             image_size=self.train_image_size_spin.value(),
             batch_size=self.train_batch_spin.value(),
@@ -639,19 +787,31 @@ class ClassificationPage(QWidget):
             f"输出目录：{job.output_dir / job.run_name}\n"
         )
         self.train_status_label.setText("训练运行中...")
-        self._run_task(
-            task=lambda: self._train_classifier(job),
-            on_success=self._on_training_finished,
-            busy_text="分类训练运行中...",
-            progress_text=f"正在训练分类模型...\n数据集：{dataset_dir}\n输出：{job.output_dir / job.run_name}",
-            error_title="训练失败",
-            error_category=DATASETS_AND_TRAINING,
-        )
+        self.train_progress.setRange(0, job.epochs)
+        self.train_progress.setValue(0)
+        self.train_progress.setFormat("准备训练 %v/%m")
+        self.train_metric_label.setText("正在验证数据集并初始化模型...")
+        self._start_training_process(job)
+
+    def stop_training(self) -> None:
+        if not self._training_running() or self.training_process is None:
+            return
+        self._training_stop_requested = True
+        self.train_status_label.setText("正在停止训练...")
+        self._append_train_log("\n已请求停止训练。\n")
+        self.training_process.terminate()
+        QTimer.singleShot(5000, self._force_stop_training)
+        self._update_action_states()
 
     def current_model_name(self) -> str:
         return self.model_combo.currentText()
 
     def shutdown(self) -> None:
+        if self._training_running() and self.training_process is not None:
+            self.training_process.terminate()
+            if not self.training_process.waitForFinished(3000):
+                self.training_process.kill()
+                self.training_process.waitForFinished(1000)
         self.tasks.shutdown()
 
     def _training_dataset_path(self) -> Path | None:
@@ -692,11 +852,6 @@ class ClassificationPage(QWidget):
         )
         return PredictionPayload(result=result, total_ms=_elapsed_ms(started_at))
 
-    def _train_classifier(self, job: ClassificationTrainingConfig) -> TrainingPayload:
-        started_at = time.perf_counter()
-        best_path = self.service.train(job)
-        return TrainingPayload(best_path=best_path, total_ms=_elapsed_ms(started_at))
-
     def _show_training_validation(self, value: object) -> None:
         report = cast(DatasetValidationReport, value)
         self._set_train_log(report.to_text())
@@ -704,22 +859,133 @@ class ClassificationPage(QWidget):
         self.train_status_label.setText(status)
         self._completion_status = status
 
-    def _on_training_finished(self, value: object) -> None:
-        payload = cast(TrainingPayload, value)
-        custom_path = self.config.custom_model_dir / f"{payload.best_path.parent.name}_best.pt"
-        lines = [
-            "训练完成。",
-            f"耗时：{payload.total_ms:.1f} ms",
-            "",
-            "最佳模型：",
-            str(payload.best_path),
-            "",
-            "自定义模型副本：",
-            str(custom_path),
-        ]
-        self._set_train_log("\n".join(lines))
-        self.train_status_label.setText(f"训练完成：{_shorten_path(payload.best_path, 70)}")
-        self._completion_status = f"训练完成：{payload.best_path}"
+    def _start_training_process(self, job: ClassificationTrainingConfig) -> None:
+        if self._training_running():
+            QMessageBox.information(self, "正在训练", "当前分类训练任务仍在运行。")
+            return
+        command = self.service.build_runner_command(job)
+        process = QProcess(self)
+        process.setProgram(command[0])
+        process.setArguments(command[1:])
+        project_root = Path(__file__).resolve().parents[4]
+        process.setWorkingDirectory(str(project_root))
+        process.setProcessChannelMode(QProcess.ProcessChannelMode.MergedChannels)
+        environment = QProcessEnvironment.systemEnvironment()
+        src_dir = project_root / "src"
+        existing_pythonpath = environment.value("PYTHONPATH")
+        environment.insert(
+            "PYTHONPATH",
+            str(src_dir) if not existing_pythonpath else str(src_dir) + os.pathsep + existing_pythonpath,
+        )
+        environment.insert("PYTHONIOENCODING", "utf-8")
+        environment.insert("PYTHONUTF8", "1")
+        environment.insert("PYTHONNOUSERSITE", "1")
+        environment.insert("ULTRALYTICS_SAFE_LOAD", "true")
+        environment.insert("TORCH_FORCE_WEIGHTS_ONLY_LOAD", "1")
+        process.setProcessEnvironment(environment)
+        process.readyReadStandardOutput.connect(self._read_training_output)
+        process.finished.connect(self._on_training_process_finished)
+        process.errorOccurred.connect(self._on_training_process_error)
+        self.training_process = process
+        self._active_training_job = job
+        self._training_output_buffer = ""
+        self._training_stop_requested = False
+        self._set_busy(True)
+        self._set_status("分类训练运行中...")
+        process.start()
+
+    def _read_training_output(self) -> None:
+        if self.training_process is None:
+            return
+        text = bytes(self.training_process.readAllStandardOutput()).decode("utf-8", errors="replace")
+        self._training_output_buffer += text
+        lines = self._training_output_buffer.split("\n")
+        self._training_output_buffer = lines.pop()
+        for line in lines:
+            self._handle_training_line(line.rstrip("\r"))
+
+    def _handle_training_line(self, line: str) -> None:
+        if line.startswith("VW_METRIC "):
+            try:
+                metrics = json.loads(line[len("VW_METRIC ") :])
+                epoch = int(metrics["epoch"])
+                epochs = int(metrics["epochs"])
+                loss = float(metrics["train_loss"])
+                accuracy = float(metrics["val_accuracy"])
+                best = float(metrics["best_accuracy"])
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+                self._append_train_log(line + "\n")
+                return
+            self.train_progress.setRange(0, epochs)
+            self.train_progress.setValue(epoch)
+            self.train_progress.setFormat(f"第 {epoch}/{epochs} 轮")
+            self.train_metric_label.setText(
+                f"训练损失：{loss:.4f} | 验证准确率：{accuracy:.2%} | 最佳准确率：{best:.2%}"
+            )
+            self._append_train_log(
+                f"Epoch {epoch}/{epochs} | loss={loss:.4f} | val_acc={accuracy:.2%} | best={best:.2%}\n"
+            )
+            return
+        if line:
+            self._append_train_log(line + "\n")
+
+    def _on_training_process_finished(self, exit_code: int, _exit_status: QProcess.ExitStatus) -> None:
+        if self._training_output_buffer:
+            self._handle_training_line(self._training_output_buffer)
+            self._training_output_buffer = ""
+        job = self._active_training_job
+        stopped = self._training_stop_requested
+        process = self.training_process
+        self.training_process = None
+        self._active_training_job = None
+        if process is not None:
+            process.deleteLater()
+        self._set_busy(False)
+        if stopped:
+            self.train_status_label.setText("训练已停止。")
+            self.train_metric_label.setText("训练由用户停止，已保留已写入的 checkpoint。")
+            self._set_status("分类训练已停止。")
+            return
+        if exit_code != 0 or job is None:
+            self.train_status_label.setText(f"训练失败，退出码：{exit_code}")
+            self._set_status("分类训练失败。")
+            QMessageBox.critical(
+                self,
+                "训练失败",
+                with_help("分类训练进程失败，请查看训练日志。", DATASETS_AND_TRAINING),
+            )
+            return
+        best_path = job.output_dir / job.run_name / "best.pt"
+        self.train_progress.setValue(job.epochs)
+        self.train_status_label.setText(f"训练完成：{_shorten_path(best_path, 70)}")
+        self.train_metric_label.setText(f"训练完成，最佳模型：{best_path}")
+        self._set_status(f"分类训练完成：{best_path.name}")
+
+    def _on_training_process_error(self, error: QProcess.ProcessError) -> None:
+        if self.training_process is None:
+            return
+        message = self.training_process.errorString()
+        self._append_train_log(f"\n训练进程错误：{message}\n")
+        if error == QProcess.ProcessError.FailedToStart:
+            process = self.training_process
+            self.training_process = None
+            self._active_training_job = None
+            self._set_busy(False)
+            self.train_status_label.setText("训练进程无法启动。")
+            self._set_status("分类训练启动失败。")
+            process.deleteLater()
+            QMessageBox.critical(
+                self,
+                "训练启动失败",
+                with_help(f"无法启动分类训练进程：{message}", DATASETS_AND_TRAINING),
+            )
+
+    def _force_stop_training(self) -> None:
+        if self._training_running() and self.training_process is not None:
+            self.training_process.kill()
+
+    def _training_running(self) -> bool:
+        return self.training_process is not None and self.training_process.state() != QProcess.ProcessState.NotRunning
 
     def _set_train_log(self, text: str) -> None:
         self.train_log.setPlainText(text)
@@ -877,6 +1143,7 @@ class ClassificationPage(QWidget):
         self._update_action_states()
 
     def _update_action_states(self) -> None:
+        training_running = self._training_running()
         has_image = self.image_path is not None
         has_checkpoint = self.checkpoint_path is not None
         self.open_button.setEnabled(not self._busy)
@@ -889,10 +1156,17 @@ class ClassificationPage(QWidget):
         self.model_combo.setEnabled(not self._busy)
         self.device_combo.setEnabled(not self._busy)
         self.topk_spin.setEnabled(not self._busy)
+        self.jump_to_training_button.setEnabled(not self._busy)
+        self.check_environment_button.setEnabled(not self._busy and not training_running)
+        self.apply_batch_button.setEnabled(
+            not self._busy and not training_running and self._recommended_batch_size is not None
+        )
+        has_training_dataset = bool(self.train_dataset_edit.text().strip())
         for widget in (
             self.train_dataset_edit,
             self.select_dataset_button,
             self.validate_dataset_button,
+            self.sample_dataset_button,
             self.train_model_combo,
             self.train_device_combo,
             self.train_epochs_spin,
@@ -902,9 +1176,10 @@ class ClassificationPage(QWidget):
             self.train_run_name_edit,
             self.train_pretrained_check,
             self.train_freeze_check,
-            self.start_training_button,
         ):
             widget.setEnabled(not self._busy)
+        self.start_training_button.setEnabled(not self._busy and not training_running and has_training_dataset)
+        self.stop_training_button.setEnabled(training_running)
 
     def _update_info(self, result: PredictionResult | None = None) -> None:
         parts = []

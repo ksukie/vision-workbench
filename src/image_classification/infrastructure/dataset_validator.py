@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 from PIL import Image
+from vision_workbench.input_limits import MAX_DATASET_IMAGES, validate_image_file
 
 from ..configuration import ImageClassificationConfig
 from ..domain import ClassCount, DatasetValidationReport, PathLike
@@ -42,6 +43,20 @@ class ClassificationDatasetValidator:
             messages.append("Missing train/ directory.")
         if not val_dir.is_dir():
             messages.append("Missing val/ directory.")
+
+        image_candidate_count = sum(
+            1
+            for split_dir in (train_dir, val_dir)
+            if split_dir.is_dir()
+            for path in split_dir.rglob("*")
+            if path.is_file() and path.suffix.lower() in self._config.image_extensions
+        )
+        if image_candidate_count > MAX_DATASET_IMAGES:
+            return DatasetValidationReport(
+                root=dataset_root,
+                ok=False,
+                messages=[f"Dataset exceeds the {MAX_DATASET_IMAGES:,} image safety limit."],
+            )
 
         train_counts = self._count_classes(train_dir) if train_dir.is_dir() else {}
         val_counts = self._count_classes(val_dir) if val_dir.is_dir() else {}
@@ -123,6 +138,7 @@ def _iter_class_dirs(split_dir: Path) -> List[Path]:
 
 def _can_open_image(path: Path) -> bool:
     try:
+        validate_image_file(path)
         with Image.open(path) as image:
             image.verify()
         return True

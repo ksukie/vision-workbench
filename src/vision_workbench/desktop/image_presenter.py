@@ -8,6 +8,7 @@ from typing import Tuple
 import cv2
 import numpy as np
 from PIL import Image
+from vision_workbench.input_limits import validate_image_file
 from PySide6.QtGui import QImage, QPixmap
 
 
@@ -35,6 +36,7 @@ class QtImagePresenter:
         return QPixmap.fromImage(qimage)
 
     def path_to_pixmap(self, path: Path) -> QPixmap:
+        path = validate_image_file(path)
         with Image.open(path) as image:
             rgb = np.asarray(image.convert("RGB"))
         return self.to_pixmap(rgb[:, :, ::-1])

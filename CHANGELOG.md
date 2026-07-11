@@ -2,6 +2,29 @@
 
 All notable changes to Vision Workbench are documented here.
 
+## [Unreleased]
+
+### Security
+
+- Restricted PyTorch and Ultralytics checkpoint loading is now enabled by default.
+- Model downloads enforce HTTPS/local-file URLs, bounded sizes, optional manifest SHA-256 and size metadata, and archive expansion limits.
+- Bundled YOLO26 v8.4.0 assets have pinned sizes and full SHA-256 values; download hosts, redirects, image inputs, dataset counts, and metadata sizes are bounded.
+- Training run names are constrained to one safe path component so outputs cannot escape the configured run directory.
+- Conda and virtual-environment launches ignore conflicting user-site packages unless explicitly opted back in.
+- CI installs the base dependency graph from a hash-locked file, audits dependencies, and produces a CycloneDX SBOM.
+
+### Changed
+
+- YOLO and classification training pages now include beginner parameter guidance, accessible label associations, and safer disabled states before a dataset is selected.
+- Classification prediction and training are separate tabs; classification training now runs in a stoppable process with epoch loss and accuracy metrics.
+- Both training pages can create deterministic sample datasets, inspect the Torch/accelerator/disk environment, and apply a recommended batch size.
+- Global navigation, title-bar controls, form labels, shortcuts, and focus styles have improved keyboard and assistive-technology metadata.
+
+### Tests
+
+- Added coverage for model hash, URL and size validation, safe run names, restricted loading defaults, and user-site isolation.
+- Added sample-dataset, input-limit, trusted-host, manifest-pinning, runtime-diagnostic, training-command, and accessibility coverage.
+
 ## [0.2.0] - 2026-07-02
 
 ### Added
@@ -46,6 +69,29 @@ All notable changes to Vision Workbench are documented here.
 # 更新日志
 
 Vision Workbench 的重要版本变动记录如下。
+
+## [未发布]
+
+### 安全
+
+- 默认启用受限的 PyTorch 与 Ultralytics checkpoint 加载。
+- 模型下载限制为 HTTPS/本地文件 URL，并增加体积上限、可选清单 SHA-256/大小校验和归档解压上限。
+- 内置 YOLO26 v8.4.0 权重固定文件大小和完整 SHA-256，并限制下载主机、重定向、图片输入、数据集数量与元数据大小。
+- 训练运行名被限制为单个安全路径组件，输出不能越过配置的运行目录。
+- Conda 和虚拟环境启动时默认忽略冲突的用户级包，并保留显式兼容开关。
+- CI 使用带哈希的依赖锁文件安装基础环境，执行依赖审计并生成 CycloneDX SBOM。
+
+### 变更
+
+- YOLO 与分类训练页面增加新手参数提示、可访问标签关联，并在未选择数据集时禁用训练操作。
+- 分类预测和训练改为独立标签页；分类训练改用可停止的独立进程，并显示每轮损失与准确率。
+- 两个训练页面均可创建确定性示例数据、检查 Torch/加速器/磁盘环境并应用推荐批量。
+- 全局导航、标题栏控件、表单标签、快捷键与焦点样式增加键盘和辅助技术元数据。
+
+### 测试
+
+- 增加模型哈希、URL、体积、安全运行名、受限加载默认值和用户包隔离测试。
+- 增加示例数据、输入上限、可信主机、清单固定、环境诊断、训练命令和可访问性测试。
 
 ## [0.2.0] - 2026-07-02
 

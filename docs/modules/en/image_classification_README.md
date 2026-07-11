@@ -24,6 +24,8 @@ vision-workbench
 
 Open **Image Classification** from the left navigation. Use the prediction controls for pretrained or custom checkpoints, and the training section for classification datasets with `train/` and `val/` class folders.
 
+Prediction and training are separate tabs. New users can create the tiny sample dataset, check the training environment, apply the recommended batch size, validate, and train. The isolated training process reports loss and validation accuracy per epoch and can be stopped from the page.
+
 ## CLI Training
 
 ```bash

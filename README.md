@@ -67,6 +67,8 @@ vision-workbench
 
 The first launch opens the unified Qt desktop shell. The left navigation provides direct access to CV Basics, Panorama Reconstruction, Camera Diagnostics, YOLO Detection, YOLO Segmentation, YOLO Training, and Image Classification.
 
+For a first training run, use **Create Sample Dataset**, then **Check Training Environment** and **Apply Recommended Batch** on either training page. Samples are workflow fixtures, not benchmark datasets. Training shows epoch metrics and can be stopped through its isolated worker process.
+
 Install the image-classification dependency group before using classification prediction or training:
 
 ```bash
@@ -99,7 +101,12 @@ After an abnormal exit, stale GUI, camera, or training processes can be listed w
 
 Report suspected vulnerabilities through the private channel in [SECURITY.md](./SECURITY.md). Do not publish exploit details or sensitive environment data in public issues.
 
+`.pt` and `.pth` models are executable serialization formats. Restricted loading and available download hashes are
+enabled by default, but you should still load only bundled, official upstream, or otherwise trusted model files.
+
 Version history is maintained in [CHANGELOG.md](./CHANGELOG.md).
+
+Use the [QA checklist](./docs/qa-checklist.md) before release for cross-platform, keyboard, screen-reader, and accelerator checks.
 
 ## Release Packages
 
@@ -151,6 +158,8 @@ Deep-learning features are optional:
 
 - Image classification: `python scripts/install_dependencies.py classification`
 - YOLO26 detection, segmentation, and training: `python scripts/install_dependencies.py yolo26`
+
+The installer uses official PyPI by default; set `VISION_WORKBENCH_PYPI_INDEX` only for an explicitly trusted mirror. `requirements-base.lock` pins the base GUI dependency graph with hashes for CI, while `requirements-dev.txt` pins test, audit, and SBOM tools.
 
 The helper detects NVIDIA GPUs and installs CUDA 12.6 Torch wheels when available; otherwise it chooses the CPU or platform-default Torch build. Plain `pip install -r requirements-*.txt` cannot detect GPU availability by itself, so use the helper for new environments. Base packages continue to use the Tsinghua PyPI mirror.
 

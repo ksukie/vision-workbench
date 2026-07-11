@@ -1,6 +1,5 @@
---index-url https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple
+--index-url https://pypi.org/simple
 --extra-index-url https://download.pytorch.org/whl/cu126
---find-links https://mirrors.aliyun.com/pytorch-wheels/cu126/
 
 -r requirements.txt
 

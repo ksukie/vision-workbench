@@ -504,6 +504,26 @@ def test_qt_title_bar_compacts_long_timing_status(qt_app):
         window.close()
 
 
+def test_qt_navigation_and_titlebar_are_keyboard_accessible(qt_app):
+    window = MainWindow()
+    try:
+        assert window.title_bar is not None
+        for button in (
+            window.title_bar.minimize_button,
+            window.title_bar.maximize_button,
+            window.title_bar.close_button,
+        ):
+            assert button.focusPolicy() == Qt.FocusPolicy.StrongFocus
+            assert button.accessibleName()
+
+        for index, button in enumerate(window.nav_buttons.values(), start=1):
+            assert button.accessibleName()
+            assert button.accessibleDescription()
+            assert button.shortcut().toString() == f"Alt+{index}"
+    finally:
+        window.close()
+
+
 def test_primary_buttons_have_disabled_style_after_primary_style():
     primary_index = APP_QSS.index('QPushButton[variant="primary"]')
     disabled_index = APP_QSS.index('QPushButton[variant="primary"]:disabled')
@@ -1322,6 +1342,29 @@ def test_classification_page_uses_chinese_labels_and_compact_layout(qt_app):
     finally:
         page.shutdown()
         page.close()
+
+
+def test_training_pages_expose_beginner_controls_and_stoppable_state(qt_app):
+    classification = ClassificationPage(service=FakeClassificationService())
+    yolo = YoloTrainingPage()
+    try:
+        assert classification.mode_tabs is not None
+        assert classification.mode_tabs.count() == 2
+        assert classification.mode_tabs.tabText(0) == "预测"
+        assert classification.mode_tabs.tabText(1) == "训练"
+        assert classification.sample_dataset_button.text() == "创建示例数据"
+        assert classification.check_environment_button.text() == "检查训练环境"
+        assert not classification.stop_training_button.isEnabled()
+        assert classification.train_progress.maximum() > 0
+
+        assert yolo.sample_dataset_button.text() == "创建示例数据"
+        assert yolo.check_environment_button.text() == "检查训练环境"
+        assert not yolo.stop_button.isEnabled()
+    finally:
+        classification.shutdown()
+        classification.close()
+        yolo.shutdown()
+        yolo.close()
 
 
 def test_classification_page_pretrained_prediction_status_mentions_cache(qt_app, tmp_path):

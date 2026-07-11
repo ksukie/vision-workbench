@@ -26,6 +26,9 @@ from PySide6.QtWidgets import (
 )
 
 from vision_workbench.model_files import validate_complete_model_file
+from vision_workbench.runtime_security import validate_run_name
+from vision_workbench.sample_data import create_yolo_sample_dataset
+from vision_workbench.runtime_diagnostics import TrainingEnvironmentReport, inspect_training_environment
 from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, MODELS_AND_WEIGHTS, help_hint, with_help
 from yolo26_training.api import create_yolo26_training_service
 from yolo26_training.application import Yolo26TrainingService
@@ -78,6 +81,7 @@ class YoloTrainingPage(QWidget):
         self._active_job = None  # type: TrainingJobConfig | None
         self._last_completed_job = None  # type: TrainingJobConfig | None
         self.models = []  # type: list[Path]
+        self._recommended_batch_size = None  # type: int | None
 
         self.task_label = QLabel("任务")
         self.task_combo = QComboBox()
@@ -91,7 +95,11 @@ class YoloTrainingPage(QWidget):
         self.dataset_edit.setMinimumWidth(320)
         self.choose_dataset_button = make_button("选择 data.yaml", primary=True)
         self.validate_button = make_button("验证数据集")
+        self.sample_dataset_button = make_button("创建示例数据")
         self.allow_missing_labels_check = QCheckBox("允许缺失标签")
+        self.allow_missing_labels_check.setToolTip(
+            "仅当无标签图片确实代表背景/负样本时启用；否则会掩盖数据集标注缺失。"
+        )
 
         self.model_label = QLabel("预训练权重")
         self.model_combo = QComboBox()
@@ -104,32 +112,51 @@ class YoloTrainingPage(QWidget):
         self.epochs_spin = QSpinBox()
         self.epochs_spin.setRange(1, 10000)
         self.epochs_spin.setValue(config.default_epochs)
+        self.epochs_spin.setToolTip("完整遍历训练集的次数。新手可先用 10～30 轮确认流程。")
 
         self.image_size_label = QLabel("尺寸")
         self.image_size_spin = QSpinBox()
         self.image_size_spin.setRange(64, 4096)
         self.image_size_spin.setSingleStep(32)
         self.image_size_spin.setValue(config.default_image_size)
+        self.image_size_spin.setToolTip("输入图像边长。数值越大越占显存，遇到显存不足时优先降低。")
 
         self.batch_label = QLabel("批量")
         self.batch_spin = QSpinBox()
         self.batch_spin.setRange(1, 1024)
         self.batch_spin.setValue(config.default_batch_size)
+        self.batch_spin.setToolTip("每次送入模型的图片数。显存不足时可从 16 降到 8、4 或 1。")
 
         self.workers_label = QLabel("线程")
         self.workers_spin = QSpinBox()
         self.workers_spin.setRange(0, 256)
         self.workers_spin.setValue(config.default_workers)
+        self.workers_spin.setToolTip("数据加载进程数。Windows 出现卡住时可改为 0。")
 
         self.device_label = QLabel("设备")
         self.device_combo = QComboBox()
         self.device_combo.addItems(config.device_options)
         self.device_combo.setCurrentText("auto")
+        self.device_combo.setToolTip("auto 会优先使用可用加速器；排查环境问题时可选 cpu。")
 
         self.run_name_label = QLabel("运行名")
         self.run_name_edit = QLineEdit()
         self.run_name_edit.setPlaceholderText("留空时使用数据集和权重名")
+        self.run_name_edit.setToolTip("仅填写名称，不要输入目录、斜杠或 ..。")
         self.resume_check = QCheckBox("继续训练")
+        self.resume_check.setToolTip("从兼容的上次训练状态继续；首次训练请保持关闭。")
+
+        self.parameter_hint = QLabel(
+            "新手建议：先验证数据集，用较小轮数完成一次试跑。若显存不足，优先降低批量和图像尺寸。"
+        )
+        self.parameter_hint.setObjectName("ParameterHint")
+        self.parameter_hint.setWordWrap(True)
+        self.check_environment_button = make_button("检查训练环境")
+        self.apply_batch_button = make_button("应用推荐批量")
+        self.apply_batch_button.setEnabled(False)
+        self.environment_label = QLabel("尚未检查训练环境。")
+        self.environment_label.setObjectName("MutedText")
+        self.environment_label.setWordWrap(True)
 
         for label in (
             self.task_label,
@@ -144,6 +171,20 @@ class YoloTrainingPage(QWidget):
         ):
             style_form_label(label)
 
+        for label, control in (
+            (self.task_label, self.task_combo),
+            (self.dataset_label, self.dataset_edit),
+            (self.model_label, self.model_combo),
+            (self.epochs_label, self.epochs_spin),
+            (self.image_size_label, self.image_size_spin),
+            (self.batch_label, self.batch_spin),
+            (self.workers_label, self.workers_spin),
+            (self.device_label, self.device_combo),
+            (self.run_name_label, self.run_name_edit),
+        ):
+            label.setBuddy(control)
+            control.setAccessibleName(label.text())
+
         self.start_button = make_button("开始训练", primary=True)
         self.stop_button = make_button("停止训练", danger=True)
         self.register_best_button = make_button("加入模型库")
@@ -153,6 +194,7 @@ class YoloTrainingPage(QWidget):
         for button in (
             self.choose_dataset_button,
             self.validate_button,
+            self.sample_dataset_button,
             self.browse_model_button,
             self.refresh_models_button,
             self.start_button,
@@ -217,6 +259,7 @@ class YoloTrainingPage(QWidget):
         dataset_grid.addWidget(self.choose_dataset_button, 1, 4)
         dataset_grid.addWidget(self.validate_button, 1, 5)
         dataset_grid.addWidget(self.allow_missing_labels_check, 2, 1, 1, 2)
+        dataset_grid.addWidget(self.sample_dataset_button, 2, 4, 1, 2)
         dataset_grid.setColumnStretch(1, 1)
         dataset_grid.setColumnStretch(3, 1)
         dataset_card.content_layout.addLayout(dataset_grid)
@@ -246,6 +289,12 @@ class YoloTrainingPage(QWidget):
         params_grid.setColumnStretch(1, 1)
         params_grid.setColumnStretch(3, 1)
         params_card.content_layout.addLayout(params_grid)
+        params_card.content_layout.addWidget(self.parameter_hint)
+        environment_row = QHBoxLayout()
+        environment_row.addWidget(self.check_environment_button)
+        environment_row.addWidget(self.apply_batch_button)
+        environment_row.addWidget(self.environment_label, 1)
+        params_card.content_layout.addLayout(environment_row)
         layout.addWidget(params_card)
 
         action_row = QHBoxLayout()
@@ -269,12 +318,16 @@ class YoloTrainingPage(QWidget):
         self.task_combo.currentIndexChanged.connect(self.refresh_models)
         self.choose_dataset_button.clicked.connect(self.choose_dataset)
         self.validate_button.clicked.connect(self.validate_dataset)
+        self.sample_dataset_button.clicked.connect(self.create_sample_dataset)
         self.browse_model_button.clicked.connect(self.choose_model)
         self.refresh_models_button.clicked.connect(self.refresh_model_catalog)
         self.start_button.clicked.connect(self.start_training)
         self.stop_button.clicked.connect(self.stop_training)
         self.register_best_button.clicked.connect(self.register_best_weight)
         self.open_runs_button.clicked.connect(self.open_runs_dir)
+        self.dataset_edit.textChanged.connect(self._update_action_states)
+        self.check_environment_button.clicked.connect(self.check_training_environment)
+        self.apply_batch_button.clicked.connect(self.apply_recommended_batch)
 
     def current_task(self) -> str:
         return str(self.task_combo.currentData() or "detect")
@@ -303,6 +356,52 @@ class YoloTrainingPage(QWidget):
         self._add_model_option(model_path)
         self.model_combo.setCurrentIndex(self.model_combo.count() - 1)
         self._update_info()
+
+    def create_sample_dataset(self) -> None:
+        task = self.current_task()
+        target = self.config.dataset_dir / f"quickstart_{task}"
+        try:
+            data_yaml = create_yolo_sample_dataset(target, task)
+        except Exception as exc:
+            QMessageBox.critical(self, "示例数据创建失败", with_help(exc, DATASETS_AND_TRAINING))
+            return
+        self.dataset_edit.setText(str(data_yaml))
+        self._append_log(f"\n已创建 {TASK_LABELS.get(task, task)} 示例数据集：\n{data_yaml}\n")
+        self._set_status("示例数据集已创建，可以先验证数据集。")
+        self._update_info("示例数据集已创建。")
+
+    def check_training_environment(self) -> None:
+        accepted = self.tasks.run(
+            task=lambda: inspect_training_environment(self.config.runs_dir),
+            on_success=self._on_environment_checked,
+            on_error=self._on_environment_check_error,
+        )
+        if not accepted:
+            QMessageBox.information(self, "正在处理", "请等待当前任务完成。")
+            return
+        self.environment_label.setText("正在检查 Torch、加速器和磁盘空间...")
+        self.check_environment_button.setEnabled(False)
+        self._set_status("正在检查训练环境...")
+
+    def _on_environment_checked(self, value: object) -> None:
+        report = value
+        if not isinstance(report, TrainingEnvironmentReport):
+            return
+        self._recommended_batch_size = report.recommended_batch_size
+        self.environment_label.setText(report.to_text())
+        self.environment_label.setToolTip(report.to_text())
+        self.apply_batch_button.setEnabled(True)
+        self.check_environment_button.setEnabled(True)
+        self._set_status("训练环境检查完成。" if report.ok else "训练环境存在需要处理的问题。")
+
+    def _on_environment_check_error(self, exc: Exception) -> None:
+        self.check_environment_button.setEnabled(True)
+        self.environment_label.setText(f"环境检查失败：{exc}")
+        self._set_status("训练环境检查失败。")
+
+    def apply_recommended_batch(self) -> None:
+        if self._recommended_batch_size is not None:
+            self.batch_spin.setValue(self._recommended_batch_size)
 
     def refresh_models(self) -> None:
         task = self.current_task()
@@ -455,7 +554,10 @@ class YoloTrainingPage(QWidget):
         if not model_path.exists():
             raise FileNotFoundError(f"预训练权重文件不存在：{model_path}")
         validate_complete_model_file(model_path)
-        run_name = self.run_name_edit.text().strip() or f"{data_path.stem}_{model_path.stem}"
+        run_name = validate_run_name(
+            self.run_name_edit.text().strip() or f"{data_path.stem}_{model_path.stem}",
+            field_name="训练运行名",
+        )
         return TrainingJobConfig(
             task=self.current_task(),
             data_yaml=data_path,
@@ -584,7 +686,9 @@ class YoloTrainingPage(QWidget):
         self.task_combo.setEnabled(not running)
         self.dataset_edit.setEnabled(not running)
         self.choose_dataset_button.setEnabled(not running)
-        self.validate_button.setEnabled(not running)
+        self.sample_dataset_button.setEnabled(not running)
+        has_dataset = bool(self.dataset_edit.text().strip())
+        self.validate_button.setEnabled(not running and has_dataset)
         self.allow_missing_labels_check.setEnabled(not running)
         self.model_combo.setEnabled(not running)
         self.browse_model_button.setEnabled(not running)
@@ -596,7 +700,9 @@ class YoloTrainingPage(QWidget):
         self.device_combo.setEnabled(not running)
         self.run_name_edit.setEnabled(not running)
         self.resume_check.setEnabled(not running)
-        self.start_button.setEnabled(not running)
+        self.check_environment_button.setEnabled(not running)
+        self.apply_batch_button.setEnabled(not running and self._recommended_batch_size is not None)
+        self.start_button.setEnabled(not running and has_dataset)
         self.stop_button.setEnabled(running)
         self.register_best_button.setEnabled(not running and self._last_completed_job is not None)
         self.open_runs_button.setEnabled(not running)

@@ -7,6 +7,7 @@ from typing import List, Optional
 
 import cv2
 import numpy as np
+from vision_workbench.input_limits import validate_image_file
 
 from ..application import Yolo26DetectionService, build_default_service
 from ..configuration import Yolo26DetectionConfig
@@ -75,7 +76,7 @@ def detect_image(
 
 
 def _load_image_bgr(path: PathLike) -> ImageArray:
-    image_path = Path(path).expanduser()
+    image_path = validate_image_file(Path(path).expanduser())
     data = np.fromfile(str(image_path), dtype=np.uint8)
     image = cv2.imdecode(data, cv2.IMREAD_COLOR)
     if image is None:

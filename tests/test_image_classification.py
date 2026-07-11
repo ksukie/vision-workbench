@@ -6,7 +6,7 @@ from PIL import Image
 
 from image_classification import api
 from image_classification.configuration import ImageClassificationConfig
-from image_classification.domain import ClassificationModelName
+from image_classification.domain import ClassificationModelName, ClassificationTrainingConfig
 from image_classification.runner import main as runner_main
 
 
@@ -81,6 +81,40 @@ def test_list_classification_models_contains_pretrained_options() -> None:
 
     assert "resnet18" in model_names
     assert "mobilenet_v3_small" in model_names
+
+
+def test_classification_runner_command_preserves_training_options(tmp_path: Path) -> None:
+    config = ImageClassificationConfig(
+        model_dir=tmp_path / "models",
+        custom_model_dir=tmp_path / "models" / "custom",
+        pretrained_model_dir=tmp_path / "models" / "pretrained",
+        dataset_dir=tmp_path / "datasets",
+        runs_dir=tmp_path / "runs",
+    )
+    service = api.create_image_classification_service(config)
+    job = ClassificationTrainingConfig(
+        model_name="resnet18",
+        dataset_dir=tmp_path / "dataset",
+        output_dir=tmp_path / "runs",
+        run_name="quickstart",
+        epochs=2,
+        image_size=128,
+        batch_size=4,
+        device="cpu",
+        learning_rate=0.002,
+        workers=1,
+        freeze_backbone=False,
+        pretrained=False,
+    )
+
+    command = service.build_runner_command(job)
+
+    assert command[1:3] == ["-m", "image_classification.runner"]
+    assert command[command.index("--name") + 1] == "quickstart"
+    assert command[command.index("--epochs") + 1] == "2"
+    assert command[command.index("--lr") + 1] == "0.002"
+    assert "--no-pretrained" in command
+    assert "--unfreeze" in command
 
 
 def test_pretrained_weight_status_and_import(tmp_path: Path) -> None:

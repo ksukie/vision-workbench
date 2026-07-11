@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import gc
+import sys
 from dataclasses import replace
 from pathlib import Path
 from typing import Callable, Dict, List, Optional, Tuple
+
+from vision_workbench.runtime_security import confined_child_path, validate_run_name
 
 from ..configuration import ImageClassificationConfig
 from ..domain import (
@@ -117,7 +120,13 @@ class ImageClassificationService:
         self._invalidate_pretrained_cache(info.model_name)
         return info
 
-    def train(self, job: ClassificationTrainingConfig) -> Path:
+    def train(
+        self,
+        job: ClassificationTrainingConfig,
+        progress_callback: Callable[[dict[str, float | int]], None] | None = None,
+    ) -> Path:
+        run_name = validate_run_name(job.run_name, field_name="classification training run name")
+        confined_child_path(job.output_dir, run_name, field_name="classification training run name")
         if job.model_name not in ClassificationModelName.all():
             raise ValueError(f"Unsupported classification model: {job.model_name}")
         report = self.validate_dataset(job.dataset_dir)
@@ -129,11 +138,49 @@ class ImageClassificationService:
                 job = replace(job, pretrained_weight_path=local_weight)
         job.output_dir.mkdir(parents=True, exist_ok=True)
         self._config.custom_model_dir.mkdir(parents=True, exist_ok=True)
-        best_path = self._backend.train(job)
-        custom_path = self._config.custom_model_dir / f"{job.run_name}_best.pt"
+        best_path = self._backend.train(job, progress_callback=progress_callback)
+        custom_path = confined_child_path(
+            self._config.custom_model_dir,
+            f"{run_name}_best.pt",
+            field_name="classification model file name",
+        )
         if best_path != custom_path:
             custom_path.write_bytes(best_path.read_bytes())
         return best_path
+
+    def build_runner_command(self, job: ClassificationTrainingConfig) -> List[str]:
+        run_name = validate_run_name(job.run_name, field_name="classification training run name")
+        confined_child_path(job.output_dir, run_name, field_name="classification training run name")
+        command = [
+            sys.executable,
+            "-m",
+            "image_classification.runner",
+            "--data",
+            str(job.dataset_dir),
+            "--model",
+            job.model_name,
+            "--epochs",
+            str(job.epochs),
+            "--imgsz",
+            str(job.image_size),
+            "--batch",
+            str(job.batch_size),
+            "--device",
+            job.device,
+            "--workers",
+            str(job.workers),
+            "--lr",
+            str(job.learning_rate),
+            "--project",
+            str(job.output_dir),
+            "--name",
+            run_name,
+        ]
+        if not job.pretrained:
+            command.append("--no-pretrained")
+        if not job.freeze_backbone:
+            command.append("--unfreeze")
+        return command
 
     def load_pretrained_classifier(
         self,

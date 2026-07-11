@@ -6,7 +6,13 @@ import shutil
 from pathlib import Path
 from typing import Callable, List, Optional
 
-from vision_workbench.model_files import download_model_file, is_complete_model_file, validate_complete_model_file
+from vision_workbench.model_files import (
+    download_model_file,
+    is_complete_model_file,
+    sha256_prefix_from_filename,
+    validate_complete_model_file,
+)
+from vision_workbench.trusted_models import trusted_model_download_hosts
 from ..configuration import ImageClassificationConfig
 from ..domain import ClassificationModelName, PathLike, PretrainedWeightInfo
 
@@ -63,7 +69,13 @@ class PretrainedWeightManager:
         filename = DEFAULT_WEIGHT_FILENAMES[normalized]
         weights = _torchvision_weights(normalized)
         url = str(weights.url)
-        download_model_file(url, self._config.pretrained_model_dir / filename, progress_callback)
+        download_model_file(
+            url,
+            self._config.pretrained_model_dir / filename,
+            progress_callback,
+            expected_sha256=sha256_prefix_from_filename(filename),
+            allowed_hosts=trusted_model_download_hosts(),
+        )
         return self.status(normalized)
 
     def local_weight_path(self, model_name: str) -> Optional[Path]:

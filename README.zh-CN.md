@@ -67,6 +67,8 @@ vision-workbench
 
 首次启动会打开统一 Qt 桌面主界面。左侧导航直接进入基础 CV、全景重构、相机诊断、YOLO 检测、YOLO 分割、模型训练和图像分类。
 
+第一次接触训练时，可在“模型训练”或“图像分类 → 训练”中点击“创建示例数据”，再点击“检查训练环境”和“应用推荐批量”。示例数据只用于跑通流程，不用于评估模型效果。训练期间可查看轮次、损失和验证准确率，并可安全停止独立训练进程。
+
 图像分类预测或训练需要先安装分类依赖组：
 
 ```bash
@@ -99,7 +101,12 @@ python scripts/install_dependencies.py doctor
 
 疑似安全漏洞通过 [SECURITY.md](./SECURITY.md) 中的私密渠道报告。公开 issue 中不发布利用细节或敏感环境信息。
 
+`.pt` / `.pth` 模型属于可执行序列化格式。程序默认启用受限模型加载并校验可用的下载哈希，但仍只应加载
+仓库内置、上游官方或来自可信人员的模型文件。不要把未知 checkpoint 当作普通图片文件打开。
+
 版本变动维护在 [CHANGELOG.md](./CHANGELOG.md)。
+
+跨平台、键盘、屏幕阅读器和不同显卡的发布前人工检查项见 [QA 检查清单](./docs/qa-checklist.md)。
 
 ## 发布包说明
 
@@ -152,7 +159,9 @@ VisionWorkbench/
 - 图像分类：`python scripts/install_dependencies.py classification`
 - YOLO26 检测、分割与训练：`python scripts/install_dependencies.py yolo26`
 
-安装脚本会检测 NVIDIA GPU；有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel，否则选择 CPU 或平台默认 Torch 构建。直接执行 `pip install -r requirements-*.txt` 无法自动检测 GPU，因此新环境优先使用安装脚本。基础包仍默认使用清华 PyPI 源。
+安装脚本会检测 NVIDIA GPU；有 NVIDIA GPU 时安装 CUDA 12.6 Torch wheel，否则选择 CPU 或平台默认 Torch 构建。直接执行 `pip install -r requirements-*.txt` 无法自动检测 GPU，因此新环境优先使用安装脚本。安装源默认为官方 PyPI；如需受控镜像，可显式设置 `VISION_WORKBENCH_PYPI_INDEX`。
+
+`requirements-base.lock` 固定基础 GUI 依赖及其哈希，CI 使用它进行可复现安装。`requirements-dev.txt` 固定测试、依赖审计和 SBOM 工具版本。
 
 手动使用 `requirements-*.txt` 安装深度学习依赖后执行：
 

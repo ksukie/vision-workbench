@@ -8,10 +8,17 @@ import tempfile
 import traceback
 from pathlib import Path
 
+from vision_workbench.runtime_security import (
+    configure_isolated_python_environment,
+    configure_restricted_model_loading,
+)
+
 
 def create_app():
     """Create or return the active Qt application."""
 
+    configure_isolated_python_environment()
+    configure_restricted_model_loading()
     from PySide6.QtWidgets import QApplication
 
     from .theme import apply_theme

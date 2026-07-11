@@ -31,7 +31,7 @@ from ..camera_resource import CameraResourceCoordinator, shared_camera_coordinat
 from ..image_presenter import QtImagePresenter
 from ..task_runner import QtTaskRunner
 from ..widgets import NoWheelComboBox as QComboBox
-from ..widgets import PreviewPanel, SectionCard, make_button, style_form_label
+from ..widgets import PreviewPanel, SectionCard, associate_form_label, make_button, style_form_label
 
 
 logger = logging.getLogger(__name__)
@@ -130,6 +130,8 @@ class CameraPage(QWidget):
         self.profile_combo.setToolTip("选择相机支持的读取格式")
         for label in (self.device_label, self.profile_label):
             style_form_label(label)
+        associate_form_label(self.device_label, self.device_combo)
+        associate_form_label(self.profile_label, self.profile_combo)
 
         self.platform_label = QLabel(_platform_text(self.platform_info))
         self.platform_label.setObjectName("MutedText")
