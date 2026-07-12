@@ -7,6 +7,8 @@
 <p align="center">
   <a href="./README.md">English</a>
   ·
+  <a href="./docs/README.md">文档中心</a>
+  ·
   <a href="./docs/二次开发指南.md">二次开发指南</a>
   ·
   <a href="./docs/legal/发布策略.md">发布策略</a>
@@ -110,7 +112,7 @@ python scripts/install_dependencies.py doctor
 
 ## 发布包说明
 
-本仓库只保存源码、文档、测试、配置和许可文件。`dist/` 等本地构建产物不提交到源码仓库。
+Git 仓库是完整项目源码的正式载体，保存第一方源码、测试、正式文档、辅助脚本、项目元数据、许可文件、符合仓库策略的模型资产和内置第三方源码。`dist/` 等本地构建产物不提交到源码仓库。
 
 正式版本建议通过 [GitHub Releases](https://github.com/ksukie/vision-workbench/releases) 发布。基础打包版本可通过 wheel 文件本地安装：
 
@@ -119,7 +121,9 @@ pip install vision_workbench-0.2.0-py3-none-any.whl
 vision-workbench
 ```
 
-wheel 会安装 Python 包和入口命令，但它不是完整离线运行环境：深度学习相关功能仍需要额外安装对应依赖组，大型模型权重也可能单独分发。
+wheel 是轻量 Python 安装包，会安装第一方 Python 包、必要资源和入口命令。它不是 Git 仓库的完整副本，也不是完整离线运行环境：测试、开发脚本、完整第三方源码、大型模型权重和可选深度学习依赖可以不包含在 wheel 中。完整源码以对应版本的 Git tag 或源码归档为准。
+
+源码归档、Python sdist、wheel 和模型 Release Assets 的正式边界见[发布策略](./docs/legal/发布策略.md)。
 
 从源码构建：
 
@@ -135,19 +139,26 @@ python -m build
 python -m build --no-isolation
 ```
 
-## 项目结构
+## 仓库结构
 
 ```text
 VisionWorkbench/
-  src/                         源码目录
+  src/                         第一方 Python 源码
   src/vision_workbench/desktop/ 统一 PySide6 桌面主界面和页面
-  docs/                        项目文档
+  docs/                        正式项目文档
   docs/assets/readme/          README 图片和图标
-  models/                      模型权重目录
-  datasets/                    数据集目录
-  runs/                        训练输出目录
+  models/                      仓库允许管理的模型资产
+  scripts/                     安装、检查和维护脚本
   third_party/yolo26_source/   内置 YOLO26 源码
   tests/                       自动化测试
+```
+
+运行过程中还会使用以下本地工作目录。它们可能由程序或用户创建，不属于每个 Git 克隆都必须包含的固定源码结构：
+
+```text
+datasets/                    本地数据集
+runs/                        训练输出
+models/**/custom/            用户导入或训练得到的自定义模型
 ```
 
 ## 依赖策略
@@ -173,7 +184,7 @@ python scripts/install_dependencies.py doctor
 
 ## 架构说明
 
-各功能包把业务逻辑放在 `api/`、`application/`、`domain/`、`infrastructure/` 和 `processing/` 中。用户直接使用的桌面体验位于 `src/vision_workbench/desktop/`。旧 `*/window/` Tkinter 模块暂时保留为兼容/参考代码，不再作为公开 GUI 入口。
+功能包根据职责使用 `api/`、`application/`、`domain/`、`infrastructure/`、`processing/`、`configuration/` 或 `ports/`。并非每个功能包都需要包含全部目录；没有对应职责时不创建空层。用户直接使用的桌面体验位于 `src/vision_workbench/desktop/`。旧 `*/window/` Tkinter 模块仅保留有限兼容和参考用途，不再作为公开 GUI 入口。具体边界见[旧版界面维护策略](./docs/旧版界面维护策略.md)。
 
 ## 开源许可
 

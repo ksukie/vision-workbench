@@ -7,6 +7,8 @@
 <p align="center">
   <a href="./README.zh-CN.md">中文文档</a>
   ·
+  <a href="./docs/README.md">Documentation</a>
+  ·
   <a href="./docs/adding_custom_features_README.md">Extension Guide</a>
   ·
   <a href="./docs/legal/release_policy.md">Release Policy</a>
@@ -106,11 +108,11 @@ enabled by default, but you should still load only bundled, official upstream, o
 
 Version history is maintained in [CHANGELOG.md](./CHANGELOG.md).
 
-Use the [QA checklist](./docs/qa-checklist.md) before release for cross-platform, keyboard, screen-reader, and accelerator checks.
+Use the [QA checklist](./docs/qa-checklist.en.md) before release for cross-platform, keyboard, screen-reader, and accelerator checks.
 
 ## Release Packages
 
-This repository keeps source code, documentation, tests, configuration, and license files. Generated build outputs such as `dist/` are not committed.
+The Git repository is the authoritative complete project source. It contains first-party source, tests, official documentation, helper scripts, project metadata, license files, model assets allowed by repository policy, and vendored third-party source. Generated build outputs such as `dist/` are not committed.
 
 Official packages should be published through [GitHub Releases](https://github.com/ksukie/vision-workbench/releases). A packaged base application can be installed from the wheel file:
 
@@ -119,7 +121,9 @@ pip install vision_workbench-0.2.0-py3-none-any.whl
 vision-workbench
 ```
 
-The wheel installs the Python package and entry points. It is not a complete offline runtime: optional deep-learning workflows still need their dependency group, and large model weights may be distributed separately.
+The wheel is a lightweight Python package containing the first-party packages, required package resources, and entry points. It is not a complete copy of the Git repository or a complete offline runtime: tests, development scripts, the full vendored source tree, large model weights, and optional deep-learning dependencies may be excluded. Use the matching Git tag or source archive when complete project source is required.
+
+See the [Release Policy](./docs/legal/release_policy.md) for the official boundaries between source archives, Python sdists, wheels, and model Release Assets.
 
 To build from source:
 
@@ -135,19 +139,26 @@ When the isolated build environment cannot access PyPI, use the current environm
 python -m build --no-isolation
 ```
 
-## Project Layout
+## Repository Layout
 
 ```text
 VisionWorkbench/
-  src/                         Source packages
+  src/                         First-party Python packages
   src/vision_workbench/desktop/ Unified PySide6 desktop shell and pages
-  docs/                        Documentation
+  docs/                        Official project documentation
   docs/assets/readme/          README images and icons
-  models/                      Model weight directory
-  datasets/                    Dataset directory
-  runs/                        Training output directory
+  models/                      Model assets allowed by repository policy
+  scripts/                     Installation, validation, and maintenance tools
   third_party/yolo26_source/   Vendored YOLO26 source
   tests/                       Automated tests
+```
+
+The application also uses local working directories. They may be created by the application or the user and are not fixed source directories that every Git checkout must contain:
+
+```text
+datasets/                    Local datasets
+runs/                        Training outputs
+models/**/custom/            User-imported or trained custom models
 ```
 
 ## Dependency Strategy
@@ -173,7 +184,7 @@ This keeps the entry-level installation lightweight while still allowing users t
 
 ## Architecture
 
-Feature packages keep the domain logic in `api/`, `application/`, `domain/`, `infrastructure/`, and `processing/`. The user-facing desktop experience lives in `src/vision_workbench/desktop/`. Legacy `*/window/` Tkinter modules remain in the source tree only as compatibility/reference code and are not the public GUI entry points.
+Feature packages use `api/`, `application/`, `domain/`, `infrastructure/`, `processing/`, `configuration/`, or `ports/` according to their responsibilities. A package does not need every directory, and empty layers should not be created solely for uniformity. The supported desktop experience lives in `src/vision_workbench/desktop/`. Legacy `*/window/` Tkinter modules receive limited compatibility maintenance and are not public GUI entry points. See the [Legacy GUI Policy](./docs/legacy-gui-policy.md) for the maintenance boundary.
 
 ## License
 

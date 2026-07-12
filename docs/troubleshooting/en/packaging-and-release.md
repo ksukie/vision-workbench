@@ -1,6 +1,6 @@
 ﻿# Packaging and Release Troubleshooting
 
-[Index](./README.md) | [中文](../zh-CN/打包与发布.md)
+[Index](./README.md) | [Release Policy](../../legal/release_policy.md) | [中文](../zh-CN/打包与发布.md)
 
 This page covers wheel builds, `dist/`, release assets, and model files larger than 100 MB.
 
@@ -35,4 +35,8 @@ Model files larger than 100 MB should be moved to local download instructions, G
 
 ## Wheel Is Not a Complete Runtime
 
-The base wheel installs Python packages and entry points. Deep-learning workflows still require the classification or YOLO26 dependency group, and large model weights may be distributed separately.
+The base wheel installs the first-party Python packages, required resources, and entry points, but it is not a complete copy of the Git repository. Tests, development scripts, the complete vendored source tree, large model weights, and optional deep-learning dependencies may be excluded.
+
+Use the matching Git tag or source archive when complete project source is required. For models, follow the relevant module documentation and use the built-in download action, a local model directory, or GitHub Release Assets.
+
+A Python sdist is a source distribution for building the base Python package and should not be treated as the complete Git repository source. See the [Release Policy](../../legal/release_policy.md) for the official artifact boundaries.

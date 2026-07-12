@@ -1,6 +1,6 @@
 ﻿# Adding Custom Features
 
-[Back to README](../README.md) | [中文文档](./二次开发指南.md)
+[Back to README](../README.md) | [Documentation](./README.md) | [中文文档](./二次开发指南.md)
 
 This contributor guide describes where to add new Vision Workbench capabilities. Runtime users should start from the root [Quick Start](../README.md#quick-start).
 
@@ -23,17 +23,19 @@ python scripts/install_dependencies.py yolo26
 
 ## Layering Model
 
-Feature packages use this structure:
+Feature packages use the following directories according to their responsibilities. Apart from the main `api/` and `application/` boundaries, directories are optional and should not be added only to make every package look identical:
 
 ```text
-api/             Public API functions
-application/     Workflow orchestration
-configuration/   Paths, parameters, and defaults
-domain/          Data models
-infrastructure/  File, camera, model, and third-party adapters
-processing/      Core algorithms or model processing
-window/          Legacy Tkinter compatibility/reference code
+api/             Public Python API for callers
+application/     Use-case and workflow orchestration
+configuration/   Paths, parameters, and defaults; optional
+domain/          Domain data models; optional
+infrastructure/  File, camera, model, and third-party adapters; optional
+processing/      Core algorithms or model processing; optional
+ports/           Protocols and dependency boundaries; optional
 ```
+
+The `window/` directories preserve legacy Tkinter compatibility/reference code and are not part of the standard structure for new feature work. The supported GUI and all new interface work belong to the Qt desktop application.
 
 The public desktop UI lives in:
 
@@ -48,7 +50,7 @@ Recommended call flow:
 desktop page -> application -> processing / infrastructure -> application -> desktop page
 ```
 
-Keep algorithm/model logic in `processing/`, external adapters in `infrastructure/`, workflows in `application/`, and public Python functions in `api/`. New user-facing GUI work should target the Qt desktop pages. Do not add new public GUI entry points under `window/` unless you are deliberately maintaining legacy compatibility.
+Keep algorithm/model logic in `processing/`, external adapters in `infrastructure/`, workflows in `application/`, and public Python functions in `api/`. Omit a directory when the package has no corresponding responsibility; do not create empty layers for visual uniformity. New user-facing GUI work should target the Qt desktop pages. Do not add new public GUI entry points under `window/` unless required by an explicit compatibility commitment. See the [Legacy GUI Policy](./legacy-gui-policy.md).
 
 ## Dependency Rules
 
@@ -188,7 +190,7 @@ If UI copy carries workflow meaning, such as "left reference image / right image
 
 The root README should contain installation, launch, and the true quick start. Module READMEs should contain the user workflow for that module. Trained-model loading, dropdown discovery, and Python API notes belong under the YOLO26 training module. Troubleshooting docs should capture symptoms and fixes. This contributor guide should record structural constraints, root causes, and extension notes.
 
-This split matters because these topics are easy to duplicate and easy to let drift. Keep "why it is designed this way" and "what to update when coding" in contributor docs, and keep "what users do next" in module docs.
+This split reduces duplicated guidance and conflicting updates. Structural constraints and coding requirements that the project must maintain belong in the official contributor or architecture documentation. Temporary investigations, detailed debugging records, and a maintainer's personal development notes may remain in a local knowledge base and are not public user instructions. Keep user actions in the relevant module documentation.
 
 ## Packaging Checklist
 
