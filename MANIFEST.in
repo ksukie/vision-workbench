@@ -1,4 +1,5 @@
 include *.md
+exclude AGENTS.md
 include LICENSE
 include NOTICE
 include CITATION.cff

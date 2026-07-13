@@ -2,7 +2,7 @@
 
 All notable changes to Vision Workbench are documented here.
 
-## [Unreleased]
+## [0.3.0] - 2026-07-13
 
 ### Security
 
@@ -13,17 +13,33 @@ All notable changes to Vision Workbench are documented here.
 - Conda and virtual-environment launches ignore conflicting user-site packages unless explicitly opted back in.
 - CI installs the base dependency graph from a hash-locked file, audits dependencies, and produces a CycloneDX SBOM.
 
+### Added
+
+- Cached model manifests can be refreshed through the detection, segmentation, and training APIs.
+- Detection now exposes a single-image path API, and training can register the best weight from a completed run.
+- Training pages provide deterministic sample datasets and environment diagnostics.
+
 ### Changed
 
 - YOLO and classification training pages now include beginner parameter guidance, accessible label associations, and safer disabled states before a dataset is selected.
 - Classification prediction and training are separate tabs; classification training now runs in a stoppable process with epoch loss and accuracy metrics.
 - Both training pages can create deterministic sample datasets, inspect the Torch/accelerator/disk environment, and apply a recommended batch size.
 - Global navigation, title-bar controls, form labels, shortcuts, and focus styles have improved keyboard and assistive-technology metadata.
+- Base dependencies are version-bounded, and CI covers Python 3.10 and 3.12 on Windows, macOS, and Linux.
+
+### Compatibility
+
+- Existing workflows that use untrusted model URLs, oversized inputs, unsafe run names, or user-site packages in an isolated environment may now be rejected by the default safety policy.
 
 ### Tests
 
 - Added coverage for model hash, URL and size validation, safe run names, restricted loading defaults, and user-site isolation.
 - Added sample-dataset, input-limit, trusted-host, manifest-pinning, runtime-diagnostic, training-command, and accessibility coverage.
+
+### Packaging
+
+- Built `vision_workbench-0.3.0-py3-none-any.whl`.
+- Built `vision_workbench-0.3.0.tar.gz`.
 
 ## [0.2.0] - 2026-07-02
 
@@ -70,7 +86,7 @@ All notable changes to Vision Workbench are documented here.
 
 Vision Workbench 的重要版本变动记录如下。
 
-## [未发布]
+## [0.3.0] - 2026-07-13
 
 ### 安全
 
@@ -81,17 +97,33 @@ Vision Workbench 的重要版本变动记录如下。
 - Conda 和虚拟环境启动时默认忽略冲突的用户级包，并保留显式兼容开关。
 - CI 使用带哈希的依赖锁文件安装基础环境，执行依赖审计并生成 CycloneDX SBOM。
 
+### 新增
+
+- 可通过检测、分割和训练 API 刷新本地缓存的模型清单。
+- 目标检测新增按单张图像路径推理的 API；训练完成后可注册最佳权重。
+- 训练页面新增确定性示例数据集与环境诊断。
+
 ### 变更
 
 - YOLO 与分类训练页面增加新手参数提示、可访问标签关联，并在未选择数据集时禁用训练操作。
 - 分类预测和训练改为独立标签页；分类训练改用可停止的独立进程，并显示每轮损失与准确率。
 - 两个训练页面均可创建确定性示例数据、检查 Torch/加速器/磁盘环境并应用推荐批量。
 - 全局导航、标题栏控件、表单标签、快捷键与焦点样式增加键盘和辅助技术元数据。
+- 基础依赖增加版本边界；CI 覆盖 Windows、macOS、Linux 上的 Python 3.10 与 3.12。
+
+### 兼容性
+
+- 默认安全策略现在可能拒绝不受信任的模型 URL、超限输入、不安全的运行名，以及隔离环境中的用户级包。
 
 ### 测试
 
 - 增加模型哈希、URL、体积、安全运行名、受限加载默认值和用户包隔离测试。
 - 增加示例数据、输入上限、可信主机、清单固定、环境诊断、训练命令和可访问性测试。
+
+### 打包
+
+- 已构建 `vision_workbench-0.3.0-py3-none-any.whl`。
+- 已构建 `vision_workbench-0.3.0.tar.gz`。
 
 ## [0.2.0] - 2026-07-02
 

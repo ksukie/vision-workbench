@@ -117,7 +117,7 @@ The Git repository is the authoritative complete project source. It contains fir
 Official packages should be published through [GitHub Releases](https://github.com/ksukie/vision-workbench/releases). A packaged base application can be installed from the wheel file:
 
 ```bash
-pip install vision_workbench-0.2.0-py3-none-any.whl
+pip install vision_workbench-0.3.0-py3-none-any.whl
 vision-workbench
 ```
 
