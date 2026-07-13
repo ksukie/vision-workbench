@@ -7,6 +7,15 @@ from pathlib import Path
 from PIL import Image, ImageDraw
 
 
+def sample_image_path() -> Path:
+    """Return the bundled image used by desktop quick-start controls."""
+
+    path = Path(__file__).with_name("assets") / "vision_workbench_sample_street.png"
+    if not path.is_file():
+        raise FileNotFoundError(f"Bundled sample image is missing: {path}")
+    return path
+
+
 def create_classification_sample_dataset(root: Path) -> Path:
     """Create a two-class train/val dataset with simple geometric shapes."""
 

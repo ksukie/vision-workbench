@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from vision_workbench.model_files import model_file_issue
+from vision_workbench.sample_data import sample_image_path
 from vision_workbench.troubleshooting import DATA_AND_FILES, MODELS_AND_WEIGHTS, MODULE_RUNTIME_ERRORS, with_help
 from yolo26_segmentation.api import create_yolo26_segmentation_service
 from yolo26_segmentation.application import Yolo26SegmentationService
@@ -135,6 +136,7 @@ class YoloSegmentationPage(QWidget):
         self.download_model_button = make_button("下载所选模型")
 
         self.select_image_button = make_button("选择图片", primary=True)
+        self.sample_image_button = make_button("加载示例图")
         self.segment_button = make_button("分割图片", primary=True)
         self.save_result_button = make_button("保存分割图")
 
@@ -190,6 +192,7 @@ class YoloSegmentationPage(QWidget):
             self.browse_model_button,
             self.download_model_button,
             self.select_image_button,
+            self.sample_image_button,
             self.segment_button,
             self.save_result_button,
         ):
@@ -293,6 +296,7 @@ class YoloSegmentationPage(QWidget):
         self.browse_model_button.clicked.connect(self.browse_model)
         self.download_model_button.clicked.connect(self.download_selected_model)
         self.select_image_button.clicked.connect(self.select_image)
+        self.sample_image_button.clicked.connect(self.load_sample_image)
         self.segment_button.clicked.connect(self.segment_image)
         self.save_result_button.clicked.connect(self.save_result)
         self.download_progress_changed.connect(self._on_download_progress)
@@ -349,7 +353,8 @@ class YoloSegmentationPage(QWidget):
 
     def _layout_wide_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.select_image_button, 0, 0)
-        controls.addWidget(self.segment_button, 0, 1, 1, 3)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.segment_button, 0, 2, 1, 2)
         controls.addWidget(self.save_result_button, 0, 4)
         controls.addWidget(self.device_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
         controls.addWidget(self.device_combo, 1, 1)
@@ -364,7 +369,8 @@ class YoloSegmentationPage(QWidget):
 
     def _layout_compact_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.select_image_button, 0, 0)
-        controls.addWidget(self.segment_button, 0, 1, 1, 2)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.segment_button, 0, 2)
         controls.addWidget(self.save_result_button, 0, 3)
         controls.addWidget(self.device_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
         controls.addWidget(self.device_combo, 1, 1)
@@ -482,7 +488,14 @@ class YoloSegmentationPage(QWidget):
         )
         if not path:
             return
-        image_path = Path(path)
+        self._load_image_path(Path(path))
+
+
+    def load_sample_image(self) -> None:
+        self._load_image_path(sample_image_path())
+
+
+    def _load_image_path(self, image_path: Path) -> None:
         self._run_task(
             task=lambda: self._load_image(image_path),
             on_success=self._on_image_loaded,
@@ -800,6 +813,7 @@ class YoloSegmentationPage(QWidget):
         self.browse_model_button.setEnabled(not self._busy)
         self.download_model_button.setEnabled(can_download and not self._busy)
         self.select_image_button.setEnabled(not self._busy)
+        self.sample_image_button.setEnabled(not self._busy)
         self.segment_button.setEnabled(has_image and has_model and not self._busy)
         self.save_result_button.setEnabled(has_result and not self._busy)
         self.device_combo.setEnabled(not self._busy)

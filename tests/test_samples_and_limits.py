@@ -12,7 +12,7 @@ from image_classification.configuration import ImageClassificationConfig
 from image_classification.infrastructure import ClassificationDatasetValidator
 from vision_workbench.input_limits import InputLimitError, read_bounded_text, validate_image_file
 from vision_workbench.runtime_diagnostics import inspect_training_environment
-from vision_workbench.sample_data import create_classification_sample_dataset, create_yolo_sample_dataset
+from vision_workbench.sample_data import create_classification_sample_dataset, create_yolo_sample_dataset, sample_image_path
 from yolo26_training.configuration import Yolo26TrainingConfig
 from yolo26_training.infrastructure import YoloDetectionDatasetValidator
 
@@ -25,6 +25,15 @@ def test_classification_sample_dataset_passes_validation(tmp_path: Path) -> None
     assert report.class_names == ["blue_circle", "red_square"]
     assert report.train_image_count == 8
     assert report.val_image_count == 4
+
+
+def test_packaged_sample_image_is_readable() -> None:
+    path = sample_image_path()
+
+    assert validate_image_file(path) == path
+    with Image.open(path) as image:
+        assert image.size[0] >= 1000
+        assert image.size[1] >= 700
 
 
 @pytest.mark.parametrize("task", ["detect", "segment", "semantic"])

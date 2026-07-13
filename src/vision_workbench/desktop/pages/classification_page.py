@@ -43,7 +43,7 @@ from image_classification.domain import ClassificationTrainingConfig, DatasetVal
 from vision_workbench.model_files import model_file_issue
 from vision_workbench.troubleshooting import DATASETS_AND_TRAINING, DATA_AND_FILES, MODELS_AND_WEIGHTS, with_help
 from vision_workbench.runtime_security import validate_run_name
-from vision_workbench.sample_data import create_classification_sample_dataset
+from vision_workbench.sample_data import create_classification_sample_dataset, sample_image_path
 from vision_workbench.runtime_diagnostics import TrainingEnvironmentReport, inspect_training_environment
 
 from ..task_runner import QtTaskRunner
@@ -154,6 +154,7 @@ class ClassificationPage(QWidget):
         self.busy_progress.setVisible(False)
 
         self.open_button = make_button("打开图片", primary=True)
+        self.sample_image_button = make_button("加载示例图")
         self.predict_pretrained_button = make_button("预测", primary=True)
         self.check_weights_button = make_button("检查权重")
         self.download_weights_button = make_button("下载权重")
@@ -163,6 +164,7 @@ class ClassificationPage(QWidget):
         self.predict_checkpoint_button = make_button("预测自定义模型")
         for button in (
             self.open_button,
+            self.sample_image_button,
             self.predict_pretrained_button,
             self.check_weights_button,
             self.download_weights_button,
@@ -440,6 +442,7 @@ class ClassificationPage(QWidget):
 
     def _connect_signals(self) -> None:
         self.open_button.clicked.connect(self.open_image)
+        self.sample_image_button.clicked.connect(self.load_sample_image)
         self.predict_pretrained_button.clicked.connect(self.predict_pretrained)
         self.check_weights_button.clicked.connect(self.check_weight_status)
         self.download_weights_button.clicked.connect(self.download_pretrained_weight)
@@ -498,29 +501,31 @@ class ClassificationPage(QWidget):
 
     def _layout_wide_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.open_button, 0, 0)
-        controls.addWidget(self.model_label, 0, 1, Qt.AlignmentFlag.AlignVCenter)
-        controls.addWidget(self.model_combo, 0, 2)
-        controls.addWidget(self.device_label, 0, 3, Qt.AlignmentFlag.AlignVCenter)
-        controls.addWidget(self.device_combo, 0, 4)
-        controls.addWidget(self.topk_label, 0, 5, Qt.AlignmentFlag.AlignVCenter)
-        controls.addWidget(self.topk_spin, 0, 6)
-        controls.addWidget(self.predict_pretrained_button, 0, 7)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.model_label, 0, 2, Qt.AlignmentFlag.AlignVCenter)
+        controls.addWidget(self.model_combo, 0, 3)
+        controls.addWidget(self.device_label, 0, 4, Qt.AlignmentFlag.AlignVCenter)
+        controls.addWidget(self.device_combo, 0, 5)
+        controls.addWidget(self.topk_label, 0, 6, Qt.AlignmentFlag.AlignVCenter)
+        controls.addWidget(self.topk_spin, 0, 7)
+        controls.addWidget(self.predict_pretrained_button, 0, 8)
 
         controls.addWidget(self.check_weights_button, 1, 0)
         controls.addWidget(self.download_weights_button, 1, 1, 1, 2)
         controls.addWidget(self.import_weights_button, 1, 3, 1, 2)
-        controls.addWidget(self.weight_status_label, 1, 5, 1, 3)
+        controls.addWidget(self.weight_status_label, 1, 5, 1, 4)
 
         controls.addWidget(self.browse_checkpoint_button, 2, 0)
         controls.addWidget(self.predict_checkpoint_button, 2, 1, 1, 2)
-        controls.addWidget(self.checkpoint_label, 2, 3, 1, 5)
+        controls.addWidget(self.checkpoint_label, 2, 3, 1, 6)
 
-        controls.setColumnStretch(2, 1)
-        controls.setColumnStretch(7, 1)
+        controls.setColumnStretch(3, 1)
+        controls.setColumnStretch(8, 1)
 
     def _layout_compact_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.open_button, 0, 0)
-        controls.addWidget(self.predict_pretrained_button, 0, 1, 1, 3)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.predict_pretrained_button, 0, 2, 1, 2)
 
         controls.addWidget(self.model_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
         controls.addWidget(self.model_combo, 1, 1, 1, 3)
@@ -542,7 +547,7 @@ class ClassificationPage(QWidget):
         controls.setColumnStretch(3, 1)
 
     def _reset_grid(self, controls: QGridLayout) -> None:
-        for index in range(8):
+        for index in range(9):
             controls.setColumnStretch(index, 0)
             controls.setColumnMinimumWidth(index, 0)
         for index in range(8):
@@ -559,7 +564,14 @@ class ClassificationPage(QWidget):
         if not path:
             return
 
-        image_path = Path(path)
+        self._open_image_path(Path(path))
+
+
+    def load_sample_image(self) -> None:
+        self._open_image_path(sample_image_path())
+
+
+    def _open_image_path(self, image_path: Path) -> None:
         try:
             started_at = time.perf_counter()
             pixmap = self._pixmap_from_path(image_path)
@@ -1147,6 +1159,7 @@ class ClassificationPage(QWidget):
         has_image = self.image_path is not None
         has_checkpoint = self.checkpoint_path is not None
         self.open_button.setEnabled(not self._busy)
+        self.sample_image_button.setEnabled(not self._busy)
         self.predict_pretrained_button.setEnabled(has_image and not self._busy)
         self.check_weights_button.setEnabled(not self._busy)
         self.download_weights_button.setEnabled(not self._busy)

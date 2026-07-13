@@ -32,6 +32,7 @@ from cv_basics.api import (
     ProcessingParams,
     create_image_processing_service,
 )
+from vision_workbench.sample_data import sample_image_path
 from vision_workbench.troubleshooting import DATA_AND_FILES, MODULE_RUNTIME_ERRORS, with_help
 
 from ..image_presenter import QtImagePresenter
@@ -225,18 +226,22 @@ class CvBasicsPage(QWidget):
         controls = QHBoxLayout()
         controls.setSpacing(10)
         self.open_button = make_button("打开图片", primary=True)
+        self.sample_button = make_button("加载示例图")
         self.save_button = make_button("保存结果")
         self.reset_button = make_button("重置")
         self.apply_button = make_button("应用效果", primary=True)
         self.open_button.setToolTip("选择本地图片并载入预览")
+        self.sample_button.setToolTip("加载内置测试图，立即体验图像处理流程")
         self.save_button.setToolTip("保存当前处理结果")
         self.reset_button.setToolTip("恢复为原图")
         self.apply_button.setToolTip("使用当前参数处理图片")
         self.open_button.clicked.connect(self.open_image)
+        self.sample_button.clicked.connect(self.load_sample_image)
         self.save_button.clicked.connect(self.save_result)
         self.reset_button.clicked.connect(self.reset_result)
         self.apply_button.clicked.connect(self.apply_effect)
         controls.addWidget(self.open_button)
+        controls.addWidget(self.sample_button)
         controls.addWidget(self.save_button)
         controls.addWidget(self.reset_button)
         controls.addStretch(1)
@@ -302,6 +307,10 @@ class CvBasicsPage(QWidget):
             return
 
         self._open_preview(Path(path))
+
+
+    def load_sample_image(self) -> None:
+        self._open_preview(sample_image_path())
 
     def save_result(self) -> None:
         if not self._has_open_image():
@@ -583,6 +592,7 @@ class CvBasicsPage(QWidget):
 
     def _update_action_states(self) -> None:
         self.open_button.setEnabled(not self._busy)
+        self.sample_button.setEnabled(not self._busy)
         self.save_button.setEnabled(self._has_displayable_result() and not self._busy)
         self.reset_button.setEnabled(self._has_open_image() and not self._busy)
         self.apply_button.setEnabled(self._has_open_image() and not self._busy)

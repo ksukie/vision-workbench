@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Optional, Sequence, cast
 
+import cv2
+import numpy as np
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import (
     QFileDialog,
@@ -25,6 +27,7 @@ from camera_diagnostics.api import create_camera_diagnostics_service
 from camera_diagnostics.application import CameraDiagnosticsService
 from camera_diagnostics.configuration import CameraDiagnosticsConfig
 from camera_diagnostics.domain import CameraBackend, CameraDevice, CaptureProfile, ImageArray, PlatformInfo
+from vision_workbench.sample_data import sample_image_path
 from vision_workbench.troubleshooting import CAMERA_AND_VIDEO, DATA_AND_FILES, with_help
 
 from ..camera_resource import CameraResourceCoordinator, shared_camera_coordinator
@@ -105,6 +108,7 @@ class CameraPage(QWidget):
         self._preview_interval = 1.0 / max(1.0, config.default_recording_fps)
 
         self.refresh_button = make_button("查找相机", primary=True)
+        self.sample_button = make_button("加载示例图")
         self.probe_button = make_button("查询相机支持格式")
         self.open_button = make_button("打开相机", primary=True)
         self.close_button = make_button("停止预览")
@@ -112,6 +116,7 @@ class CameraPage(QWidget):
 
         for button in (
             self.refresh_button,
+            self.sample_button,
             self.probe_button,
             self.open_button,
             self.close_button,
@@ -215,6 +220,7 @@ class CameraPage(QWidget):
 
     def _connect_signals(self) -> None:
         self.refresh_button.clicked.connect(self.refresh_cameras)
+        self.sample_button.clicked.connect(self.load_sample_image)
         self.probe_button.clicked.connect(self.probe_profiles)
         self.open_button.clicked.connect(self.open_camera)
         self.close_button.clicked.connect(self.close_camera)
@@ -259,6 +265,7 @@ class CameraPage(QWidget):
         controls.addWidget(self.open_button, 0, 6)
         controls.addWidget(self.close_button, 0, 7)
         controls.addWidget(self.screenshot_button, 1, 0)
+        controls.addWidget(self.sample_button, 1, 1)
         controls.setColumnStretch(2, 1)
         controls.setColumnStretch(5, 1)
 
@@ -271,7 +278,8 @@ class CameraPage(QWidget):
         controls.addWidget(self.device_combo, 1, 1, 1, 3)
         controls.addWidget(self.profile_label, 2, 0, Qt.AlignmentFlag.AlignVCenter)
         controls.addWidget(self.profile_combo, 2, 1, 1, 3)
-        controls.addWidget(self.screenshot_button, 3, 0, 1, 4)
+        controls.addWidget(self.screenshot_button, 3, 0, 1, 2)
+        controls.addWidget(self.sample_button, 3, 2, 1, 2)
         controls.setColumnStretch(1, 1)
         controls.setColumnStretch(3, 1)
 
@@ -346,6 +354,32 @@ class CameraPage(QWidget):
             error_title="打开失败",
             error_category=CAMERA_AND_VIDEO,
         )
+
+    def load_sample_image(self) -> None:
+        if self._camera_open:
+            QMessageBox.information(self, "相机运行中", "请先停止相机，再加载示例图。")
+            return
+        try:
+            image_path = sample_image_path()
+            data = np.fromfile(str(image_path), dtype=np.uint8)
+            frame = cv2.imdecode(data, cv2.IMREAD_COLOR)
+            if frame is None:
+                raise ValueError(f"Cannot decode bundled sample image: {image_path}")
+        except ValueError as exc:
+            QMessageBox.critical(self, "加载示例失败", with_help(exc, DATA_AND_FILES))
+            return
+
+        self.current_frame = frame
+        self.actual_profile = None
+        self._display_fps = 0.0
+        self._last_frame_time = None
+        self.fps_label.setText("FPS：示例静态图")
+        height, width = frame.shape[:2]
+        self.profile_info_label.setText(f"示例图：{width}x{height}")
+        self.preview_panel.set_pixmap(self.presenter.to_pixmap(frame))
+        self._update_info()
+        self._update_action_states()
+        self._set_status("示例图已加载，可用于预览和截图测试。")
 
     def close_camera(self, *, show_status: bool = True) -> None:
         was_open = self._camera_open or self._preview_thread is not None
@@ -685,6 +719,7 @@ class CameraPage(QWidget):
         has_device = self.selected_device() is not None
         has_frame = self.current_frame is not None
         self.refresh_button.setEnabled(not self._busy)
+        self.sample_button.setEnabled(not self._busy and not self._camera_open)
         self.probe_button.setEnabled(has_device and not self._busy and not self._camera_open)
         self.open_button.setEnabled(has_device and not self._busy and not self._camera_open)
         self.close_button.setEnabled(self._camera_open and not self._busy)

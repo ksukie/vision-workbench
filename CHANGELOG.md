@@ -18,6 +18,7 @@ All notable changes to Vision Workbench are documented here.
 - Cached model manifests can be refreshed through the detection, segmentation, and training APIs.
 - Detection now exposes a single-image path API, and training can register the best weight from a completed run.
 - Training pages provide deterministic sample datasets and environment diagnostics.
+- Desktop workflows now provide a bundled sample image where they accept an input image; panorama reconstruction and training keep their existing sample controls.
 
 ### Changed
 
@@ -102,6 +103,7 @@ Vision Workbench 的重要版本变动记录如下。
 - 可通过检测、分割和训练 API 刷新本地缓存的模型清单。
 - 目标检测新增按单张图像路径推理的 API；训练完成后可注册最佳权重。
 - 训练页面新增确定性示例数据集与环境诊断。
+- 所有接收输入图像的桌面流程均可加载内置示例图；全景重构和训练保留既有示例入口。
 
 ### 变更
 

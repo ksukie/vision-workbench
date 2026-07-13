@@ -32,6 +32,7 @@ from camera_diagnostics.domain import CameraBackend, CameraDevice, CaptureProfil
 from cv_basics.api import EffectName
 from image_classification.api import PredictionItem, PredictionResult, PretrainedWeightInfo
 from panorama_reconstruction.domain import ImagePairPaths, PanoramaResult
+from vision_workbench.sample_data import sample_image_path
 from vision_workbench.desktop.image_presenter import QtImagePresenter
 from vision_workbench.desktop.main_window import MainWindow, NAV_ITEM_BY_KEY
 from vision_workbench.desktop.pages.camera_page import CameraPage
@@ -1311,6 +1312,50 @@ def test_classification_page_open_preview_and_prediction(qt_app, tmp_path):
     finally:
         page.shutdown()
         page.close()
+
+
+def test_pages_load_the_bundled_sample_image(qt_app):
+    sample_path = sample_image_path()
+    cv_basics = CvBasicsPage()
+    detection = YoloDetectionPage(service=FakeYoloDetectionService(), camera_coordinator=CameraResourceCoordinator())
+    segmentation = YoloSegmentationPage(service=FakeYoloSegmentationService())
+    classification = ClassificationPage(service=FakeClassificationService())
+    camera = CameraPage(service=FakeCameraService(), camera_coordinator=CameraResourceCoordinator())
+    queued = {}
+    segmentation._run_task = lambda **kwargs: queued.update(kwargs)
+    try:
+        cv_basics.load_sample_image()
+        detection.load_sample_image()
+        classification.load_sample_image()
+        camera.load_sample_image()
+        segmentation.load_sample_image()
+
+        assert cv_basics.current_path == sample_path
+        assert detection.image_path == sample_path
+        assert classification.image_path == sample_path
+        assert camera.current_frame is not None
+        assert queued["task"]().path == sample_path
+        assert all(
+            button.text() == "加载示例图"
+            for button in (
+                cv_basics.sample_button,
+                detection.sample_image_button,
+                segmentation.sample_image_button,
+                classification.sample_image_button,
+                camera.sample_button,
+            )
+        )
+    finally:
+        cv_basics.shutdown()
+        detection.shutdown()
+        segmentation.shutdown()
+        classification.shutdown()
+        camera.shutdown()
+        cv_basics.close()
+        detection.close()
+        segmentation.close()
+        classification.close()
+        camera.close()
 
 
 def test_classification_page_uses_chinese_labels_and_compact_layout(qt_app):

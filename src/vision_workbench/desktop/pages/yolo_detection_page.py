@@ -37,6 +37,7 @@ from vision_workbench.troubleshooting import (
 )
 from vision_workbench.model_files import model_file_issue
 from vision_workbench.input_limits import validate_image_file
+from vision_workbench.sample_data import sample_image_path
 from yolo26_detection.api import create_yolo26_detection_service
 from yolo26_detection.application import Yolo26DetectionService
 from yolo26_detection.configuration import Yolo26DetectionConfig
@@ -179,6 +180,7 @@ class YoloDetectionPage(QWidget):
         self._inference_thread = None  # type: Optional[threading.Thread]
 
         self.open_image_button = make_button("选择图片", primary=True)
+        self.sample_image_button = make_button("加载示例图")
         self.detect_button = make_button("检测图片", primary=True)
         self.save_result_button = make_button("保存检测图")
         self.refresh_models_button = make_button("查找模型")
@@ -191,6 +193,7 @@ class YoloDetectionPage(QWidget):
         self.stop_live_button = make_button("停止摄像头检测")
         for button in (
             self.open_image_button,
+            self.sample_image_button,
             self.detect_button,
             self.save_result_button,
             self.refresh_models_button,
@@ -368,6 +371,7 @@ class YoloDetectionPage(QWidget):
 
     def _connect_signals(self) -> None:
         self.open_image_button.clicked.connect(self.open_image)
+        self.sample_image_button.clicked.connect(self.load_sample_image)
         self.detect_button.clicked.connect(self.detect_image)
         self.save_result_button.clicked.connect(self.save_result)
         self.refresh_models_button.clicked.connect(self.refresh_model_catalog)
@@ -432,7 +436,8 @@ class YoloDetectionPage(QWidget):
 
     def _layout_wide_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.open_image_button, 0, 0)
-        controls.addWidget(self.detect_button, 0, 1, 1, 3)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.detect_button, 0, 2, 1, 2)
         controls.addWidget(self.save_result_button, 0, 4)
 
         controls.addWidget(self.camera_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -458,7 +463,8 @@ class YoloDetectionPage(QWidget):
 
     def _layout_compact_controls(self, controls: QGridLayout) -> None:
         controls.addWidget(self.open_image_button, 0, 0)
-        controls.addWidget(self.detect_button, 0, 1, 1, 2)
+        controls.addWidget(self.sample_image_button, 0, 1)
+        controls.addWidget(self.detect_button, 0, 2)
         controls.addWidget(self.save_result_button, 0, 3)
 
         controls.addWidget(self.camera_label, 1, 0, Qt.AlignmentFlag.AlignVCenter)
@@ -636,7 +642,17 @@ class YoloDetectionPage(QWidget):
         if not path:
             return
 
-        image_path = Path(path)
+        self._set_input_image(Path(path))
+
+
+    def load_sample_image(self) -> None:
+        if self._camera_open:
+            QMessageBox.information(self, "相机运行中", "请先停止相机，再加载示例图。")
+            return
+        self._set_input_image(sample_image_path())
+
+
+    def _set_input_image(self, image_path: Path) -> None:
         try:
             pixmap = self._pixmap_from_path(image_path)
         except ValueError as exc:
@@ -1299,6 +1315,7 @@ class YoloDetectionPage(QWidget):
         can_edit_inference = not self._busy and not self._live_detection_enabled
         self.download_model_button.setText(_download_button_text(model))
         self.open_image_button.setEnabled(not self._busy and not self._camera_open)
+        self.sample_image_button.setEnabled(not self._busy and not self._camera_open)
         self.detect_button.setEnabled(has_image and has_model and not self._busy and not self._camera_open)
         self.save_result_button.setEnabled(self.result_image is not None and not self._busy)
         self.refresh_models_button.setEnabled(not self._busy)
