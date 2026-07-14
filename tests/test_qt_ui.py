@@ -33,11 +33,13 @@ from cv_basics.api import EffectName
 from image_classification.api import PredictionItem, PredictionResult, PretrainedWeightInfo
 from panorama_reconstruction.domain import ImagePairPaths, PanoramaResult
 from vision_workbench.sample_data import sample_image_path
+from vision_workbench.desktop.build_mode import BASE_EXE_ENV
 from vision_workbench.desktop.image_presenter import QtImagePresenter
 from vision_workbench.desktop.main_window import MainWindow, NAV_ITEM_BY_KEY
 from vision_workbench.desktop.pages.camera_page import CameraPage
 from vision_workbench.desktop.pages.classification_page import ClassificationPage
 from vision_workbench.desktop.pages.cv_basics_page import CvBasicsPage, EFFECT_ZH_TO_NAME
+from vision_workbench.desktop.pages.deep_learning_source_page import DeepLearningSourcePage
 from vision_workbench.desktop.pages.panorama_page import MODE_MANUAL, PanoramaPage
 from vision_workbench.desktop.pages.yolo_detection_page import (
     LiveDetectionPayload,
@@ -442,6 +444,25 @@ def test_qt_main_window_smoke(qt_app):
 
         window.set_current_page("panorama")
         assert window.findChild(QLabel, "SidebarDetail").text() == NAV_ITEM_BY_KEY["panorama"].description
+    finally:
+        window.close()
+
+
+def test_qt_base_exe_routes_deep_learning_pages_to_source_setup(qt_app, monkeypatch):
+    monkeypatch.setenv(BASE_EXE_ENV, "1")
+    window = MainWindow()
+    try:
+        assert isinstance(window.pages["cv_basics"], CvBasicsPage)
+        assert isinstance(window.pages["panorama"], PanoramaPage)
+        assert isinstance(window.pages["camera"], CameraPage)
+
+        for key in ("detection", "segmentation", "training", "classification"):
+            page = window.pages[key]
+            assert isinstance(page, DeepLearningSourcePage)
+            assert page.findChild(QScrollArea) is not None
+
+        assert "install_dependencies.py yolo26" in window.pages["detection"].install_commands.toPlainText()
+        assert "install_dependencies.py classification" in window.pages["classification"].install_commands.toPlainText()
     finally:
         window.close()
 

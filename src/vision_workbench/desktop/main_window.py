@@ -6,6 +6,7 @@ import ctypes
 import ctypes.wintypes
 import sys
 from dataclasses import dataclass
+from importlib import import_module
 from typing import Dict
 
 from PySide6.QtCore import QPoint, Qt
@@ -23,13 +24,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .build_mode import is_base_exe
 from .pages.camera_page import CameraPage
-from .pages.classification_page import ClassificationPage
 from .pages.cv_basics_page import CvBasicsPage
+from .pages.deep_learning_source_page import DeepLearningSourcePage
 from .pages.panorama_page import PanoramaPage
-from .pages.yolo_detection_page import YoloDetectionPage
-from .pages.yolo_segmentation_page import YoloSegmentationPage
-from .pages.yolo_training_page import YoloTrainingPage
 
 
 @dataclass(frozen=True)
@@ -49,6 +48,12 @@ NAV_ITEMS = [
     NavItem("classification", "图像分类", "ResNet18、MobileNetV3 预测和基础训练。"),
 ]
 NAV_ITEM_BY_KEY = {item.key: item for item in NAV_ITEMS}
+DEEP_LEARNING_PAGE_SPECS = {
+    "detection": (".pages.yolo_detection_page", "YoloDetectionPage", "yolo26"),
+    "segmentation": (".pages.yolo_segmentation_page", "YoloSegmentationPage", "yolo26"),
+    "training": (".pages.yolo_training_page", "YoloTrainingPage", "yolo26"),
+    "classification": (".pages.classification_page", "ClassificationPage", "classification"),
+}
 
 
 class WindowTitleBar(QFrame):
@@ -252,29 +257,8 @@ class MainWindow(QMainWindow):
         sidebar_layout.addWidget(version)
 
         for item in NAV_ITEMS:
-            if item.key == "cv_basics":
-                page = CvBasicsPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "panorama":
-                page = PanoramaPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "camera":
-                page = CameraPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "detection":
-                page = YoloDetectionPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "segmentation":
-                page = YoloSegmentationPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "training":
-                page = YoloTrainingPage()
-                page.status_changed.connect(self.set_status)
-            elif item.key == "classification":
-                page = ClassificationPage()
-                page.status_changed.connect(self.set_status)
-            else:
-                raise ValueError(f"Unsupported navigation item: {item.key}")
+            page = self._create_page(item.key)
+            page.status_changed.connect(self.set_status)
             self.pages[item.key] = page
             self.stack.addWidget(page)
 
@@ -283,6 +267,21 @@ class MainWindow(QMainWindow):
         shell_layout.addWidget(body, 1)
         root_layout.addWidget(shell, 1)
         self.setCentralWidget(central)
+
+    def _create_page(self, key: str) -> QWidget:
+        if key == "cv_basics":
+            return CvBasicsPage()
+        if key == "panorama":
+            return PanoramaPage()
+        if key == "camera":
+            return CameraPage()
+
+        module_name, class_name, dependency_target = DEEP_LEARNING_PAGE_SPECS[key]
+        if is_base_exe():
+            return DeepLearningSourcePage(NAV_ITEM_BY_KEY[key].label, dependency_target)
+
+        page_class = getattr(import_module(module_name, package=__package__), class_name)
+        return page_class()
 
     def set_current_page(self, key: str) -> None:
         page = self.pages[key]

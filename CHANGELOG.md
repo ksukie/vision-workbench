@@ -41,6 +41,7 @@ All notable changes to Vision Workbench are documented here.
 
 - Built `vision_workbench-0.3.0-py3-none-any.whl`.
 - Built `vision_workbench-0.3.0.tar.gz`.
+- Added a base-only single-file Windows EXE build; deep-learning navigation directs users to the supported full-source install route.
 
 ## [0.2.0] - 2026-07-02
 
@@ -126,6 +127,7 @@ Vision Workbench 的重要版本变动记录如下。
 
 - 已构建 `vision_workbench-0.3.0-py3-none-any.whl`。
 - 已构建 `vision_workbench-0.3.0.tar.gz`。
+- 新增仅含基础功能的单文件 Windows EXE 构建；深度学习入口会引导用户使用受支持的完整源码安装路线。
 
 ## [0.2.0] - 2026-07-02
 
