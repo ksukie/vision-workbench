@@ -4,10 +4,10 @@ message: "If you use Vision Workbench, please cite this project and the third-pa
 type: software
 authors:
   - name: Shuqi Ke
-repository-code: "TBD"
+repository-code: "https://github.com/ksukie/vision-workbench"
 license: AGPL-3.0
-version: 0.1.0
-date-released: 2026-06-30
+version: 0.4.0
+date-released: 2026-07-17
 references:
   - type: software
     title: Ultralytics YOLO

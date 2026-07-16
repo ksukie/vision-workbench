@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,6 +16,20 @@ MODEL_ROOT = ROOT / "models"
 MAX_MODEL_BYTES = 100 * 1024 * 1024
 
 
+def is_git_ignored(path: Path) -> bool:
+    try:
+        result = subprocess.run(
+            ["git", "check-ignore", "-q", "--", str(path.relative_to(ROOT))],
+            cwd=ROOT,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    except OSError:
+        return False
+    return result.returncode == 0
+
+
 def main() -> int:
     oversized = []
     if MODEL_ROOT.exists():
@@ -23,11 +38,13 @@ def main() -> int:
                 continue
             if path.suffix.lower() not in {".pt", ".pth", ".onnx", ".engine"}:
                 continue
+            if is_git_ignored(path):
+                continue
             if path.stat().st_size > MAX_MODEL_BYTES:
                 oversized.append(path)
 
     if not oversized:
-        print("Release asset check passed: no model file is larger than 100 MB.")
+        print("Release asset check passed: no publishable model file is larger than 100 MB.")
         return 0
 
     print("Release asset check failed: these model files are larger than 100 MB:")

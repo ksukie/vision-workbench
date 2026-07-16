@@ -2,6 +2,24 @@
 
 All notable changes to Vision Workbench are documented here.
 
+## [0.4.0] - 2026-07-17
+
+### Fixed
+
+- Fixed a critical Windows high-DPI hit-testing bug that could classify a large area on the right side of a normal window as the resize border, preventing Qt controls there from receiving clicks.
+- Kept native edge resizing, title-bar dragging, and title-bar controls working consistently by using Win32 native pixels for non-client hit testing and converting client positions to Qt device-independent coordinates.
+- Release asset checks now ignore Git-ignored local model files, so a deliberately excluded local weight cannot block an otherwise publishable release.
+
+### Tests
+
+- Added Windows regression coverage for 125% display scaling, including an interior point previously misclassified as `HTRIGHT` and a real right-edge resize point.
+- Added regression coverage for Git-ignored release assets.
+- Verified the complete test suite and the affected controls in a real 125% DPI Windows window.
+
+### Packaging
+
+- Bumped Python package, source-download, citation, documentation, and Windows base-EXE metadata to `0.4.0`.
+
 ## [0.3.0] - 2026-07-13
 
 ### Security
@@ -87,6 +105,24 @@ All notable changes to Vision Workbench are documented here.
 # 更新日志
 
 Vision Workbench 的重要版本变动记录如下。
+
+## [0.4.0] - 2026-07-17
+
+### 修复
+
+- 修复 Windows 高 DPI 下的重大命中测试缺陷：普通窗口右侧大片区域可能被误判为缩放边框，导致其中的 Qt 控件无法接收点击。
+- 非客户区命中测试改用 Win32 原生像素，并将客户区位置转换为 Qt 设备无关坐标，从而同时保留窗口边缘缩放、标题栏拖动和标题栏按钮行为。
+- 发布资产检查现在会跳过被 Git 忽略的本地模型，避免明确排除的本地权重阻塞原本可发布的版本。
+
+### 测试
+
+- 增加 Windows 125% 显示缩放回归测试，覆盖此前被误判为 `HTRIGHT` 的内部位置和真正的右边缘缩放位置。
+- 增加被 Git 忽略发布资产的回归测试。
+- 在真实 Windows 125% DPI 窗口中验证完整测试套件和受影响控件。
+
+### 打包
+
+- Python 包、源码下载、引用信息、文档和 Windows 基础 EXE 元数据统一升级为 `0.4.0`。
 
 ## [0.3.0] - 2026-07-13
 

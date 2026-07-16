@@ -18,7 +18,7 @@ from PySide6.QtWidgets import (
 from ..widgets import make_button
 
 
-SOURCE_DOWNLOAD_URL = "https://github.com/ksukie/vision-workbench/archive/refs/tags/v0.3.0.zip"
+SOURCE_DOWNLOAD_URL = "https://github.com/ksukie/vision-workbench/archive/refs/tags/v0.4.0.zip"
 
 
 def source_install_commands(target: str) -> str:

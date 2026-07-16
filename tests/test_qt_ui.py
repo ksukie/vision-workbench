@@ -448,6 +448,57 @@ def test_qt_main_window_smoke(qt_app):
         window.close()
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="WM_NCHITTEST is Windows-only")
+def test_qt_main_window_native_hit_test_uses_native_pixels(qt_app, monkeypatch):
+    import ctypes
+    import ctypes.wintypes
+
+    class HighDpiMainWindow(MainWindow):
+        def __init__(self):
+            self.hit_test_positions = []
+            super().__init__()
+
+        def devicePixelRatioF(self):  # noqa: N802
+            return 1.25
+
+        def _is_title_bar_drag_area(self, window_pos):
+            self.hit_test_positions.append(window_pos)
+            return True
+
+    window = HighDpiMainWindow()
+    user32 = ctypes.windll.user32
+    native_rect = (125, 125, 1675, 1150)
+
+    def get_window_rect(_hwnd, rect_pointer):
+        rect = ctypes.cast(rect_pointer, ctypes.POINTER(ctypes.wintypes.RECT)).contents
+        rect.left, rect.top, rect.right, rect.bottom = native_rect
+        return True
+
+    def screen_to_client(_hwnd, point_pointer):
+        point = ctypes.cast(point_pointer, ctypes.POINTER(ctypes.wintypes.POINT)).contents
+        point.x -= native_rect[0]
+        point.y -= native_rect[1]
+        return True
+
+    monkeypatch.setattr(user32, "GetWindowRect", get_window_rect)
+    monkeypatch.setattr(user32, "ScreenToClient", screen_to_client)
+
+    message = ctypes.wintypes.MSG()
+    message.message = 0x0084
+
+    def hit_test(x, y):
+        message.lParam = ((y & 0xFFFF) << 16) | (x & 0xFFFF)
+        return window.nativeEvent(b"windows_generic_MSG", ctypes.addressof(message))
+
+    try:
+        assert hit_test(1500, 425) == (True, 2)
+        assert window.hit_test_positions == [QPoint(1100, 240)]
+        assert hit_test(1674, 425) == (True, 11)
+        assert window.hit_test_positions == [QPoint(1100, 240)]
+    finally:
+        window.close()
+
+
 def test_qt_base_exe_routes_deep_learning_pages_to_source_setup(qt_app, monkeypatch):
     monkeypatch.setenv(BASE_EXE_ENV, "1")
     window = MainWindow()

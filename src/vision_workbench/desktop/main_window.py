@@ -325,42 +325,49 @@ class MainWindow(QMainWindow):
 
         x = ctypes.c_short(msg.lParam & 0xFFFF).value
         y = ctypes.c_short((msg.lParam >> 16) & 0xFFFF).value
+        hwnd = ctypes.wintypes.HWND(int(self.winId()))
         if not self.isMaximized():
-            border = 8
-            rect = self.frameGeometry()
-            left = x - rect.left() <= border
-            right = rect.right() - x <= border
-            top = y - rect.top() <= border
-            bottom = rect.bottom() - y <= border
+            rect = ctypes.wintypes.RECT()
+            if ctypes.windll.user32.GetWindowRect(hwnd, ctypes.byref(rect)):
+                border = max(1, round(8 * self.devicePixelRatioF()))
+                left = x - rect.left <= border
+                right = rect.right - x <= border
+                top = y - rect.top <= border
+                bottom = rect.bottom - y <= border
 
-            if top and left:
-                return True, 13  # HTTOPLEFT
-            if top and right:
-                return True, 14  # HTTOPRIGHT
-            if bottom and left:
-                return True, 16  # HTBOTTOMLEFT
-            if bottom and right:
-                return True, 17  # HTBOTTOMRIGHT
-            if left:
-                return True, 10  # HTLEFT
-            if right:
-                return True, 11  # HTRIGHT
-            if top:
-                return True, 12  # HTTOP
-            if bottom:
-                return True, 15  # HTBOTTOM
-        if self._is_title_bar_drag_area(QPoint(x, y)):
-            return True, 2  # HTCAPTION
+                if top and left:
+                    return True, 13  # HTTOPLEFT
+                if top and right:
+                    return True, 14  # HTTOPRIGHT
+                if bottom and left:
+                    return True, 16  # HTBOTTOMLEFT
+                if bottom and right:
+                    return True, 17  # HTBOTTOMRIGHT
+                if left:
+                    return True, 10  # HTLEFT
+                if right:
+                    return True, 11  # HTRIGHT
+                if top:
+                    return True, 12  # HTTOP
+                if bottom:
+                    return True, 15  # HTBOTTOM
+
+        native_pos = ctypes.wintypes.POINT(x, y)
+        if ctypes.windll.user32.ScreenToClient(hwnd, ctypes.byref(native_pos)):
+            scale = self.devicePixelRatioF()
+            window_pos = QPoint(round(native_pos.x / scale), round(native_pos.y / scale))
+            if self._is_title_bar_drag_area(window_pos):
+                return True, 2  # HTCAPTION
         return super().nativeEvent(event_type, message)
 
-    def _is_title_bar_drag_area(self, global_pos: QPoint) -> bool:
+    def _is_title_bar_drag_area(self, window_pos: QPoint) -> bool:
         title_bar = getattr(self, "title_bar", None)
         if title_bar is None or not title_bar.isVisible():
             return False
-        if not title_bar.rect().contains(title_bar.mapFromGlobal(global_pos)):
+        if not title_bar.rect().contains(title_bar.mapFrom(self, window_pos)):
             return False
         for button in (title_bar.minimize_button, title_bar.maximize_button, title_bar.close_button):
-            if button.isVisible() and button.rect().contains(button.mapFromGlobal(global_pos)):
+            if button.isVisible() and button.rect().contains(button.mapFrom(self, window_pos)):
                 return False
         return True
 
