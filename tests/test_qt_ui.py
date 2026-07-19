@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 import os
 import subprocess
 import sys
@@ -26,6 +28,7 @@ if qt_probe.returncode != 0:
 
 from PySide6.QtCore import QEventLoop, QPoint, QPointF, QTimer, Qt
 from PySide6.QtGui import QWheelEvent
+from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QApplication, QFrame, QLabel, QMessageBox, QPushButton, QScrollArea
 
 from camera_diagnostics.domain import CameraBackend, CameraDevice, CaptureProfile, PlatformInfo
@@ -41,6 +44,7 @@ from vision_workbench.desktop.pages.classification_page import ClassificationPag
 from vision_workbench.desktop.pages.cv_basics_page import CvBasicsPage, EFFECT_ZH_TO_NAME
 from vision_workbench.desktop.pages.deep_learning_source_page import DeepLearningSourcePage
 from vision_workbench.desktop.pages.panorama_page import MODE_MANUAL, PanoramaPage
+from vision_workbench.desktop.pages.version_page import VersionPage
 from vision_workbench.desktop.pages.yolo_detection_page import (
     LiveDetectionPayload,
     LiveFramePayload,
@@ -50,7 +54,7 @@ from vision_workbench.desktop.pages.yolo_detection_page import (
 from vision_workbench.desktop.pages.yolo_segmentation_page import YoloSegmentationPage
 from vision_workbench.desktop.pages.yolo_training_page import YoloTrainingPage
 from vision_workbench.desktop.task_runner import QtTaskRunner
-from vision_workbench.desktop.theme import APP_QSS
+from vision_workbench.desktop.theme import APP_QSS, apply_theme
 from vision_workbench.desktop.widgets import (
     NoWheelComboBox,
     NoWheelDoubleSpinBox,
@@ -60,6 +64,12 @@ from vision_workbench.desktop.widgets import (
 from yolo26_detection.domain import DetectionBox, DetectionOutput, ModelInfo
 from yolo26_segmentation.domain import ModelInfo as SegmentationModelInfo, SegmentationOutput
 from vision_workbench.desktop.camera_resource import CameraResourceCoordinator
+from vision_workbench.update_service import (
+    ReleaseAsset,
+    ReleaseInfo,
+    UpdateCheckResult,
+    UpdateState,
+)
 
 
 class LazyLoadService:
@@ -434,6 +444,7 @@ def test_qt_main_window_smoke(qt_app):
         assert isinstance(window.pages["segmentation"], YoloSegmentationPage)
         assert isinstance(window.pages["training"], YoloTrainingPage)
         assert isinstance(window.pages["classification"], ClassificationPage)
+        assert isinstance(window.pages["version"], VersionPage)
         assert all(page.findChild(QScrollArea) is not None for page in window.pages.values())
         assert window.windowFlags() & Qt.WindowType.FramelessWindowHint
 
@@ -444,6 +455,9 @@ def test_qt_main_window_smoke(qt_app):
 
         window.set_current_page("panorama")
         assert window.findChild(QLabel, "SidebarDetail").text() == NAV_ITEM_BY_KEY["panorama"].description
+
+        window.set_current_page("version")
+        assert window.findChild(QLabel, "SidebarDetail").text() == NAV_ITEM_BY_KEY["version"].description
     finally:
         window.close()
 
@@ -561,6 +575,94 @@ def test_qt_main_window_page_roundtrip_updates_navigation(qt_app):
         assert window.title_bar.status_label.text() == "处理中"
     finally:
         window.close()
+
+
+def test_version_page_displays_available_verified_update_and_reflows_actions(qt_app):
+    previous_style = qt_app.style().objectName()
+    previous_stylesheet = qt_app.styleSheet()
+    apply_theme(qt_app)
+    page = VersionPage()
+    asset = ReleaseAsset(
+        kind="python-wheel",
+        name="vision_workbench-1.1.0-py3-none-any.whl",
+        url=(
+            "https://github.com/ksukie/vision-workbench/releases/download/"
+            "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
+        ),
+        size=100,
+        sha256="a" * 64,
+    )
+    release = ReleaseInfo(
+        version="1.1.0",
+        published_at="2026-08-01T12:00:00Z",
+        release_url="https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        tag="v1.1.0",
+        commit="1" * 40,
+        assets=(asset,),
+        dependency_contract_sha256=page.version_info.dependency_contract_sha256,
+    )
+    result = UpdateCheckResult(UpdateState.UPDATE_AVAILABLE, page.version_info, release, "2026-08-01T12:05:00Z", asset)
+    try:
+        page._on_check_success(result)
+
+        assert page.current_version_label.text() == "v1.0.0"
+        assert "editable" in page.current_mode_label.text()
+        assert page.latest_version_label.text() == "v1.1.0"
+        assert not page.update_button.isHidden()
+        assert page.update_button.text() == "更新到 v1.1.0"
+        assert page.repository_label.wordWrap()
+
+        page.resize(360, 700)
+        page.show()
+        qt_app.processEvents()
+        page._apply_action_layout(force=True)
+        assert page._action_columns == 1
+        check_index = page.actions_layout.indexOf(page.check_button)
+        release_index = page.actions_layout.indexOf(page.release_button)
+        assert page.actions_layout.getItemPosition(check_index)[:2] == (0, 0)
+        assert page.actions_layout.getItemPosition(release_index)[:2] == (3, 0)
+        assert page.scroll_area.horizontalScrollBar().maximum() == 0
+
+        page.resize(480, 700)
+        qt_app.processEvents()
+        page._apply_action_layout(force=True)
+        assert page._action_columns == 2
+        release_index = page.actions_layout.indexOf(page.release_button)
+        assert page.actions_layout.getItemPosition(release_index)[:2] == (1, 1)
+
+        page.resize(680, 700)
+        qt_app.processEvents()
+        page._apply_action_layout(force=True)
+        assert page._action_columns == 4
+        release_index = page.actions_layout.indexOf(page.release_button)
+        assert page.actions_layout.getItemPosition(release_index)[:2] == (0, 3)
+
+        page.check_button.setFocus()
+        qt_app.processEvents()
+        focus_order = []
+        for _ in range(4):
+            focused = qt_app.focusWidget()
+            assert isinstance(focused, QPushButton)
+            focus_order.append(focused.text())
+            QTest.keyClick(focused, Qt.Key.Key_Tab)
+            qt_app.processEvents()
+        assert focus_order == [
+            "检查更新",
+            "更新到 v1.1.0",
+            "打开项目仓库",
+            "打开最新发布页面",
+        ]
+
+        page._active_operation = "check"
+        page._on_task_error(RuntimeError("offline"))
+        assert page.update_result is None
+        assert page.update_button.isHidden()
+        assert page.release_button.isHidden()
+        assert page.latest_version_label.text() == "查询失败"
+    finally:
+        page.close()
+        qt_app.setStyleSheet(previous_stylesheet)
+        qt_app.setStyle(previous_style)
 
 
 def test_qt_title_bar_compacts_long_timing_status(qt_app):

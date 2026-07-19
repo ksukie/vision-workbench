@@ -16,7 +16,7 @@ Use this guide when an install command, GUI popup, camera workflow, model load, 
 | Camera scan/open/read failures, screenshots, recording, device permissions | [Camera and video](./camera-and-video.md) |
 | Classification datasets, YOLO `data.yaml`, labels, masks, training aborted | [Datasets and training](./datasets-and-training.md) |
 | CV effects, panorama reconstruction, detection/segmentation runtime errors | [Module runtime errors](./module-runtime-errors.md) |
-| Wheel builds, `dist/`, release assets, model files larger than 100 MB | [Packaging and release](./packaging-and-release.md) |
+| Version mismatch, `pip show` is stale, update checks, one-click updates, wheel builds, or release assets | [Packaging and release](./packaging-and-release.md) |
 
 ## Fast Checks
 

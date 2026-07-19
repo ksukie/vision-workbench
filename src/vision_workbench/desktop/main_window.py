@@ -7,8 +7,6 @@ import ctypes.wintypes
 import sys
 from dataclasses import dataclass
 from importlib import import_module
-from typing import Dict
-
 from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
@@ -24,11 +22,13 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..versioning import current_version_info
 from .build_mode import is_base_exe
 from .pages.camera_page import CameraPage
 from .pages.cv_basics_page import CvBasicsPage
 from .pages.deep_learning_source_page import DeepLearningSourcePage
 from .pages.panorama_page import PanoramaPage
+from .pages.version_page import VersionPage
 
 
 @dataclass(frozen=True)
@@ -46,6 +46,7 @@ NAV_ITEMS = [
     NavItem("segmentation", "YOLO 分割", "YOLO26 实例分割和语义分割。"),
     NavItem("training", "模型训练", "YOLO26 检测、分割与语义分割训练入口。"),
     NavItem("classification", "图像分类", "ResNet18、MobileNetV3 预测和基础训练。"),
+    NavItem("version", "版本信息", "查看当前版本、更新时间、项目仓库和正式更新。"),
 ]
 NAV_ITEM_BY_KEY = {item.key: item for item in NAV_ITEMS}
 DEEP_LEARNING_PAGE_SPECS = {
@@ -165,6 +166,7 @@ class MainWindow(QMainWindow):
         self.sidebar = None  # type: QFrame | None
         self.shell_shadow = None  # type: QGraphicsDropShadowEffect | None
         self.nav_detail_label = None  # type: QLabel | None
+        self.version_info = current_version_info()
 
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
@@ -252,7 +254,7 @@ class MainWindow(QMainWindow):
         self.nav_detail_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
         sidebar_layout.addWidget(self.nav_detail_label)
 
-        version = QLabel("Qt / PySide6")
+        version = QLabel(f"v{self.version_info.version} · Qt / PySide6")
         version.setObjectName("MutedText")
         sidebar_layout.addWidget(version)
 
@@ -275,6 +277,8 @@ class MainWindow(QMainWindow):
             return PanoramaPage()
         if key == "camera":
             return CameraPage()
+        if key == "version":
+            return VersionPage(self.version_info)
 
         module_name, class_name, dependency_target = DEEP_LEARNING_PAGE_SPECS[key]
         if is_base_exe():

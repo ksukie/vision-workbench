@@ -2,6 +2,25 @@
 
 All notable changes to Vision Workbench are documented here.
 
+## [1.0.0] - 2026-07-19
+
+### Added
+
+- Added a first-class Qt version-information page with the running version, update date, installation mode, official repository link, non-blocking update checks, and an explicit one-click update action.
+- Added runtime-aware version resolution for editable source, installed wheels, and frozen Windows executables.
+- Added strict GitHub release metadata validation, bounded downloads, SHA-256 verification, and an out-of-process update helper with Windows EXE backup and rollback behavior.
+- Added a stable update-manifest generator and CI version-contract gate for the 1.0 release line.
+- Added a tagged release-draft workflow and a dependency-contract fingerprint that blocks unsafe no-dependency wheel upgrades.
+- Added installed-wheel and frozen-EXE self-tests to the release pipeline, including internal wheel identity validation before Python updates and a Qt construction check before EXE replacement.
+- Included the runtime dependency declarations in the source distribution so an unpacked sdist can resolve the same 1.0 identity contract.
+- Standardized the Windows release asset as `Vision-Workbench-win-x64.exe`, preventing an in-place update from retaining an obsolete version in its filename.
+
+### Changed
+
+- Promoted Vision Workbench to the 1.0.0 stable release contract and removed hard-coded component version strings.
+- Editable installations now report the checked-out source version; accepting an official update switches the environment to the verified release wheel without modifying the source checkout.
+- Runtime identity now fails closed on mismatched bundled metadata, frozen builds ignore unrelated editable registrations, and local `datasets/` content is protected from accidental commits.
+
 ## [0.4.0] - 2026-07-17
 
 ### Fixed
@@ -105,6 +124,25 @@ All notable changes to Vision Workbench are documented here.
 # 更新日志
 
 Vision Workbench 的重要版本变动记录如下。
+
+## [1.0.0] - 2026-07-19
+
+### 新增
+
+- 新增与其它工作流同级的 Qt“版本信息”页面，展示当前版本、更新时间、运行方式和官方仓库，并支持后台检查更新和用户确认后的一键更新。
+- 新增按 editable 源码、wheel 安装和 Windows 单文件 EXE 分别解析的运行版本模型。
+- 新增 GitHub Release 元数据严格校验、下载大小限制、SHA-256 复核以及进程外更新助手；Windows EXE 更新保留旧文件并在替换失败时回滚。
+- 新增稳定更新清单生成器和 CI 版本契约门禁，作为 1.0 正式版本规范。
+- 新增 tag 驱动的发布草稿工作流和运行依赖契约指纹，阻止不安全的无依赖 wheel 升级。
+- 发布流程新增已安装 wheel 与冻结 EXE 自检；Python 更新前校验 wheel 内部身份，EXE 替换前执行 Qt 构造检查。
+- sdist 现包含运行依赖声明，解压后的源码发布包也能解析与 1.0 一致的身份契约。
+- Windows 正式资产统一使用 `Vision-Workbench-win-x64.exe`，避免原地更新后文件名仍残留旧版本号。
+
+### 变更
+
+- Vision Workbench 进入 1.0.0 正式版本契约，移除组件内分散的硬编码版本号。
+- editable 安装现在展示当前源码版本；用户确认安装正式更新后，环境切换为经校验的正式 wheel，不修改源码仓库。
+- 运行身份在内置元数据不一致时会直接失败；冻结构建忽略无关 editable 注册，并防止本地 `datasets/` 内容被误提交。
 
 ## [0.4.0] - 2026-07-17
 

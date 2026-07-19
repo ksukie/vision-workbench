@@ -14,13 +14,13 @@ if __package__ in (None, ""):
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
     from image_classification.api import create_image_classification_service
     from image_classification.configuration import ImageClassificationConfig
-    from image_classification.domain import ClassificationTrainingConfig, PredictionResult
+    from image_classification.domain import ClassificationTrainingConfig
     from image_classification.window.presenter import TkClassificationPresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 else:
     from ..api import create_image_classification_service
     from ..configuration import ImageClassificationConfig
-    from ..domain import ClassificationTrainingConfig, PredictionResult
+    from ..domain import ClassificationTrainingConfig
     from .presenter import TkClassificationPresenter
     from cv_basics.window.process_exit import arm_forced_process_exit, close_window
 
@@ -413,7 +413,10 @@ class ImageClassificationWindow:
             try:
                 result = task()
             except Exception as exc:
-                self.root.after(0, lambda: self._show_error(error_title, exc, target_status, error_category))
+                self.root.after(
+                    0,
+                    lambda caught=exc: self._show_error(error_title, caught, target_status, error_category),
+                )
                 return
             self.root.after(0, lambda: self._show_success(result, on_success, target_status))
 

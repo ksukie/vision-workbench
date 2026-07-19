@@ -7,7 +7,7 @@ Automated tests cover core logic, but cameras, GPU drivers, font rendering, and 
 ## Desktop and Accessibility
 
 - Launch `vision-workbench` once on Windows, Ubuntu, and macOS, then open every page and confirm that the application remains stable.
-- Complete navigation using only the keyboard: `Alt+1` through `Alt+7`, Tab/Shift+Tab, Space/Enter, `Ctrl+O`, `Ctrl+S`, and `Ctrl+Return`.
+- Complete navigation using only the keyboard: `Alt+1` through `Alt+8`, Tab/Shift+Tab, Space/Enter, `Ctrl+O`, `Ctrl+S`, and `Ctrl+Return`.
 - Confirm that focus is visible, labels are associated with inputs, and the minimize, maximize, and close controls are keyboard accessible.
 - Use at least one supported screen reader: Windows Narrator, macOS VoiceOver, or Linux Orca. Confirm that it reads the main navigation, training parameters, and button names.
 - Check the 1040×680 minimum window and common widescreen sizes at 100%, 125%, 150%, and 200% scaling. Text must remain visible and essential controls must remain reachable.
@@ -31,10 +31,21 @@ Automated tests cover core logic, but cameras, GPU drivers, font rendering, and 
 - Discover, open, and close a camera. Test exclusive camera ownership between the camera diagnostics page and YOLO live detection.
 - Save detection, segmentation, screenshot, and panorama results. Confirm that the files can be opened again and that the cleanup script can identify project processes after an abnormal exit.
 
+## Version and Updates
+
+- Confirm that editable source, an installed wheel, and the Windows base EXE each show the version bound to the code actually running. In editable mode, deliberately stale `pip show` metadata must not override the live source identity; after refreshing the editable registration, both values must match.
+- Check updates while online, offline, rate-limited, and behind an interrupted connection. A failed query must never be reported as up to date.
+- Confirm that an available update remains disabled when its compatible asset or SHA-256 digest is missing.
+- When a Python wheel dependency-contract fingerprint is missing or changed, confirm that one-click update remains unavailable and directs the user to manual installation; the self-contained EXE should still follow its EXE update path.
+- Verify one valid update end to end: download, size and SHA-256 checks, Qt exit, external installation, restart, and the new version shown on the version page.
+- Corrupt a staged asset or give a wheel mismatched internal metadata and confirm that installation does not start. On Windows, test a cross-volume cache update, force an EXE self-test or replacement failure, and confirm that the previous executable remains usable.
+- Install the final wheel into a clean environment and run `python -m vision_workbench.self_test --expected-version <version> --expected-mode wheel --qt`. Run the frozen EXE with `--vision-workbench-self-test --expected-version <version> --qt` before publishing it.
+
 ## Automated Baseline
 
 ```bash
 python -m compileall -q src tests scripts
+python scripts/check_version_contract.py
 python -m pytest -q
 python scripts/check_markdown_links.py
 ```

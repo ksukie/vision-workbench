@@ -1,5 +1,7 @@
 """Camera diagnostics package for Vision Workbench."""
 
+from vision_workbench.versioning import current_version_info
+
 from .api import (
     create_camera_diagnostics_service,
     detect_platform,
@@ -21,4 +23,4 @@ __all__ = [
     "probe_profiles",
 ]
 
-__version__ = "0.1.0"
+__version__ = current_version_info().version

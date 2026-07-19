@@ -15,10 +15,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ...versioning import source_archive_url
 from ..widgets import make_button
-
-
-SOURCE_DOWNLOAD_URL = "https://github.com/ksukie/vision-workbench/archive/refs/tags/v0.4.0.zip"
 
 
 def source_install_commands(target: str) -> str:
@@ -27,7 +25,7 @@ def source_install_commands(target: str) -> str:
     return "\n".join(
         (
             "# 先下载并解压完整源码：",
-            f"# {SOURCE_DOWNLOAD_URL}",
+            f"# {source_archive_url()}",
             "# 在解压后的 vision-workbench 目录打开 PowerShell：",
             "py -3.11 -m venv .venv",
             f".\\.venv\\Scripts\\python.exe scripts\\install_dependencies.py {target}",
@@ -104,7 +102,7 @@ class DeepLearningSourcePage(QWidget):
         self.scroll_area.setWidget(content)
 
     def open_source_download(self) -> None:
-        QDesktopServices.openUrl(QUrl(SOURCE_DOWNLOAD_URL))
+        QDesktopServices.openUrl(QUrl(source_archive_url()))
         self.status_changed.emit("已打开完整源码下载页。")
 
     def copy_install_commands(self) -> None:

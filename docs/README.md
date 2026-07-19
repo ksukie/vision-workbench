@@ -9,6 +9,7 @@ This page is the central index for the official Vision Workbench documentation. 
 | 使用场景 | 文档 |
 | --- | --- |
 | 首次安装、启动和了解功能 | [项目 README](../README.zh-CN.md) |
+| 查看实际运行版本、检查更新或排查一键更新 | [版本身份与更新](../README.zh-CN.md#版本身份与更新) |
 | 使用基础 CV、全景、相机、分类或 YOLO 模块 | [功能模块索引](../README.zh-CN.md#功能模块) |
 | 安装失败、模型错误、相机异常或训练失败 | [问题排查指南](./troubleshooting/zh-CN/问题排查指南.md) |
 | 扩展模块、API 或 Qt 页面 | [二次开发指南](./二次开发指南.md) |
@@ -21,6 +22,7 @@ This page is the central index for the official Vision Workbench documentation. 
 | Task | Documentation |
 | --- | --- |
 | Install, launch, and review available features | [Project README](../README.md) |
+| Verify the running version, check updates, or troubleshoot one-click updates | [Version identity and updates](../README.md#version-identity-and-updates) |
 | Use CV, panorama, camera, classification, or YOLO modules | [Feature module index](../README.md#modules) |
 | Resolve installation, model, camera, or training failures | [Troubleshooting guide](./troubleshooting/en/README.md) |
 | Extend modules, APIs, or Qt pages | [Extension guide](./adding_custom_features_README.md) |

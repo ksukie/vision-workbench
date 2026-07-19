@@ -10,6 +10,7 @@ dist/
 
 # Local training and runtime outputs
 runs/
+datasets/
 datasets/**/.cache/
 
 # Release policy: keep individual model files at or below 100 MB in Git.

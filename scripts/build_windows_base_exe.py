@@ -31,16 +31,6 @@ CONDA_RUNTIME_DLLS = (
 )
 
 
-def project_version() -> str:
-    try:
-        import tomllib
-    except ModuleNotFoundError:
-        import tomli as tomllib
-
-    data = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    return str(data["project"]["version"])
-
-
 def add_conda_runtime_dlls(arguments: list[str]) -> None:
     """Bundle Conda DLLs needed by Python extension modules when available."""
 
@@ -55,8 +45,7 @@ def main() -> None:
     if sys.platform != "win32":
         raise SystemExit("The base EXE must be built on Windows.")
 
-    version = project_version()
-    name = f"Vision-Workbench-{version}-win-x64"
+    name = "Vision-Workbench-win-x64"
     work_path = PROJECT_ROOT / "build" / "windows-base-exe"
     arguments = [
         "--noconfirm",

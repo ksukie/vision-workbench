@@ -1,5 +1,7 @@
 """Panorama reconstruction package for Vision Workbench."""
 
+from vision_workbench.versioning import current_version_info
+
 from .api import (
     create_panorama_reconstruction_service,
     get_default_service,
@@ -40,4 +42,4 @@ __all__ = [
     "save_reconstruction_outputs",
 ]
 
-__version__ = "0.1.0"
+__version__ = current_version_info().version

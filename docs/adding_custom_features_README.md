@@ -192,14 +192,24 @@ The root README should contain installation, launch, and the true quick start. M
 
 This split reduces duplicated guidance and conflicting updates. Structural constraints and coding requirements that the project must maintain belong in the official contributor or architecture documentation. Temporary investigations, detailed debugging records, and a maintainer's personal development notes may remain in a local knowledge base and are not public user instructions. Keep user actions in the relevant module documentation.
 
+## Version Identity And Update Changes
+
+`pyproject.toml` is the authoritative release version. Runtime code must obtain its identity through `vision_workbench.versioning`; do not add numeric package-level `__version__` literals or derive a version from the executable filename. Every formal version change must synchronize `release_info.json`, both current-version headings in `CHANGELOG.md`, `CITATION.cff`, and the wheel examples in both root READMEs. `scripts/check_version_contract.py` enforces this relationship.
+
+The Python one-click updater deliberately installs with `--no-deps`, so changes to base or optional runtime dependency declarations change the dependency-contract fingerprint and disable one-click wheel updates across that boundary. Update the bundled fingerprint together with any dependency declaration; the contract check reports the expected fingerprint and confirms it. The Windows asset keeps the stable name `Vision-Workbench-win-x64.exe`; its embedded identity, Release tag, manifest size, and SHA-256 define its version.
+
+Update checks must remain explicit user actions and off the startup path. Any new update source or install route must keep official HTTPS host validation, bounded metadata and assets, internal wheel identity checks, out-of-process installation, and the artifact self-tests described in the [Release Policy](./legal/release_policy.md).
+
 ## Packaging Checklist
 
 Before preparing a release or commit:
 
 ```bash
-python -m compileall -q src
+python -m compileall -q src tests scripts
+python scripts/check_version_contract.py
 python scripts/check_markdown_links.py
 python -m pytest -q
+python -m build
 python scripts/cleanup_runtime.py
 git status --short
 ```

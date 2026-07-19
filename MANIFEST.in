@@ -4,4 +4,8 @@ include LICENSE
 include NOTICE
 include CITATION.cff
 include THIRD_PARTY_NOTICES.md
+include requirements.txt
+include requirements-classification.txt
+include requirements-yolo26.txt
+include third_party/yolo26_source/pyproject.toml
 recursive-include docs *.md

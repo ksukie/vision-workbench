@@ -7,7 +7,7 @@
 ## 桌面与可访问性
 
 - Windows、Ubuntu 和 macOS 各启动一次 `vision-workbench`，逐页切换且无崩溃。
-- 仅使用键盘完成导航：`Alt+1` 至 `Alt+7`、Tab/Shift+Tab、Space/Enter、`Ctrl+O`、`Ctrl+S`、`Ctrl+Return`。
+- 仅使用键盘完成导航：`Alt+1` 至 `Alt+8`、Tab/Shift+Tab、Space/Enter、`Ctrl+O`、`Ctrl+S`、`Ctrl+Return`。
 - 检查所有焦点位置可见，标签与输入控件关联，窗口最小化、最大化、关闭按钮可被键盘访问。
 - Windows Narrator、macOS VoiceOver 或 Linux Orca 至少选择一种，读取主导航、训练参数和按钮名称。
 - 在 100%、125%、150%、200% 缩放下检查 1040×680 最小窗口和常用宽屏尺寸，无文本遮挡或关键按钮不可达。
@@ -31,10 +31,21 @@
 - 枚举、打开、关闭摄像头，测试基础相机页和 YOLO 实时检测之间的独占切换。
 - 保存检测、分割、截图和全景结果，确认文件可重新打开且异常退出后可由清理脚本识别残留进程。
 
+## 版本与更新
+
+- 分别确认 editable 源码、wheel 安装和 Windows 基础 EXE 展示的是实际运行代码所绑定的版本。editable 模式下应故意保留一次旧的 `pip show` 元数据，确认它不会覆盖当前源码身份；刷新 editable 注册后，两者必须一致。
+- 在联网、离线、限流和连接中断条件下检查更新；查询失败绝不能显示为“已是最新版本”。
+- 缺少兼容资产或 SHA-256 时，确认一键更新保持不可用。
+- Python wheel 的运行依赖契约指纹缺失或变化时，确认一键更新保持不可用并引导手动安装；自包含 EXE 仍可按 EXE 流程更新。
+- 完成一次有效更新全流程：下载、大小与 SHA-256 校验、退出 Qt、进程外安装、重启，并在版本页面看到新版本。
+- 篡改暂存资产或让 wheel 内部元数据与文件名不一致，确认安装不会开始；在 Windows 上测试跨盘缓存更新、模拟 EXE 自检或替换失败并确认旧程序仍可使用。
+- 将最终 wheel 安装到干净环境并执行 `python -m vision_workbench.self_test --expected-version <version> --expected-mode wheel --qt`；公开 Windows EXE 前执行 `--vision-workbench-self-test --expected-version <version> --qt`。
+
 ## 自动化基线
 
 ```bash
 python -m compileall -q src tests scripts
+python scripts/check_version_contract.py
 python -m pytest -q
 python scripts/check_markdown_links.py
 ```

@@ -67,7 +67,7 @@ pip install -e .
 vision-workbench
 ```
 
-The first launch opens the unified Qt desktop shell. The left navigation provides direct access to CV Basics, Panorama Reconstruction, Camera Diagnostics, YOLO Detection, YOLO Segmentation, YOLO Training, and Image Classification.
+The first launch opens the unified Qt desktop shell. The left navigation provides direct access to CV Basics, Panorama Reconstruction, Camera Diagnostics, YOLO Detection, YOLO Segmentation, YOLO Training, Image Classification, and Version Information. The version page reads the identity of the code that is actually running and can check official stable GitHub Releases without blocking startup.
 
 For a first training run, use **Create Sample Dataset**, then **Check Training Environment** and **Apply Recommended Batch** on either training page. Samples are workflow fixtures, not benchmark datasets. Training shows epoch metrics and can be stopped through its isolated worker process.
 
@@ -117,11 +117,21 @@ The Git repository is the authoritative complete project source. It contains fir
 Official packages should be published through [GitHub Releases](https://github.com/ksukie/vision-workbench/releases). A packaged base application can be installed from the wheel file:
 
 ```bash
-pip install vision_workbench-0.4.0-py3-none-any.whl
+pip install vision_workbench-1.0.0-py3-none-any.whl
 vision-workbench
 ```
 
 The wheel is a lightweight Python package containing the first-party packages, required package resources, and entry points. It is not a complete copy of the Git repository or a complete offline runtime: tests, development scripts, the full vendored source tree, large model weights, and optional deep-learning dependencies may be excluded. Use the matching Git tag or source archive when complete project source is required.
+
+The official `Vision-Workbench-win-x64.exe` is the self-contained Windows base application. It includes the Qt shell, CV Basics, Panorama Reconstruction, Camera Diagnostics, and Version Information without requiring a Python environment. Heavy classification and YOLO workflows are intentionally excluded; their navigation pages direct users to the matching full-source setup.
+
+### Version Identity And Updates
+
+The **Version Information** page is the authoritative user-facing identity for the code that is running. It shows the runtime version, update date, and installation mode (editable source, Python wheel, or Windows single-file EXE). It makes no network request during application startup; **Check for Updates** explicitly queries the official stable GitHub Release. One-click installation is offered only for an exact-version official asset with an allowed HTTPS URL, bounded size, and full SHA-256 digest. Python updates additionally require the current and target runtime dependency contracts to match; otherwise the page keeps one-click installation disabled and opens the manual Release page instead.
+
+For a wheel or editable source launch, a confirmed one-click update installs the verified wheel with `--no-deps` after Qt exits and then checks the installed metadata and runtime version before restarting. Updating from editable mode changes only that environment's package registration and does not modify, reset, or delete the source checkout. The official Windows asset uses the stable name `Vision-Workbench-win-x64.exe`; its bundled identity and manifest determine the version, so an in-place update never leaves an obsolete version in the filename. The new executable is copied beside the current file, self-tested before replacement, and the previous EXE is retained as a backup. Update failures are recorded under the per-version update cache, normally `%LOCALAPPDATA%\VisionWorkbench\updates\<version>\update.log` on Windows.
+
+For an editable install, `pip list` and `pip show` metadata is generated at installation time and can remain on an older version after the checkout and `pyproject.toml` change; `vision-workbench.exe` still loads the live checkout. From 1.0.0 onward, the in-app version page resolves the identity of the code actually running. Re-run `python -m pip install --no-deps --editable .` only when the pip metadata also needs to be refreshed; use the matching wheel for a formal installation.
 
 See the [Release Policy](./docs/legal/release_policy.md) for the official boundaries between source archives, Python sdists, wheels, and model Release Assets.
 

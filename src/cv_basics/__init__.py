@@ -1,5 +1,7 @@
 """Vision Workbench package."""
 
+from vision_workbench.versioning import current_version_info
+
 from .api import (
     apply_blur,
     apply_effect,
@@ -72,4 +74,4 @@ __all__ = [
     "to_grayscale",
 ]
 
-__version__ = "0.1.0"
+__version__ = current_version_info().version

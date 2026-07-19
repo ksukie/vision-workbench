@@ -348,7 +348,13 @@ class Yolo26DetectionWindow:
         try:
             model = self.service.download_official_model(name)
         except Exception as exc:
-            self.root.after(0, lambda: messagebox.showerror("Download failed", with_help(exc, MODELS_AND_WEIGHTS)))
+            self.root.after(
+                0,
+                lambda caught=exc: messagebox.showerror(
+                    "Download failed",
+                    with_help(caught, MODELS_AND_WEIGHTS),
+                ),
+            )
             self.root.after(0, lambda: self.status_var.set("Model download failed."))
             return
         self.root.after(0, lambda: self._on_model_downloaded(model))

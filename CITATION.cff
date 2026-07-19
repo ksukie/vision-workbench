@@ -5,9 +5,9 @@ type: software
 authors:
   - name: Shuqi Ke
 repository-code: "https://github.com/ksukie/vision-workbench"
-license: AGPL-3.0
-version: 0.4.0
-date-released: 2026-07-17
+license: AGPL-3.0-only
+version: 1.0.0
+date-released: 2026-07-19
 references:
   - type: software
     title: Ultralytics YOLO
