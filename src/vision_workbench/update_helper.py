@@ -277,6 +277,8 @@ def _self_test_executable(executable: Path, expected_version: str, log_path: Pat
         "--expected-version",
         expected_version,
         "--qt",
+        "--report",
+        str(log_path),
     ]
     _append_log(log_path, f"Self-testing {executable.name} before replacement.")
     try:

@@ -5,6 +5,7 @@ import os
 import sys
 import zipfile
 from pathlib import Path
+from types import SimpleNamespace
 from urllib.error import HTTPError
 
 import pytest
@@ -769,6 +770,23 @@ def test_update_helper_keeps_existing_backup_when_new_exe_self_test_fails(tmp_pa
     assert backup.read_bytes() == b"previous"
 
 
+def test_update_helper_exe_self_test_reports_to_the_update_log(tmp_path, monkeypatch):
+    executable = tmp_path / "Vision-Workbench-win-x64.exe"
+    executable.write_bytes(b"exe")
+    log = tmp_path / "update.log"
+    calls = []
+    monkeypatch.setattr(
+        update_helper.subprocess,
+        "run",
+        lambda command, **kwargs: calls.append((command, kwargs)) or SimpleNamespace(returncode=0),
+    )
+
+    update_helper._self_test_executable(executable, "1.1.0", log)
+
+    command, _kwargs = calls[0]
+    assert command[-2:] == ["--report", str(log)]
+
+
 @pytest.mark.skipif(os.name != "nt", reason="ReplaceFileW is Windows-only")
 def test_update_helper_windows_atomic_replace_preserves_backup(tmp_path):
     current = tmp_path / "Vision-Workbench.exe"
@@ -925,3 +943,22 @@ def test_version_contract_reports_the_expected_dependency_fingerprint(monkeypatc
 
 def test_source_installation_self_test_accepts_stale_pip_metadata():
     assert self_test.installation_errors(expected_version="1.0.0", expected_mode="editable") == []
+
+
+@pytest.mark.parametrize(
+    ("errors", "expected_exit_code", "expected_report"),
+    [([], 0, "self-test OK"), (["failure"], 1, "ERROR: failure")],
+)
+def test_self_test_main_handles_a_windowed_runtime_without_console(
+    tmp_path,
+    monkeypatch,
+    errors,
+    expected_exit_code,
+    expected_report,
+):
+    report = tmp_path / "self-test.log"
+    monkeypatch.setattr(self_test, "installation_errors", lambda **_kwargs: errors)
+    monkeypatch.setattr(self_test, "sys", SimpleNamespace(stdout=None, stderr=None))
+
+    assert self_test.main(["--report", str(report)]) == expected_exit_code
+    assert expected_report in report.read_text(encoding="utf-8")

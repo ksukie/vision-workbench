@@ -4,9 +4,36 @@ from __future__ import annotations
 
 import argparse
 import os
+import sys
 from importlib import metadata
+from pathlib import Path
+from typing import TextIO
 
 from .versioning import DISTRIBUTION_NAME, current_version_info, stable_version_tuple
+
+
+def _emit(message: str, stream: TextIO | None) -> None:
+    """Write a self-test message when the runtime has a console stream."""
+
+    if stream is None:
+        return
+    try:
+        print(message, file=stream)
+    except (AttributeError, OSError, ValueError):
+        pass
+
+
+def _append_report(path: Path | None, messages: list[str]) -> None:
+    """Persist diagnostics for a windowed executable that has no console."""
+
+    if path is None:
+        return
+    try:
+        with path.open("a", encoding="utf-8") as stream:
+            for message in messages:
+                stream.write(f"{message}\n")
+    except OSError:
+        pass
 
 
 def installation_errors(
@@ -59,6 +86,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--expected-version")
     parser.add_argument("--expected-mode", choices=("editable", "wheel", "single-file"))
     parser.add_argument("--qt", action="store_true", help="also construct and close the main Qt window")
+    parser.add_argument("--report", type=Path, help="append self-test diagnostics to this file")
     args = parser.parse_args(argv)
 
     try:
@@ -70,11 +98,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         errors = [f"{type(exc).__name__}: {exc}"]
     if errors:
-        for error in errors:
-            print(f"ERROR: {error}")
+        messages = [f"ERROR: {error}" for error in errors]
+        for message in messages:
+            _emit(message, sys.stderr)
+        _append_report(args.report, messages)
         return 1
     info = current_version_info()
-    print(f"Vision Workbench {info.version} ({info.install_mode}) self-test OK")
+    message = f"Vision Workbench {info.version} ({info.install_mode}) self-test OK"
+    _emit(message, sys.stdout)
+    _append_report(args.report, [message])
     return 0
 
 

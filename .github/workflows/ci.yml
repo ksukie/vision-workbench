@@ -23,14 +23,21 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
+      - name: Install Linux Qt runtime
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends --yes libegl1
       - name: Install locked base dependencies
         run: python -m pip install --require-hashes --requirement requirements-base.lock
       - name: Install pytest
         run: python -m pip install pytest==9.0.3
       - name: Install project
         run: python -m pip install --no-deps --editable .
+      - name: Smoke-test Qt shell
+        run: python -m vision_workbench.self_test --expected-mode editable --qt
       - name: Compile sources
-        run: python -m compileall -q src tests scripts
+        run: python -W error -m compileall -q src tests scripts
       - name: Check version contract
         run: python scripts/check_version_contract.py
       - name: Run tests

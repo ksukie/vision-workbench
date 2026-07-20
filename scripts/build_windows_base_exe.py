@@ -10,8 +10,10 @@ import PyInstaller.__main__
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-DEEP_LEARNING_MODULES = (
+EXCLUDED_MODULES = (
     "image_classification",
+    "pkg_resources",
+    "setuptools",
     "torch",
     "torchvision",
     "ultralytics",
@@ -68,7 +70,7 @@ def main() -> None:
         "--collect-data",
         "panorama_reconstruction",
     ]
-    for module in DEEP_LEARNING_MODULES:
+    for module in EXCLUDED_MODULES:
         arguments.extend(("--exclude-module", module))
     add_conda_runtime_dlls(arguments)
     arguments.append(str(PROJECT_ROOT / "scripts" / "windows_base_exe.py"))

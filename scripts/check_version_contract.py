@@ -146,15 +146,23 @@ def contract_errors(*, release: bool = False) -> list[str]:
     if "datasets/" not in {line.strip() for line in gitignore}:
         errors.append(".gitignore must protect the local datasets/ directory")
 
+    exe_build_script = (PROJECT_ROOT / "scripts" / "build_windows_base_exe.py").read_text(encoding="utf-8")
+    for build_only_module in ('"pkg_resources"', '"setuptools"'):
+        if build_only_module not in exe_build_script:
+            errors.append(f"Windows EXE must exclude build-only module {build_only_module}")
+
     release_workflow = PROJECT_ROOT / ".github" / "workflows" / "release.yml"
     if not release_workflow.is_file():
         errors.append("the tagged release-draft workflow is missing")
     else:
         workflow_text = release_workflow.read_text(encoding="utf-8")
         required_steps = (
+            "python -W error -m compileall",
             "check_version_contract.py --release",
             "generate_update_manifest.py",
+            "libegl1",
             "--vision-workbench-self-test",
+            "--report",
             "Vision-Workbench-win-x64.exe",
             "--draft",
         )
@@ -165,6 +173,19 @@ def contract_errors(*, release: bool = False) -> list[str]:
         explicit_tag_ref_count = workflow_text.count("ref: ${{ github.ref }}")
         if checkout_count == 0 or explicit_tag_ref_count != checkout_count:
             errors.append("every release checkout must explicitly preserve the triggering tag ref")
+
+    ci_workflow = PROJECT_ROOT / ".github" / "workflows" / "ci.yml"
+    if not ci_workflow.is_file():
+        errors.append("the cross-platform CI workflow is missing")
+    else:
+        ci_text = ci_workflow.read_text(encoding="utf-8")
+        for required_step in (
+            "libegl1",
+            "vision_workbench.self_test --expected-mode editable --qt",
+            "python -W error -m compileall",
+        ):
+            if required_step not in ci_text:
+                errors.append(f"CI workflow is missing required Qt gate: {required_step}")
 
     if release:
         expected_tag = f"v{version}"

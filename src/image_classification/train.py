@@ -2,7 +2,7 @@
 
 Change the variables below, then run:
 
-python src\image_classification\train.py
+python src/image_classification/train.py
 """
 
 from __future__ import annotations
