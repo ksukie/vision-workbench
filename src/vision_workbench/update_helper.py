@@ -25,6 +25,12 @@ class UpdateApplyError(RuntimeError):
     """Raised when a prepared update cannot be applied safely."""
 
 
+def _is_windows() -> bool:
+    """Return whether the update helper is running on Windows."""
+
+    return os.name == "nt"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Apply a prepared Vision Workbench update.")
     parser.add_argument("--plan", required=True)
@@ -223,7 +229,7 @@ def _restore_editable(plan: dict[str, object], python: Path, log_path: Path) -> 
 
 
 def _apply_single_file(plan: dict[str, object], log_path: Path) -> None:
-    if os.name != "nt" or plan.get("asset_kind") != "windows-x64-exe":
+    if not _is_windows() or plan.get("asset_kind") != "windows-x64-exe":
         raise UpdateApplyError("单文件更新仅支持 Windows EXE。")
     current = Path(_required_text(plan, "application_executable")).resolve()
     downloaded = Path(_required_text(plan, "asset_path")).resolve()
@@ -320,7 +326,7 @@ def _wait_for_process_exit(pid: int) -> None:
 def _process_exists(pid: int) -> bool:
     if pid <= 0:
         return False
-    if os.name == "nt":
+    if _is_windows():
         import ctypes
 
         process = ctypes.windll.kernel32.OpenProcess(0x00100000, False, pid)
@@ -384,7 +390,7 @@ def _append_log(path: Path, message: str) -> None:
 
 def _report_failure(exc: Exception, log_path: Path) -> None:
     message = f"Vision Workbench 更新失败。\n\n{exc}\n\n详细日志：{log_path}"
-    if os.name == "nt":
+    if _is_windows():
         try:
             import ctypes
 

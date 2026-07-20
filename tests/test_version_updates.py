@@ -722,7 +722,7 @@ def test_update_helper_stages_single_file_beside_target_before_atomic_replace(tm
         target.replace(backup)
         replacement.replace(target)
 
-    monkeypatch.setattr(update_helper.os, "name", "nt")
+    monkeypatch.setattr(update_helper, "_is_windows", lambda: True)
     monkeypatch.setattr(update_helper, "_self_test_executable", lambda *_args: None)
     monkeypatch.setattr(update_helper, "_replace_file_with_backup", replace_with_backup)
     monkeypatch.setattr(update_helper.subprocess, "Popen", lambda command, **_kwargs: restarts.append(command))
@@ -753,7 +753,7 @@ def test_update_helper_keeps_existing_backup_when_new_exe_self_test_fails(tmp_pa
         "application_executable": str(current),
         "target_version": "1.1.0",
     }
-    monkeypatch.setattr(update_helper.os, "name", "nt")
+    monkeypatch.setattr(update_helper, "_is_windows", lambda: True)
     monkeypatch.setattr(
         update_helper,
         "_self_test_executable",
