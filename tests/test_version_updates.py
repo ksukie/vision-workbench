@@ -558,13 +558,15 @@ def test_launch_update_helper_uses_an_external_python_process(tmp_path, monkeypa
     plan = tmp_path / "update-plan.json"
     plan.write_text("{}", encoding="utf-8")
     prepared = PreparedUpdate("1.1.0", tmp_path / "release.whl", plan)
+    console_python = tmp_path / "console-python"
     calls = []
+    monkeypatch.setattr(update_installer, "_console_python_executable", lambda: console_python)
     monkeypatch.setattr(update_installer.subprocess, "Popen", lambda command, **kwargs: calls.append((command, kwargs)))
 
     launch_update_helper(prepared)
 
     command, kwargs = calls[0]
-    assert command[:3] == [update_installer.sys.executable, "-m", "vision_workbench.update_helper"]
+    assert command[:3] == [str(console_python), "-m", "vision_workbench.update_helper"]
     assert "--parent-pid" in command
     assert kwargs["cwd"] == str(tmp_path)
 
