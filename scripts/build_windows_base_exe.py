@@ -31,6 +31,11 @@ CONDA_RUNTIME_DLLS = (
     "tcl86t.dll",
     "tk86t.dll",
 )
+PACKAGE_DATA = (
+    ("vision_workbench/release_info.json", "vision_workbench"),
+    ("vision_workbench/assets", "vision_workbench/assets"),
+    ("panorama_reconstruction/assets", "panorama_reconstruction/assets"),
+)
 
 
 def add_conda_runtime_dlls(arguments: list[str]) -> None:
@@ -41,6 +46,17 @@ def add_conda_runtime_dlls(arguments: list[str]) -> None:
         path = runtime_dir / name
         if path.is_file():
             arguments.extend(("--add-binary", f"{path}{os.pathsep}."))
+
+
+def add_package_data(arguments: list[str]) -> None:
+    """Bundle required source data without relying on an installed package."""
+
+    source_root = PROJECT_ROOT / "src"
+    for relative_source, destination in PACKAGE_DATA:
+        source = source_root / relative_source
+        if not source.exists():
+            raise FileNotFoundError(f"Required EXE package data is missing: {source}")
+        arguments.extend(("--add-data", f"{source}{os.pathsep}{destination}"))
 
 
 def main() -> None:
@@ -65,13 +81,10 @@ def main() -> None:
         str(work_path),
         "--specpath",
         str(work_path),
-        "--collect-data",
-        "vision_workbench",
-        "--collect-data",
-        "panorama_reconstruction",
     ]
     for module in EXCLUDED_MODULES:
         arguments.extend(("--exclude-module", module))
+    add_package_data(arguments)
     add_conda_runtime_dlls(arguments)
     arguments.append(str(PROJECT_ROOT / "scripts" / "windows_base_exe.py"))
 

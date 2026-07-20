@@ -150,6 +150,16 @@ def contract_errors(*, release: bool = False) -> list[str]:
     for build_only_module in ('"pkg_resources"', '"setuptools"'):
         if build_only_module not in exe_build_script:
             errors.append(f"Windows EXE must exclude build-only module {build_only_module}")
+    if '"--collect-data"' in exe_build_script:
+        errors.append("Windows EXE package data must not depend on an installed project package")
+    for required_data in (
+        '"vision_workbench/release_info.json"',
+        '"vision_workbench/assets"',
+        '"panorama_reconstruction/assets"',
+        '"--add-data"',
+    ):
+        if required_data not in exe_build_script:
+            errors.append(f"Windows EXE is missing explicit package data: {required_data}")
 
     release_workflow = PROJECT_ROOT / ".github" / "workflows" / "release.yml"
     if not release_workflow.is_file():

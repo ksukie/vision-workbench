@@ -36,6 +36,29 @@ def _append_report(path: Path | None, messages: list[str]) -> None:
         pass
 
 
+def _bundled_asset_errors() -> list[str]:
+    """Return missing base-application data files required after packaging."""
+
+    errors = []
+    try:
+        from .sample_data import sample_image_path
+
+        sample_image_path()
+    except (ImportError, OSError) as exc:
+        errors.append(f"bundled sample image is unavailable: {type(exc).__name__}: {exc}")
+
+    try:
+        from panorama_reconstruction.api import get_sample_image_paths
+
+        pair = get_sample_image_paths()
+        for name, path in (("left", pair.left), ("right", pair.right)):
+            if not path.is_file():
+                errors.append(f"bundled panorama {name} image is missing: {path}")
+    except (ImportError, OSError) as exc:
+        errors.append(f"bundled panorama images are unavailable: {type(exc).__name__}: {exc}")
+    return errors
+
+
 def installation_errors(
     *,
     expected_version: str | None = None,
@@ -57,6 +80,8 @@ def installation_errors(
         installed_version = metadata.version(DISTRIBUTION_NAME)
         if installed_version != info.version:
             errors.append(f"installed metadata {installed_version} != runtime {info.version}")
+
+    errors.extend(_bundled_asset_errors())
 
     if check_qt:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")

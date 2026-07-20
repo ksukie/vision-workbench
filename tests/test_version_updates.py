@@ -11,8 +11,9 @@ from urllib.error import HTTPError
 import pytest
 
 import vision_workbench
+from panorama_reconstruction import api as panorama_api
 from scripts import check_version_contract, generate_update_manifest
-from vision_workbench import self_test, update_helper, update_installer, versioning
+from vision_workbench import sample_data, self_test, update_helper, update_installer, versioning
 from vision_workbench.update_installer import (
     PreparedUpdate,
     UpdatePreparationError,
@@ -943,6 +944,24 @@ def test_version_contract_reports_the_expected_dependency_fingerprint(monkeypatc
 
 def test_source_installation_self_test_accepts_stale_pip_metadata():
     assert self_test.installation_errors(expected_version="1.0.0", expected_mode="editable") == []
+
+
+def test_self_test_reports_missing_bundled_base_assets(tmp_path, monkeypatch):
+    def missing_sample_image():
+        raise FileNotFoundError("sample image missing")
+
+    monkeypatch.setattr(sample_data, "sample_image_path", missing_sample_image)
+    monkeypatch.setattr(
+        panorama_api,
+        "get_sample_image_paths",
+        lambda: SimpleNamespace(left=tmp_path / "left.png", right=tmp_path / "right.png"),
+    )
+
+    errors = self_test._bundled_asset_errors()
+
+    assert any("bundled sample image is unavailable" in error for error in errors)
+    assert any("bundled panorama left image is missing" in error for error in errors)
+    assert any("bundled panorama right image is missing" in error for error in errors)
 
 
 @pytest.mark.parametrize(

@@ -22,6 +22,7 @@ All notable changes to Vision Workbench are documented here.
 - Runtime identity now fails closed on mismatched bundled metadata, frozen builds ignore unrelated editable registrations, and local `datasets/` content is protected from accidental commits.
 - Version-page actions now use stable responsive breakpoints with content-width safeguards, so Linux, macOS, and Windows reflow consistently without compressing button labels.
 - Cross-platform and release CI now provisions the required Linux Qt runtime and treats unavailable Qt UI tests as a failure instead of silently skipping them.
+- The Windows EXE builder now takes required release metadata and sample assets directly from the tagged source tree, eliminating dependence on an unrelated local editable installation.
 
 ## [0.4.0] - 2026-07-17
 
@@ -147,6 +148,7 @@ Vision Workbench 的重要版本变动记录如下。
 - 运行身份在内置元数据不一致时会直接失败；冻结构建忽略无关 editable 注册，并防止本地 `datasets/` 内容被误提交。
 - 版本页面操作按钮采用稳定的响应式断点并保留内容宽度保护，使 Linux、macOS 与 Windows 在不压缩按钮文字的前提下保持一致换行。
 - 跨平台与发布 CI 会安装 Linux Qt 所需运行库；Qt UI 测试不可用时直接失败，不再静默跳过。
+- Windows EXE 构建器直接从带标签的源码树加入发布元数据和示例资源，不再依赖构建机器中无关的本地 editable 安装。
 
 ## [0.4.0] - 2026-07-17
 
