@@ -5,6 +5,7 @@ import subprocess
 import sys
 import threading
 import time
+from importlib.util import find_spec
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +14,15 @@ from PIL import Image
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
-pytest.importorskip("PySide6")
+
+def _skip_or_fail_for_missing_qt(reason):
+    if os.environ.get("VISION_WORKBENCH_REQUIRE_QT_TESTS") == "1":
+        raise RuntimeError(reason)
+    pytest.skip(reason, allow_module_level=True)
+
+
+if find_spec("PySide6") is None:
+    _skip_or_fail_for_missing_qt("PySide6 is not installed in this environment.")
 
 qt_probe = subprocess.run(
     [sys.executable, "-c", "from PySide6.QtWidgets import QApplication"],
@@ -24,7 +33,10 @@ qt_probe = subprocess.run(
     check=False,
 )
 if qt_probe.returncode != 0:
-    pytest.skip("PySide6 QtWidgets is not available in this environment.", allow_module_level=True)
+    details = qt_probe.stderr.strip() or "no diagnostic output"
+    _skip_or_fail_for_missing_qt(
+        f"PySide6 QtWidgets is not available in this environment: {details}"
+    )
 
 from PySide6.QtCore import QEventLoop, QPoint, QPointF, QTimer, Qt
 from PySide6.QtGui import QWheelEvent

@@ -44,10 +44,10 @@
 ## 自动化基线
 
 ```bash
-python -m compileall -q src tests scripts
+python -W error -m compileall -q src tests scripts
 python scripts/check_version_contract.py
 python -m pytest -q
 python scripts/check_markdown_links.py
 ```
 
-CI 应在 Windows、Ubuntu、macOS 与 Python 3.10/3.12 上通过。安全工作流应完成 `pip-audit` 并生成 CycloneDX SBOM；发布前人工确认审计结果，不应仅依赖工作流绿色状态。
+CI 应在 Windows、Ubuntu、macOS 与 Python 3.10/3.12 上通过。CI 和发布门禁中的 Qt 探测或 UI 测试不得因运行库缺失而静默跳过；无法构造 Qt 主界面必须直接判定失败。安全工作流应完成 `pip-audit` 并生成 CycloneDX SBOM；发布前人工确认审计结果，不应仅依赖工作流绿色状态。

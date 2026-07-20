@@ -28,6 +28,10 @@ from ..task_runner import QtTaskRunner
 from ..widgets import SectionCard, make_button
 
 
+_ACTION_TWO_COLUMN_MIN_WIDTH = 280
+_ACTION_FOUR_COLUMN_MIN_WIDTH = 500
+
+
 class VersionPage(QWidget):
     """Display the running release identity and manage explicit updates."""
 
@@ -159,9 +163,6 @@ class VersionPage(QWidget):
         self.update_button.clicked.connect(self.install_update)
         self.repository_button.clicked.connect(self.open_repository)
         self.release_button.clicked.connect(self.open_latest_release)
-        QWidget.setTabOrder(self.check_button, self.update_button)
-        QWidget.setTabOrder(self.update_button, self.repository_button)
-        QWidget.setTabOrder(self.repository_button, self.release_button)
         update_card.content_layout.addWidget(self.actions_widget)
         update_card.content_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         content_layout.addWidget(update_card)
@@ -359,6 +360,8 @@ class VersionPage(QWidget):
             self.actions_layout.addWidget(button, index // columns, index % columns)
         for index in range(columns):
             self.actions_layout.setColumnStretch(index, 1)
+        for first, second in zip(buttons, buttons[1:]):
+            QWidget.setTabOrder(first, second)
 
     def _preferred_action_columns(self) -> int:
         """Choose 1, 2, or 4 columns without compressing button labels."""
@@ -375,9 +378,9 @@ class VersionPage(QWidget):
         available = max(0, self.width() - 24 * 2 - 8 * 2 - 18 * 2 - scrollbar)
         four_columns = sum(widths) + spacing * 3
         two_columns = max(widths[0], widths[2]) + max(widths[1], widths[3]) + spacing
-        if four_columns <= available:
+        if max(_ACTION_FOUR_COLUMN_MIN_WIDTH, four_columns) <= available:
             return 4
-        if two_columns <= available:
+        if max(_ACTION_TWO_COLUMN_MIN_WIDTH, two_columns) <= available:
             return 2
         return 1
 

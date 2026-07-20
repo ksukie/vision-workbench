@@ -161,6 +161,7 @@ def contract_errors(*, release: bool = False) -> list[str]:
             "check_version_contract.py --release",
             "generate_update_manifest.py",
             "libegl1",
+            'VISION_WORKBENCH_REQUIRE_QT_TESTS: "1"',
             "--vision-workbench-self-test",
             "--report",
             "Vision-Workbench-win-x64.exe",
@@ -181,6 +182,7 @@ def contract_errors(*, release: bool = False) -> list[str]:
         ci_text = ci_workflow.read_text(encoding="utf-8")
         for required_step in (
             "libegl1",
+            'VISION_WORKBENCH_REQUIRE_QT_TESTS: "1"',
             "vision_workbench.self_test --expected-mode editable --qt",
             "python -W error -m compileall",
         ):

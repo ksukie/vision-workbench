@@ -10,6 +10,7 @@ permissions:
 
 env:
   PYTHONNOUSERSITE: "1"
+  VISION_WORKBENCH_REQUIRE_QT_TESTS: "1"
 
 jobs:
   python-distributions:

@@ -17,6 +17,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       PYTHONNOUSERSITE: "1"
+      VISION_WORKBENCH_REQUIRE_QT_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

@@ -44,10 +44,10 @@ Automated tests cover core logic, but cameras, GPU drivers, font rendering, and 
 ## Automated Baseline
 
 ```bash
-python -m compileall -q src tests scripts
+python -W error -m compileall -q src tests scripts
 python scripts/check_version_contract.py
 python -m pytest -q
 python scripts/check_markdown_links.py
 ```
 
-CI should pass on Windows, Ubuntu, and macOS with Python 3.10 and 3.12. The security workflow should complete `pip-audit` and generate a CycloneDX SBOM. Review the audit results manually before release rather than relying only on a successful workflow status.
+CI should pass on Windows, Ubuntu, and macOS with Python 3.10 and 3.12. Qt probing and UI tests in CI and release gates must not be silently skipped because a runtime library is missing; failure to construct the Qt shell must fail the job. The security workflow should complete `pip-audit` and generate a CycloneDX SBOM. Review the audit results manually before release rather than relying only on a successful workflow status.
