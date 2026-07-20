@@ -161,6 +161,10 @@ def contract_errors(*, release: bool = False) -> list[str]:
         for required_step in required_steps:
             if required_step not in workflow_text:
                 errors.append(f"release workflow is missing required gate: {required_step}")
+        checkout_count = workflow_text.count("uses: actions/checkout@v4")
+        explicit_tag_ref_count = workflow_text.count("ref: ${{ github.ref }}")
+        if checkout_count == 0 or explicit_tag_ref_count != checkout_count:
+            errors.append("every release checkout must explicitly preserve the triggering tag ref")
 
     if release:
         expected_tag = f"v{version}"
