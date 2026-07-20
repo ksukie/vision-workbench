@@ -2,6 +2,18 @@
 
 All notable changes to Vision Workbench are documented here.
 
+## [1.0.1] - 2026-07-20
+
+### Changed
+
+- Updated the canonical public repository URL to `ksukie/Vision-WorkBench` while retaining the lowercase repository alias in the trusted update identity required by existing 1.0.0 clients.
+- Made the Chinese README the default GitHub repository landing page and moved the English README to `README.en.md`, with corrected bilingual navigation throughout the documentation.
+
+### Fixed
+
+- Synchronized the source, bundled release identity, citation metadata, package examples, and tests for the `v1.0.1` release so the tag-version gate cannot build a mislabeled artifact.
+- Added a CI troubleshooting and release runbook covering every failure encountered while establishing the 1.0 release pipeline.
+
 ## [1.0.0] - 2026-07-19
 
 ### Added
@@ -127,6 +139,18 @@ All notable changes to Vision Workbench are documented here.
 # 更新日志
 
 Vision Workbench 的重要版本变动记录如下。
+
+## [1.0.1] - 2026-07-20
+
+### 变更
+
+- 将对外展示的仓库规范地址更新为 `ksukie/Vision-WorkBench`，同时在受信任更新身份中继续保留现有 1.0.0 客户端所需的小写仓库别名。
+- GitHub 仓库首页默认展示中文 README，英文版迁移至 `README.en.md`，并同步修正全部中英文文档导航。
+
+### 修复
+
+- 为 `v1.0.1` 同步源码版本、内置发布身份、引用信息、安装示例和测试，确保标签版本门禁不会构建错误标记的产物。
+- 新增 CI 故障排查与发布手册，汇总建立 1.0 发布流水线期间实际遇到的全部问题。
 
 ## [1.0.0] - 2026-07-19
 

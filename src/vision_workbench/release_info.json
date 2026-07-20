@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "version": "1.0.0",
-  "updated_at": "2026-07-19",
+  "version": "1.0.1",
+  "updated_at": "2026-07-20",
   "repository_url": "https://github.com/ksukie/vision-workbench",
   "dependency_contract_sha256": "a8ad51cd28f03ca76b4f2ced660f8c501f986d1205849341c6c957d680bcb727"
 }

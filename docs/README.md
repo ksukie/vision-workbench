@@ -16,6 +16,7 @@ This page is the central index for the official Vision Workbench documentation. 
 | 了解正式 GUI 与旧版窗口的边界 | [旧版界面维护策略](./旧版界面维护策略.md) |
 | 准备源码、wheel、模型或 Release Assets | [发布策略](./legal/发布策略.md) |
 | 执行发布前人工检查 | [QA 检查清单](./qa-checklist.md) |
+| 排查 GitHub Actions、跨平台测试或标签发布失败 | [CI 故障记录与发布排查手册](./ci-troubleshooting.md) |
 
 ## English Documentation
 
@@ -29,6 +30,7 @@ This page is the central index for the official Vision Workbench documentation. 
 | Understand the supported GUI and legacy window boundary | [Legacy GUI policy](./legacy-gui-policy.md) |
 | Prepare source, wheels, models, or Release Assets | [Release policy](./legal/release_policy.md) |
 | Perform manual checks before release | [QA checklist](./qa-checklist.en.md) |
+| Diagnose GitHub Actions, cross-platform tests, or tagged releases | [CI troubleshooting history and release runbook (Chinese)](./ci-troubleshooting.md) |
 
 ## 文档范围 / Documentation Scope
 

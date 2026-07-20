@@ -618,7 +618,7 @@ def test_version_page_displays_available_verified_update_and_reflows_actions(qt_
     try:
         page._on_check_success(result)
 
-        assert page.current_version_label.text() == "v1.0.0"
+        assert page.current_version_label.text() == "v1.0.1"
         assert "editable" in page.current_mode_label.text()
         assert page.latest_version_label.text() == "v1.1.0"
         assert not page.update_button.isHidden()

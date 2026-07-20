@@ -219,7 +219,10 @@ def contract_errors(*, release: bool = False) -> list[str]:
         expected_tag = f"v{version}"
         tag = _git("describe", "--tags", "--exact-match", "HEAD")
         if tag != expected_tag:
-            errors.append(f"HEAD tag {tag or '<none>'} != {expected_tag}")
+            errors.append(
+                f"HEAD tag {tag or '<none>'} != {expected_tag} from pyproject.toml; "
+                "commit the synchronized release version before creating the annotated tag"
+            )
         elif _git("cat-file", "-t", expected_tag) != "tag":
             errors.append(f"release tag {expected_tag} must be an annotated tag object")
         if _git("status", "--porcelain"):
