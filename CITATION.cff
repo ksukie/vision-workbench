@@ -6,7 +6,7 @@ authors:
   - name: Shuqi Ke
 repository-code: "https://github.com/ksukie/Vision-WorkBench"
 license: AGPL-3.0-only
-version: 1.0.1
+version: 1.0.2
 date-released: 2026-07-20
 references:
   - type: software

@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..branding import application_icon
 from ..versioning import current_version_info
 from .build_mode import is_base_exe
 from .pages.camera_page import CameraPage
@@ -69,7 +70,15 @@ class WindowTitleBar(QFrame):
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 4, 10, 4)
-        layout.setSpacing(5)
+        layout.setSpacing(7)
+
+        self.icon_label = QLabel()
+        self.icon_label.setObjectName("WindowIcon")
+        self.icon_label.setFixedSize(20, 20)
+        self.icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.icon_label.setAccessibleName("Vision Workbench 应用图标")
+        self.icon_label.setPixmap(window.windowIcon().pixmap(18, 18))
+        layout.addWidget(self.icon_label)
 
         self.title_label = QLabel("Vision Workbench")
         self.title_label.setObjectName("WindowTitle")
@@ -170,6 +179,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.setWindowIcon(application_icon())
         self.setWindowTitle("Vision Workbench")
         self.resize(1240, 820)
         self.setMinimumSize(1040, 680)

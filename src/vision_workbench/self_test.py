@@ -41,6 +41,13 @@ def _bundled_asset_errors() -> list[str]:
 
     errors = []
     try:
+        from .branding import application_icon_path
+
+        application_icon_path()
+    except (ImportError, OSError) as exc:
+        errors.append(f"bundled application icon is unavailable: {type(exc).__name__}: {exc}")
+
+    try:
         from .sample_data import sample_image_path
 
         sample_image_path()

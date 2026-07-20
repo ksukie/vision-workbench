@@ -2,6 +2,17 @@
 
 All notable changes to Vision Workbench are documented here.
 
+## [1.0.2] - 2026-07-20
+
+### Added
+
+- Added a dedicated Vision Workbench application icon derived from the README visual identity, with a transparent 512 px PNG and a Windows ICO containing sizes from 16 px through 256 px.
+
+### Changed
+
+- Applied the shared icon to the Qt application, native window/taskbar identity, and the custom title bar beside the project name.
+- Updated the Windows EXE build and release contract to embed and validate the same project icon in source, wheel, and frozen builds.
+
 ## [1.0.1] - 2026-07-20
 
 ### Changed
@@ -139,6 +150,17 @@ All notable changes to Vision Workbench are documented here.
 # 更新日志
 
 Vision Workbench 的重要版本变动记录如下。
+
+## [1.0.2] - 2026-07-20
+
+### 新增
+
+- 新增源自 README 视觉风格的 Vision Workbench 专属应用图标，包括透明的 512 像素 PNG，以及包含 16 至 256 像素尺寸的 Windows ICO。
+
+### 变更
+
+- Qt 应用、原生窗口与任务栏身份，以及项目名称左侧的自定义标题栏统一使用同一图标。
+- Windows EXE 构建与发布契约现在会嵌入并校验项目图标，确保源码、wheel 和冻结 EXE 的品牌资产一致。
 
 ## [1.0.1] - 2026-07-20
 

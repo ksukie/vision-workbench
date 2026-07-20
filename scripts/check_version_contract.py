@@ -74,8 +74,13 @@ def contract_errors(*, release: bool = False) -> list[str]:
             if urls.get(label) != expected_url:
                 errors.append(f"pyproject.toml project.urls.{label} is not canonical")
     package_data = metadata_payload.get("tool", {}).get("setuptools", {}).get("package-data", {})
-    if "release_info.json" not in package_data.get("vision_workbench", []):
-        errors.append("pyproject.toml package data must include vision_workbench/release_info.json")
+    vision_workbench_data = package_data.get("vision_workbench", [])
+    for required_pattern in ("assets/*.png", "assets/*.ico", "release_info.json"):
+        if required_pattern not in vision_workbench_data:
+            errors.append(
+                "pyproject.toml package data must include "
+                f"vision_workbench/{required_pattern}"
+            )
     manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
     required_sdist_declarations = (
         "requirements.txt",
@@ -96,6 +101,13 @@ def contract_errors(*, release: bool = False) -> list[str]:
         errors.append("release_info.json schema_version must be 1")
     if release_info.get("repository_url") != UPDATE_REPOSITORY_URL:
         errors.append("release_info.json repository_url is not the official repository")
+
+    icon_png = PROJECT_ROOT / "src" / "vision_workbench" / "assets" / "vision_workbench_icon.png"
+    icon_ico = PROJECT_ROOT / "src" / "vision_workbench" / "assets" / "vision_workbench_icon.ico"
+    if not icon_png.is_file() or not icon_png.read_bytes().startswith(b"\x89PNG\r\n\x1a\n"):
+        errors.append("the bundled application PNG icon is missing or invalid")
+    if not icon_ico.is_file() or not icon_ico.read_bytes().startswith(b"\x00\x00\x01\x00"):
+        errors.append("the Windows application ICO is missing or invalid")
     dependency_contract = project_dependency_contract(PROJECT_ROOT)
     if release_info.get("dependency_contract_sha256") != dependency_contract:
         errors.append(
@@ -172,6 +184,8 @@ def contract_errors(*, release: bool = False) -> list[str]:
         '"vision_workbench/release_info.json"',
         '"vision_workbench/assets"',
         '"panorama_reconstruction/assets"',
+        '"vision_workbench_icon.ico"',
+        '"--icon"',
         '"--add-data"',
     ):
         if required_data not in exe_build_script:

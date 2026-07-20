@@ -9,11 +9,12 @@ from types import SimpleNamespace
 from urllib.error import HTTPError
 
 import pytest
+from PIL import Image
 
 import vision_workbench
 from panorama_reconstruction import api as panorama_api
 from scripts import check_version_contract, generate_update_manifest
-from vision_workbench import sample_data, self_test, update_helper, update_installer, versioning
+from vision_workbench import branding, sample_data, self_test, update_helper, update_installer, versioning
 from vision_workbench.update_installer import (
     PreparedUpdate,
     UpdatePreparationError,
@@ -137,13 +138,13 @@ def _wheel_bytes(version="1.1.0", dependency_contract=DEPENDENCY_CONTRACT):
 def test_runtime_version_reads_the_current_editable_source():
     info = current_version_info()
 
-    assert info.version == "1.0.1"
+    assert info.version == "1.0.2"
     assert info.install_mode == "editable"
     assert info.source_root is not None
     assert (info.source_root / "pyproject.toml").is_file()
     assert info.repository_url == REPOSITORY_URL
     assert source_archive_url() == (
-        f"{REPOSITORY_URL}/archive/refs/tags/v1.0.1.zip"
+        f"{REPOSITORY_URL}/archive/refs/tags/v1.0.2.zip"
     )
     assert vision_workbench.__version__ == info.version
 
@@ -189,7 +190,7 @@ def test_runtime_version_uses_bundled_identity_for_frozen_exe(monkeypatch):
     monkeypatch.setattr(versioning.sys, "frozen", True, raising=False)
     try:
         info = current_version_info()
-        assert info.version == "1.0.1"
+        assert info.version == "1.0.2"
         assert info.install_mode == "single-file"
     finally:
         current_version_info.cache_clear()
@@ -941,6 +942,19 @@ def test_repository_version_contract_is_consistent():
     assert check_version_contract.contract_errors() == []
 
 
+def test_application_icon_assets_are_valid_and_multisize():
+    png_path = branding.application_icon_path()
+    ico_path = png_path.with_suffix(".ico")
+
+    with Image.open(png_path) as image:
+        assert image.size == (512, 512)
+        assert image.mode == "RGBA"
+        assert image.getchannel("A").getextrema() == (0, 255)
+
+    with Image.open(ico_path) as image:
+        assert {(16, 16), (32, 32), (48, 48), (256, 256)}.issubset(image.ico.sizes())
+
+
 def test_version_contract_explains_release_tag_version_order(monkeypatch):
     def fake_git(*args):
         if args == ("describe", "--tags", "--exact-match", "HEAD"):
@@ -954,7 +968,7 @@ def test_version_contract_explains_release_tag_version_order(monkeypatch):
     errors = check_version_contract.contract_errors(release=True)
 
     assert any(
-        "v1.0.0 != v1.0.1 from pyproject.toml" in error
+        "v1.0.0 != v1.0.2 from pyproject.toml" in error
         and "before creating the annotated tag" in error
         for error in errors
     )
@@ -969,13 +983,17 @@ def test_version_contract_reports_the_expected_dependency_fingerprint(monkeypatc
 
 
 def test_source_installation_self_test_accepts_stale_pip_metadata():
-    assert self_test.installation_errors(expected_version="1.0.1", expected_mode="editable") == []
+    assert self_test.installation_errors(expected_version="1.0.2", expected_mode="editable") == []
 
 
 def test_self_test_reports_missing_bundled_base_assets(tmp_path, monkeypatch):
+    def missing_application_icon():
+        raise FileNotFoundError("application icon missing")
+
     def missing_sample_image():
         raise FileNotFoundError("sample image missing")
 
+    monkeypatch.setattr(branding, "application_icon_path", missing_application_icon)
     monkeypatch.setattr(sample_data, "sample_image_path", missing_sample_image)
     monkeypatch.setattr(
         panorama_api,
@@ -985,6 +1003,7 @@ def test_self_test_reports_missing_bundled_base_assets(tmp_path, monkeypatch):
 
     errors = self_test._bundled_asset_errors()
 
+    assert any("bundled application icon is unavailable" in error for error in errors)
     assert any("bundled sample image is unavailable" in error for error in errors)
     assert any("bundled panorama left image is missing" in error for error in errors)
     assert any("bundled panorama right image is missing" in error for error in errors)

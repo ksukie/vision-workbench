@@ -48,6 +48,7 @@ from cv_basics.api import EffectName
 from image_classification.api import PredictionItem, PredictionResult, PretrainedWeightInfo
 from panorama_reconstruction.domain import ImagePairPaths, PanoramaResult
 from vision_workbench.sample_data import sample_image_path
+from vision_workbench.desktop.app import create_app
 from vision_workbench.desktop.build_mode import BASE_EXE_ENV
 from vision_workbench.desktop.image_presenter import QtImagePresenter
 from vision_workbench.desktop.main_window import MainWindow, NAV_ITEM_BY_KEY
@@ -460,6 +461,11 @@ def test_qt_main_window_smoke(qt_app):
         assert isinstance(window.pages["version"], VersionPage)
         assert all(page.findChild(QScrollArea) is not None for page in window.pages.values())
         assert window.windowFlags() & Qt.WindowType.FramelessWindowHint
+        assert not window.windowIcon().isNull()
+        icon_label = window.findChild(QLabel, "WindowIcon")
+        assert icon_label is not None
+        assert icon_label.pixmap() is not None
+        assert not icon_label.pixmap().isNull()
 
         button_texts = {button.text() for button in window.findChildren(QPushButton)}
         assert {"打开图片", "保存结果", "重置", "应用效果"}.issubset(button_texts)
@@ -473,6 +479,13 @@ def test_qt_main_window_smoke(qt_app):
         assert window.findChild(QLabel, "SidebarDetail").text() == NAV_ITEM_BY_KEY["version"].description
     finally:
         window.close()
+
+
+def test_qt_application_uses_brand_icon(qt_app):
+    app = create_app()
+
+    assert app is qt_app
+    assert not app.windowIcon().isNull()
 
 
 @pytest.mark.skipif(sys.platform != "win32", reason="WM_NCHITTEST is Windows-only")
@@ -618,7 +631,7 @@ def test_version_page_displays_available_verified_update_and_reflows_actions(qt_
     try:
         page._on_check_success(result)
 
-        assert page.current_version_label.text() == "v1.0.1"
+        assert page.current_version_label.text() == "v1.0.2"
         assert "editable" in page.current_mode_label.text()
         assert page.latest_version_label.text() == "v1.1.0"
         assert not page.update_button.isHidden()

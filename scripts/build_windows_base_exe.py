@@ -10,6 +10,9 @@ import PyInstaller.__main__
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+APPLICATION_ICON = (
+    PROJECT_ROOT / "src" / "vision_workbench" / "assets" / "vision_workbench_icon.ico"
+)
 EXCLUDED_MODULES = (
     "image_classification",
     "pkg_resources",
@@ -65,6 +68,8 @@ def main() -> None:
 
     name = "Vision-Workbench-win-x64"
     work_path = PROJECT_ROOT / "build" / "windows-base-exe"
+    if not APPLICATION_ICON.is_file():
+        raise FileNotFoundError(f"Required Windows application icon is missing: {APPLICATION_ICON}")
     arguments = [
         "--noconfirm",
         "--clean",
@@ -73,6 +78,8 @@ def main() -> None:
         "--noupx",
         "--name",
         name,
+        "--icon",
+        str(APPLICATION_ICON),
         "--paths",
         str(PROJECT_ROOT / "src"),
         "--distpath",

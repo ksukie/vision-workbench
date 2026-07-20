@@ -8,6 +8,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
+from vision_workbench.branding import application_icon
 from vision_workbench.runtime_security import (
     configure_isolated_python_environment,
     configure_restricted_model_loading,
@@ -26,6 +27,7 @@ def create_app():
     app = QApplication.instance()
     if app is None:
         app = QApplication(sys.argv)
+    app.setWindowIcon(application_icon())
     apply_theme(app)
     return app
 
