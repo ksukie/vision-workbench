@@ -4,7 +4,7 @@ message: "If you use Vision Workbench, please cite this project and the third-pa
 type: software
 authors:
   - name: Shuqi Ke
-repository-code: "https://github.com/ksukie/vision-workbench"
+repository-code: "https://github.com/ksukie/Vision-WorkBench"
 license: AGPL-3.0-only
 version: 1.0.0
 date-released: 2026-07-19

@@ -1,6 +1,6 @@
 # 发布前 QA 检查清单
 
-[English](./qa-checklist.en.md) | [文档中心](./README.md) | [返回项目 README](../README.zh-CN.md)
+[English](./qa-checklist.en.md) | [文档中心](./README.md) | [返回项目 README](../README.md)
 
 自动化测试覆盖核心逻辑，但摄像头、GPU 驱动、字体渲染和辅助技术必须在真实设备上验证。每个正式版本至少记录一次下面的人工结果；失败项应附操作系统、Python、Qt、Torch、驱动版本和复现步骤。
 

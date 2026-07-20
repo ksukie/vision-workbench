@@ -16,10 +16,14 @@ from urllib.parse import unquote, urlparse
 
 
 DISTRIBUTION_NAME = "vision-workbench"
-REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
+REPOSITORY_URL = "https://github.com/ksukie/Vision-WorkBench"
+# Version 1.0.0 embedded this case-preserving GitHub alias in its trusted
+# update contract. Keep release manifests and bundled release information on
+# this alias so existing 1.0.0 installations can validate future updates.
+UPDATE_REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
 RELEASES_URL = f"{REPOSITORY_URL}/releases"
 LATEST_RELEASE_URL = f"{RELEASES_URL}/latest"
-LATEST_MANIFEST_URL = f"{LATEST_RELEASE_URL}/download/update-manifest.json"
+LATEST_MANIFEST_URL = f"{UPDATE_REPOSITORY_URL}/releases/latest/download/update-manifest.json"
 _STABLE_VERSION_PATTERN = re.compile(r"^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)$")
 _RUNTIME_DEPENDENCY_FILES = (
     "requirements.txt",
@@ -92,12 +96,12 @@ def current_version_info() -> RuntimeVersionInfo:
     except ValueError as exc:
         raise RuntimeError("内置版本更新时间必须是 YYYY-MM-DD 格式。") from exc
     repository_url = _required_release_value(release_info, "repository_url")
-    if repository_url != REPOSITORY_URL:
+    if repository_url != UPDATE_REPOSITORY_URL:
         raise RuntimeError("内置版本信息指向了非官方仓库。")
     return RuntimeVersionInfo(
         version=version,
         updated_at=updated_at,
-        repository_url=repository_url,
+        repository_url=REPOSITORY_URL,
         install_mode=mode,
         source_root=source_root,
         dependency_contract_sha256=dependency_contract,

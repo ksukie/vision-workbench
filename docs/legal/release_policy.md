@@ -1,6 +1,6 @@
 ﻿# Release Policy
 
-[中文文档](./发布策略.md) | [Documentation](../README.md) | [Back to README](../../README.md)
+[中文文档](./发布策略.md) | [Documentation](../README.md) | [Back to README](../../README.en.md)
 
 Vision Workbench is an open-source learning project released under AGPL-3.0.
 This policy defines the official boundaries between Git source, Python packages, and model release assets.
@@ -54,6 +54,15 @@ the update manifest. The EXE's bundled identity must match the release. Generate
 manifest with the same GitHub Release. The manifest version, tag, repository,
 asset names, byte sizes, and SHA-256 digests must match the immutable release
 artifacts.
+
+The canonical user-facing repository URL is
+`https://github.com/ksukie/Vision-WorkBench`. Version 1.0.0 embedded the
+lowercase GitHub path alias in its trusted update contract, so
+`release_info.json` and generated update manifests must retain
+`https://github.com/ksukie/vision-workbench`. Runtime UI and project metadata
+normalize that compatibility identity to the canonical URL. Removing the
+alias from release artifacts would prevent existing 1.0.0 installations from
+validating later official updates.
 
 The desktop update client accepts stable releases only. It must not install an
 asset without an exact compatible name, bounded positive size, and SHA-256

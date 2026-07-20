@@ -1,6 +1,6 @@
 # Pre-release QA Checklist
 
-[中文](./qa-checklist.md) | [Documentation](./README.md) | [Back to README](../README.md)
+[中文](./qa-checklist.md) | [Documentation](./README.md) | [Back to README](../README.en.md)
 
 Automated tests cover core logic, but cameras, GPU drivers, font rendering, and assistive technologies require validation on physical systems. Record at least one manual result for every official release. For each failed item, include the operating system, Python, Qt, Torch, and driver versions together with reproducible steps.
 

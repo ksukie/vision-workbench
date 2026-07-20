@@ -15,12 +15,13 @@ from urllib.request import Request, urlopen
 from .versioning import (
     LATEST_MANIFEST_URL,
     REPOSITORY_URL,
+    UPDATE_REPOSITORY_URL,
     RuntimeVersionInfo,
     stable_version_tuple,
 )
 
 
-GITHUB_API_LATEST_URL = "https://api.github.com/repos/ksukie/vision-workbench/releases/latest"
+GITHUB_API_LATEST_URL = "https://api.github.com/repos/ksukie/Vision-WorkBench/releases/latest"
 MAX_METADATA_BYTES = 2 * 1024 * 1024
 MAX_UPDATE_ASSET_BYTES = 2 * 1024 * 1024 * 1024
 ALLOWED_DOWNLOAD_HOSTS = {
@@ -173,7 +174,7 @@ def _parse_manifest(payload: dict[str, object]) -> ReleaseInfo:
     if tag != f"v{version}":
         raise UpdateCheckError("更新清单的 tag 与版本不一致。")
     repository_url = payload.get("repository_url")
-    if repository_url != REPOSITORY_URL:
+    if repository_url != UPDATE_REPOSITORY_URL:
         raise UpdateCheckError("更新清单指向了非官方仓库。")
     release_url = _official_release_url(_required_text(payload, "release_url"))
     if release_url != f"{REPOSITORY_URL}/releases/tag/{tag}":
@@ -294,19 +295,26 @@ def _required_text(payload: dict[str, object], key: str) -> str:
 
 def _official_release_url(value: str) -> str:
     parsed = urlparse(value)
-    if parsed.scheme != "https" or parsed.netloc.lower() != "github.com":
+    if (
+        parsed.scheme != "https"
+        or parsed.netloc.lower() != "github.com"
+        or parsed.query
+        or parsed.fragment
+    ):
         raise UpdateCheckError("Release URL 不是官方 HTTPS 地址。")
     prefix = "/ksukie/vision-workbench/releases/"
-    if not parsed.path.startswith(prefix):
+    if not parsed.path.casefold().startswith(prefix):
         raise UpdateCheckError("Release URL 不属于官方仓库。")
-    return value
+    return f"{REPOSITORY_URL}/releases/{parsed.path[len(prefix):]}"
 
 
 def _official_download_url(value: str) -> str:
     parsed = urlparse(value)
     if not _standard_https_host(parsed) or parsed.hostname not in ALLOWED_DOWNLOAD_HOSTS:
         raise UpdateCheckError("更新资产不是允许的 HTTPS 下载地址。")
-    if parsed.hostname == "github.com" and not parsed.path.startswith("/ksukie/vision-workbench/releases/download/"):
+    if parsed.hostname == "github.com" and not parsed.path.casefold().startswith(
+        "/ksukie/vision-workbench/releases/download/"
+    ):
         raise UpdateCheckError("更新资产不属于官方仓库。")
     return value
 

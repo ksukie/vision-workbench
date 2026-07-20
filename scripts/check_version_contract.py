@@ -13,7 +13,8 @@ from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
+REPOSITORY_URL = "https://github.com/ksukie/Vision-WorkBench"
+UPDATE_REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
 
 
 def _load_dependency_contract_function():
@@ -59,8 +60,19 @@ def contract_errors(*, release: bool = False) -> list[str]:
     if not isinstance(classifiers, list) or "Development Status :: 5 - Production/Stable" not in classifiers:
         errors.append("pyproject.toml must declare the Production/Stable classifier")
     urls = project.get("urls")
-    if not isinstance(urls, dict) or urls.get("Repository") != REPOSITORY_URL:
-        errors.append("pyproject.toml project.urls.Repository is not the official repository")
+    expected_project_urls = {
+        "Homepage": REPOSITORY_URL,
+        "Repository": REPOSITORY_URL,
+        "Documentation": f"{REPOSITORY_URL}/tree/main/docs",
+        "Issues": f"{REPOSITORY_URL}/issues",
+        "Changelog": f"{REPOSITORY_URL}/blob/main/CHANGELOG.md",
+    }
+    if not isinstance(urls, dict):
+        errors.append("pyproject.toml project.urls is missing")
+    else:
+        for label, expected_url in expected_project_urls.items():
+            if urls.get(label) != expected_url:
+                errors.append(f"pyproject.toml project.urls.{label} is not canonical")
     package_data = metadata_payload.get("tool", {}).get("setuptools", {}).get("package-data", {})
     if "release_info.json" not in package_data.get("vision_workbench", []):
         errors.append("pyproject.toml package data must include vision_workbench/release_info.json")
@@ -82,7 +94,7 @@ def contract_errors(*, release: bool = False) -> list[str]:
         errors.append(f"release_info.json version {release_info.get('version')} != {version}")
     if release_info.get("schema_version") != 1:
         errors.append("release_info.json schema_version must be 1")
-    if release_info.get("repository_url") != REPOSITORY_URL:
+    if release_info.get("repository_url") != UPDATE_REPOSITORY_URL:
         errors.append("release_info.json repository_url is not the official repository")
     dependency_contract = project_dependency_contract(PROJECT_ROOT)
     if release_info.get("dependency_contract_sha256") != dependency_contract:
@@ -102,6 +114,8 @@ def contract_errors(*, release: bool = False) -> list[str]:
         errors.append("CITATION.cff version does not match pyproject.toml")
     if re.search(r"(?m)^license:\s*AGPL-3\.0-only\s*$", citation) is None:
         errors.append("CITATION.cff must use the AGPL-3.0-only SPDX identifier")
+    if f'repository-code: "{REPOSITORY_URL}"' not in citation:
+        errors.append("CITATION.cff repository-code is not canonical")
 
     changelog = (PROJECT_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     first_heading = re.search(r"(?m)^## \[([^]]+)] - (\d{4}-\d{2}-\d{2})$", changelog)
@@ -126,8 +140,10 @@ def contract_errors(*, release: bool = False) -> list[str]:
         errors.append("CITATION.cff date-released does not match release_info.json")
 
     expected_wheel = f"vision_workbench-{version}-py3-none-any.whl"
-    for name in ("README.md", "README.zh-CN.md"):
+    for name in ("README.md", "README.en.md"):
         readme = (PROJECT_ROOT / name).read_text(encoding="utf-8")
+        if f"{REPOSITORY_URL}/releases" not in readme:
+            errors.append(f"{name} does not reference the canonical GitHub Releases URL")
         if expected_wheel not in readme:
             errors.append(f"{name} does not reference {expected_wheel}")
         wheel_versions = set(re.findall(r"vision_workbench-(\d+\.\d+\.\d+)-py3-none-any\.whl", readme))

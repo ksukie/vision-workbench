@@ -1,6 +1,6 @@
 ﻿# 基础 CV README
 
-[返回 README](../../../README.zh-CN.md) | [English](../en/cv_basics_README.md) | [二次开发指南](../../二次开发指南.md#基础-cv-扩展)
+[返回 README](../../../README.md) | [English](../en/cv_basics_README.md) | [二次开发指南](../../二次开发指南.md#基础-cv-扩展)
 
 ## 概览
 

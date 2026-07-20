@@ -112,7 +112,9 @@ def _validate_plan(payload: dict[str, object], plan_path: Path) -> None:
     asset_path = Path(_required_text(payload, "asset_path")).resolve()
     if asset_path.name != expected_name or asset_path.parent != plan_path.parent:
         raise UpdateApplyError("更新计划的资产名称或位置无效。")
-    if _required_text(payload, "release_url") != f"{REPOSITORY_URL}/releases/tag/v{target_version}":
+    if _required_text(payload, "release_url") != (
+        f"{REPOSITORY_URL}/releases/tag/v{target_version}"
+    ):
         raise UpdateApplyError("更新计划的发布页面与目标版本不一致。")
 
     application = Path(_required_text(payload, "application_executable")).resolve()

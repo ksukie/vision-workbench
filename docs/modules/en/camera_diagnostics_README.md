@@ -1,6 +1,6 @@
 ﻿# Camera Diagnostics README
 
-[Back to README](../../../README.md) | [中文文档](../zh-CN/相机诊断.md) | [Extension Guide](../../adding_custom_features_README.md#camera-diagnostics-extensions)
+[Back to README](../../../README.en.md) | [中文文档](../zh-CN/相机诊断.md) | [Extension Guide](../../adding_custom_features_README.md#camera-diagnostics-extensions)
 
 ## Overview
 

@@ -34,11 +34,11 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ksukie/vision-workbench"
-Repository = "https://github.com/ksukie/vision-workbench"
-Documentation = "https://github.com/ksukie/vision-workbench/tree/main/docs"
-Issues = "https://github.com/ksukie/vision-workbench/issues"
-Changelog = "https://github.com/ksukie/vision-workbench/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/ksukie/Vision-WorkBench"
+Repository = "https://github.com/ksukie/Vision-WorkBench"
+Documentation = "https://github.com/ksukie/Vision-WorkBench/tree/main/docs"
+Issues = "https://github.com/ksukie/Vision-WorkBench/issues"
+Changelog = "https://github.com/ksukie/Vision-WorkBench/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 classification = [

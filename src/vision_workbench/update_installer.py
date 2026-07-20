@@ -23,7 +23,7 @@ from urllib.parse import urlparse
 from urllib.request import Request, urlopen
 
 from .update_service import ALLOWED_DOWNLOAD_HOSTS, MAX_UPDATE_ASSET_BYTES, UpdateCheckResult
-from .versioning import DISTRIBUTION_NAME, REPOSITORY_URL, stable_version_tuple
+from .versioning import DISTRIBUTION_NAME, UPDATE_REPOSITORY_URL, stable_version_tuple
 
 
 MAX_UPDATE_BYTES = MAX_UPDATE_ASSET_BYTES
@@ -184,7 +184,7 @@ def validate_python_wheel(path: Path, expected_version: str, expected_dependency
         raise UpdatePreparationError("Python 更新 wheel 的内置发布信息格式无效。")
     if release_info.get("version") != expected_version:
         raise UpdatePreparationError("Python 更新 wheel 的内置版本不一致。")
-    if release_info.get("repository_url") != REPOSITORY_URL:
+    if release_info.get("repository_url") != UPDATE_REPOSITORY_URL:
         raise UpdatePreparationError("Python 更新 wheel 指向了非官方仓库。")
     if release_info.get("dependency_contract_sha256") != expected_dependency_contract:
         raise UpdatePreparationError("Python 更新 wheel 的运行依赖契约不一致。")

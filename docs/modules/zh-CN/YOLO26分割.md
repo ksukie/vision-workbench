@@ -1,6 +1,6 @@
 ﻿# YOLO26 分割 README
 
-[返回 README](../../../README.zh-CN.md) | [English](../en/yolo26_segmentation_README.md) | [二次开发指南](../../二次开发指南.md#yolo26-分割扩展)
+[返回 README](../../../README.md) | [English](../en/yolo26_segmentation_README.md) | [二次开发指南](../../二次开发指南.md#yolo26-分割扩展)
 
 ## 概览
 

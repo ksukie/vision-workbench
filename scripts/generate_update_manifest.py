@@ -14,7 +14,9 @@ from urllib.parse import quote
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
+# Keep the alias embedded in 1.0.0 so released clients can validate and install
+# every later official update after the repository's display-case change.
+UPDATE_REPOSITORY_URL = "https://github.com/ksukie/vision-workbench"
 sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from vision_workbench.update_installer import (  # noqa: E402
@@ -68,7 +70,7 @@ def build_manifest(assets_dir: Path, published_at: str, commit: str) -> dict[str
             {
                 "kind": kind,
                 "name": name,
-                "url": f"{REPOSITORY_URL}/releases/download/{tag}/{quote(name)}",
+                "url": f"{UPDATE_REPOSITORY_URL}/releases/download/{tag}/{quote(name)}",
                 "size": size,
                 "sha256": file_sha256(path),
             }
@@ -80,8 +82,8 @@ def build_manifest(assets_dir: Path, published_at: str, commit: str) -> dict[str
         "published_at": published_at,
         "tag": tag,
         "commit": commit,
-        "repository_url": REPOSITORY_URL,
-        "release_url": f"{REPOSITORY_URL}/releases/tag/{tag}",
+        "repository_url": UPDATE_REPOSITORY_URL,
+        "release_url": f"{UPDATE_REPOSITORY_URL}/releases/tag/{tag}",
         "dependency_contract_sha256": dependency_contract,
         "assets": assets,
     }

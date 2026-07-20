@@ -31,6 +31,8 @@ from vision_workbench.update_service import (
 )
 from vision_workbench.versioning import (
     LATEST_MANIFEST_URL,
+    REPOSITORY_URL,
+    UPDATE_REPOSITORY_URL,
     RuntimeVersionInfo,
     current_version_info,
     source_archive_url,
@@ -71,7 +73,7 @@ def _runtime(version="1.0.0", mode="editable", source_root=None):
     return RuntimeVersionInfo(
         version=version,
         updated_at="2026-07-19",
-        repository_url="https://github.com/ksukie/vision-workbench",
+        repository_url=REPOSITORY_URL,
         install_mode=mode,
         source_root=source_root,
         dependency_contract_sha256=DEPENDENCY_CONTRACT,
@@ -86,15 +88,15 @@ def _manifest(version="1.1.0", *, sha256="a" * 64):
         "published_at": "2026-08-01T12:00:00Z",
         "tag": f"v{version}",
         "commit": "1" * 40,
-        "repository_url": "https://github.com/ksukie/vision-workbench",
-        "release_url": f"https://github.com/ksukie/vision-workbench/releases/tag/v{version}",
+        "repository_url": UPDATE_REPOSITORY_URL,
+        "release_url": f"{UPDATE_REPOSITORY_URL}/releases/tag/v{version}",
         "dependency_contract_sha256": DEPENDENCY_CONTRACT,
         "assets": [
             {
                 "kind": "python-wheel",
                 "name": f"vision_workbench-{version}-py3-none-any.whl",
                 "url": (
-                    "https://github.com/ksukie/vision-workbench/releases/download/"
+                    f"{UPDATE_REPOSITORY_URL}/releases/download/"
                     f"v{version}/vision_workbench-{version}-py3-none-any.whl"
                 ),
                 "size": 100,
@@ -115,7 +117,7 @@ def _wheel_bytes(version="1.1.0", dependency_contract=DEPENDENCY_CONTRACT):
         "schema_version": 1,
         "version": version,
         "updated_at": "2026-08-01",
-        "repository_url": "https://github.com/ksukie/vision-workbench",
+        "repository_url": UPDATE_REPOSITORY_URL,
         "dependency_contract_sha256": dependency_contract,
     }
     with zipfile.ZipFile(stream, "w") as archive:
@@ -139,8 +141,9 @@ def test_runtime_version_reads_the_current_editable_source():
     assert info.install_mode == "editable"
     assert info.source_root is not None
     assert (info.source_root / "pyproject.toml").is_file()
+    assert info.repository_url == REPOSITORY_URL
     assert source_archive_url() == (
-        "https://github.com/ksukie/vision-workbench/archive/refs/tags/v1.0.0.zip"
+        f"{REPOSITORY_URL}/archive/refs/tags/v1.0.0.zip"
     )
     assert vision_workbench.__version__ == info.version
 
@@ -216,7 +219,7 @@ def test_runtime_version_uses_distribution_metadata_for_wheel(monkeypatch):
             "schema_version": 1,
             "version": "1.2.3",
             "updated_at": "2026-08-01",
-            "repository_url": "https://github.com/ksukie/vision-workbench",
+            "repository_url": UPDATE_REPOSITORY_URL,
             "dependency_contract_sha256": "a" * 64,
         },
     )
@@ -291,6 +294,7 @@ def test_update_client_selects_a_hashed_wheel_for_editable_mode():
     result = client.check(_runtime())
 
     assert result.state is UpdateState.UPDATE_AVAILABLE
+    assert result.latest.release_url == f"{REPOSITORY_URL}/releases/tag/v1.1.0"
     assert result.can_install
     assert result.dependencies_compatible
     assert result.compatible_asset is not None
@@ -304,7 +308,7 @@ def test_update_client_selects_the_stable_name_exe_for_frozen_mode():
             "kind": "windows-x64-exe",
             "name": "Vision-Workbench-win-x64.exe",
             "url": (
-                "https://github.com/ksukie/vision-workbench/releases/download/"
+                f"{UPDATE_REPOSITORY_URL}/releases/download/"
                 "v1.1.0/Vision-Workbench-win-x64.exe"
             ),
             "size": 100,
@@ -368,7 +372,7 @@ def test_update_client_rejects_nonofficial_asset_url():
 def test_update_client_rejects_nonstandard_official_host_url():
     payload = _manifest()
     payload["assets"][0]["url"] = (
-        "https://github.com:444/ksukie/vision-workbench/releases/download/"
+        "https://github.com:444/ksukie/Vision-WorkBench/releases/download/"
         "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
     )
     client = UpdateClient(opener=lambda _request, timeout: _json_response(payload))
@@ -382,14 +386,14 @@ def test_update_client_falls_back_to_github_release_api():
         "draft": False,
         "prerelease": False,
         "tag_name": "v1.1.0",
-        "html_url": "https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        "html_url": f"{REPOSITORY_URL}/releases/tag/v1.1.0",
         "published_at": "2026-08-01T12:00:00Z",
         "target_commitish": "main",
         "assets": [
             {
                 "name": "vision_workbench-1.1.0-py3-none-any.whl",
                 "browser_download_url": (
-                    "https://github.com/ksukie/vision-workbench/releases/download/"
+                    f"{REPOSITORY_URL}/releases/download/"
                     "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
                 ),
                 "size": 100,
@@ -398,7 +402,7 @@ def test_update_client_falls_back_to_github_release_api():
             {
                 "name": "Vision-Workbench-1.1.0-win-x64.exe",
                 "browser_download_url": (
-                    "https://github.com/ksukie/vision-workbench/releases/download/"
+                    f"{REPOSITORY_URL}/releases/download/"
                     "v1.1.0/Vision-Workbench-1.1.0-win-x64.exe"
                 ),
                 "size": 100,
@@ -426,7 +430,7 @@ def test_update_client_rejects_github_release_url_for_a_different_tag():
         "draft": False,
         "prerelease": False,
         "tag_name": "v1.1.0",
-        "html_url": "https://github.com/ksukie/vision-workbench/releases/tag/v9.9.9",
+        "html_url": f"{REPOSITORY_URL}/releases/tag/v9.9.9",
         "published_at": "2026-08-01T12:00:00Z",
         "assets": [],
     }
@@ -448,7 +452,7 @@ def test_prepare_update_downloads_and_rechecks_sha256(tmp_path, monkeypatch):
         kind="python-wheel",
         name="vision_workbench-1.1.0-py3-none-any.whl",
         url=(
-            "https://github.com/ksukie/vision-workbench/releases/download/"
+            f"{UPDATE_REPOSITORY_URL}/releases/download/"
             "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
         ),
         size=len(payload),
@@ -457,7 +461,7 @@ def test_prepare_update_downloads_and_rechecks_sha256(tmp_path, monkeypatch):
     release = ReleaseInfo(
         version="1.1.0",
         published_at="2026-08-01T12:00:00Z",
-        release_url="https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        release_url=f"{REPOSITORY_URL}/releases/tag/v1.1.0",
         tag="v1.1.0",
         commit="1" * 40,
         assets=(asset,),
@@ -489,7 +493,7 @@ def test_prepare_update_rejects_mislabeled_wheel_identity(tmp_path, monkeypatch)
         kind="python-wheel",
         name="vision_workbench-1.1.0-py3-none-any.whl",
         url=(
-            "https://github.com/ksukie/vision-workbench/releases/download/"
+            f"{UPDATE_REPOSITORY_URL}/releases/download/"
             "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
         ),
         size=len(payload),
@@ -498,7 +502,7 @@ def test_prepare_update_rejects_mislabeled_wheel_identity(tmp_path, monkeypatch)
     release = ReleaseInfo(
         "1.1.0",
         "2026-08-01T12:00:00Z",
-        "https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        f"{REPOSITORY_URL}/releases/tag/v1.1.0",
         "v1.1.0",
         None,
         (asset,),
@@ -525,7 +529,7 @@ def test_prepare_update_removes_corrupt_partial_download(tmp_path, monkeypatch):
         kind="python-wheel",
         name="vision_workbench-1.1.0-py3-none-any.whl",
         url=(
-            "https://github.com/ksukie/vision-workbench/releases/download/"
+            f"{UPDATE_REPOSITORY_URL}/releases/download/"
             "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
         ),
         size=len(actual),
@@ -534,7 +538,7 @@ def test_prepare_update_removes_corrupt_partial_download(tmp_path, monkeypatch):
     release = ReleaseInfo(
         "1.1.0",
         "2026-08-01T12:00:00Z",
-        "https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        f"{REPOSITORY_URL}/releases/tag/v1.1.0",
         "v1.1.0",
         None,
         (asset,),
@@ -843,7 +847,7 @@ def test_update_helper_accepts_a_complete_verified_editable_plan(tmp_path):
                 "python_executable": str(Path(sys.executable).resolve()),
                 "application_executable": str(Path(sys.executable).resolve()),
                 "source_root": str(source_root),
-                "release_url": "https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+                "release_url": f"{REPOSITORY_URL}/releases/tag/v1.1.0",
             }
         ),
         encoding="utf-8",
@@ -883,8 +887,11 @@ def test_generate_update_manifest_hashes_exact_1_0_assets(tmp_path, monkeypatch)
     )
 
     assert manifest["version"] == "1.0.0"
+    assert manifest["repository_url"] == UPDATE_REPOSITORY_URL
+    assert manifest["release_url"] == f"{UPDATE_REPOSITORY_URL}/releases/tag/v1.0.0"
     assert len(manifest["dependency_contract_sha256"]) == 64
     assert {item["name"] for item in manifest["assets"]} == {exe.name, wheel.name}
+    assert all(item["url"].startswith(f"{UPDATE_REPOSITORY_URL}/") for item in manifest["assets"])
     assert all(len(item["sha256"]) == 64 for item in manifest["assets"])
 
 

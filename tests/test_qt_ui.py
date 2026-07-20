@@ -82,6 +82,7 @@ from vision_workbench.update_service import (
     UpdateCheckResult,
     UpdateState,
 )
+from vision_workbench.versioning import REPOSITORY_URL, UPDATE_REPOSITORY_URL
 
 
 class LazyLoadService:
@@ -598,7 +599,7 @@ def test_version_page_displays_available_verified_update_and_reflows_actions(qt_
         kind="python-wheel",
         name="vision_workbench-1.1.0-py3-none-any.whl",
         url=(
-            "https://github.com/ksukie/vision-workbench/releases/download/"
+            f"{UPDATE_REPOSITORY_URL}/releases/download/"
             "v1.1.0/vision_workbench-1.1.0-py3-none-any.whl"
         ),
         size=100,
@@ -607,7 +608,7 @@ def test_version_page_displays_available_verified_update_and_reflows_actions(qt_
     release = ReleaseInfo(
         version="1.1.0",
         published_at="2026-08-01T12:00:00Z",
-        release_url="https://github.com/ksukie/vision-workbench/releases/tag/v1.1.0",
+        release_url=f"{REPOSITORY_URL}/releases/tag/v1.1.0",
         tag="v1.1.0",
         commit="1" * 40,
         assets=(asset,),
@@ -623,6 +624,7 @@ def test_version_page_displays_available_verified_update_and_reflows_actions(qt_
         assert not page.update_button.isHidden()
         assert page.update_button.text() == "更新到 v1.1.0"
         assert page.repository_label.wordWrap()
+        assert REPOSITORY_URL in page.repository_label.text()
 
         page.resize(360, 700)
         page.show()

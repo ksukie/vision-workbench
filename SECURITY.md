@@ -4,7 +4,7 @@
 
 Report suspected vulnerabilities through GitHub private vulnerability reporting:
 
-https://github.com/ksukie/vision-workbench/security/advisories/new
+https://github.com/ksukie/Vision-WorkBench/security/advisories/new
 
 Use public GitHub Issues for ordinary bugs, documentation problems, installation failures, model download failures, and feature requests. Do not include exploit details, private datasets, credentials, tokens, or sensitive environment information in public issues.
 
@@ -40,7 +40,7 @@ Reports are triaged by severity, reproducibility, affected versions, and exposur
 
 疑似安全漏洞通过 GitHub 私密安全通告提交：
 
-https://github.com/ksukie/vision-workbench/security/advisories/new
+https://github.com/ksukie/Vision-WorkBench/security/advisories/new
 
 普通缺陷、文档问题、安装失败、模型下载失败和功能建议使用公开 GitHub Issues。公开 issue 中不包含利用细节、私有数据集、凭据、令牌或敏感环境信息。
 

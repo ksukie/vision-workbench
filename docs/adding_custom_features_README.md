@@ -1,8 +1,8 @@
 ﻿# Adding Custom Features
 
-[Back to README](../README.md) | [Documentation](./README.md) | [中文文档](./二次开发指南.md)
+[Back to README](../README.en.md) | [Documentation](./README.md) | [中文文档](./二次开发指南.md)
 
-This contributor guide describes where to add new Vision Workbench capabilities. Runtime users should start from the root [Quick Start](../README.md#quick-start).
+This contributor guide describes where to add new Vision Workbench capabilities. Runtime users should start from the root [Quick Start](../README.en.md#quick-start).
 
 ## Development Environment
 

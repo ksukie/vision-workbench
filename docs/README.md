@@ -1,16 +1,16 @@
 # Vision Workbench 文档中心 / Documentation
 
-本页是 Vision Workbench 正式项目文档的统一入口。首次使用项目时，请先阅读根目录的 [中文 README](../README.zh-CN.md)；需要解决具体问题时，再进入对应专题。
+本页是 Vision Workbench 正式项目文档的统一入口。首次使用项目时，请先阅读根目录的 [中文 README](../README.md)；需要解决具体问题时，再进入对应专题。
 
-This page is the central index for the official Vision Workbench documentation. First-time users should begin with the root [English README](../README.md), then use the sections below for module-specific or maintenance information.
+This page is the central index for the official Vision Workbench documentation. First-time users should begin with the root [English README](../README.en.md), then use the sections below for module-specific or maintenance information.
 
 ## 中文文档
 
 | 使用场景 | 文档 |
 | --- | --- |
-| 首次安装、启动和了解功能 | [项目 README](../README.zh-CN.md) |
-| 查看实际运行版本、检查更新或排查一键更新 | [版本身份与更新](../README.zh-CN.md#版本身份与更新) |
-| 使用基础 CV、全景、相机、分类或 YOLO 模块 | [功能模块索引](../README.zh-CN.md#功能模块) |
+| 首次安装、启动和了解功能 | [项目 README](../README.md) |
+| 查看实际运行版本、检查更新或排查一键更新 | [版本身份与更新](../README.md#版本身份与更新) |
+| 使用基础 CV、全景、相机、分类或 YOLO 模块 | [功能模块索引](../README.md#功能模块) |
 | 安装失败、模型错误、相机异常或训练失败 | [问题排查指南](./troubleshooting/zh-CN/问题排查指南.md) |
 | 扩展模块、API 或 Qt 页面 | [二次开发指南](./二次开发指南.md) |
 | 了解正式 GUI 与旧版窗口的边界 | [旧版界面维护策略](./旧版界面维护策略.md) |
@@ -21,9 +21,9 @@ This page is the central index for the official Vision Workbench documentation. 
 
 | Task | Documentation |
 | --- | --- |
-| Install, launch, and review available features | [Project README](../README.md) |
-| Verify the running version, check updates, or troubleshoot one-click updates | [Version identity and updates](../README.md#version-identity-and-updates) |
-| Use CV, panorama, camera, classification, or YOLO modules | [Feature module index](../README.md#modules) |
+| Install, launch, and review available features | [Project README](../README.en.md) |
+| Verify the running version, check updates, or troubleshoot one-click updates | [Version identity and updates](../README.en.md#version-identity-and-updates) |
+| Use CV, panorama, camera, classification, or YOLO modules | [Feature module index](../README.en.md#modules) |
 | Resolve installation, model, camera, or training failures | [Troubleshooting guide](./troubleshooting/en/README.md) |
 | Extend modules, APIs, or Qt pages | [Extension guide](./adding_custom_features_README.md) |
 | Understand the supported GUI and legacy window boundary | [Legacy GUI policy](./legacy-gui-policy.md) |

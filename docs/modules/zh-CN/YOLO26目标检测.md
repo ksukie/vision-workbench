@@ -1,6 +1,6 @@
 ﻿# YOLO26 目标检测 README
 
-[返回 README](../../../README.zh-CN.md) | [English](../en/yolo26_detection_README.md) | [二次开发指南](../../二次开发指南.md#yolo26-目标检测扩展)
+[返回 README](../../../README.md) | [English](../en/yolo26_detection_README.md) | [二次开发指南](../../二次开发指南.md#yolo26-目标检测扩展)
 
 ## 概览
 

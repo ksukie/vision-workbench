@@ -1,6 +1,6 @@
 # Legacy GUI Policy
 
-[中文](./旧版界面维护策略.md) | [Documentation](./README.md) | [Back to README](../README.md)
+[中文](./旧版界面维护策略.md) | [Documentation](./README.md) | [Back to README](../README.en.md)
 
 The supported Vision Workbench GUI is the PySide6 / Qt desktop application launched with `vision-workbench`. New and maintained user-interface work belongs under `src/vision_workbench/desktop/` and its `pages/` directory.
 

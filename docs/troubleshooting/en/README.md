@@ -1,6 +1,6 @@
 ﻿# Troubleshooting Guide
 
-[Project README](../../../README.md) | [中文](../zh-CN/问题排查指南.md)
+[Project README](../../../README.en.md) | [中文](../zh-CN/问题排查指南.md)
 
 Use this guide when an install command, GUI popup, camera workflow, model load, dataset validation, or training run fails. Most user-visible errors in Vision Workbench include one of these document paths.
 
