@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img src="./docs/assets/brand/vision_workbench_logo.png" alt="Vision Workbench" width="760">
+  <img src="./docs/assets/brand/vision_workbench_logo.webp" alt="Vision Workbench" width="760">
 </h1>
 
 <p align="center">
