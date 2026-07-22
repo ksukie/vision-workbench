@@ -1,8 +1,6 @@
-# Vision Workbench
-
-<p align="center">
-  <img src="./docs/assets/readme/vision_workbench_hero.png" alt="Vision Workbench overview" width="100%">
-</p>
+<h1 align="center">
+  <img src="./docs/assets/brand/vision_workbench_logo.png" alt="Vision Workbench" width="760">
+</h1>
 
 <p align="center">
   <a href="./README.md">中文文档</a>
@@ -23,6 +21,7 @@
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-0f766e">
   <img alt="Python" src="https://img.shields.io/badge/python-3.10%2B-2563eb">
+  <img alt="OpenCV" src="https://img.shields.io/badge/OpenCV-4.13%2B-5c3ee8?logo=opencv&logoColor=white">
   <img alt="GUI" src="https://img.shields.io/badge/GUI-PySide6-0a84ff">
   <img alt="Status" src="https://img.shields.io/badge/status-learning%20workbench-16a34a">
 </p>
